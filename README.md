@@ -9,8 +9,7 @@ Simply run the code in Analyze\ Data.ipynb to see the relationships
 ## Built With
 
 * [Pandas](https://pandas.pydata.org) - Handling the "large" amounts of data
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
+* And more...
 
 ## Authors
 
@@ -26,6 +25,7 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 #TODO:
 
  * Add Acknowledgements
+ * Complete Built With list
  * Put location counts on map
      * Include interactivity with simulated time passage
  * Explore other relationships
