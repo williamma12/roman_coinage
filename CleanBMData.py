@@ -1,6 +1,6 @@
 import re
 
-def stringToList(sep):
+def stringToList(sep=', '):
     '''
     Parameters
     ---------
@@ -41,7 +41,7 @@ def stringToListofDicts(list_sep, dict_sep, key_sep):
     -------
     Returns a function that takes in the string and returns a dictionary
 
-    Example
+    Doctest
     -------
     >>> stringToListofDicts('|', ';', ':')('1:one;2:two|1:I;2:II')
     [{'2': 'two', '1': 'one'}, {'2': 'II', '1': 'I'}]
@@ -59,7 +59,7 @@ def stringToListofDicts(list_sep, dict_sep, key_sep):
                     dic[content[0]] = content[1]
                 except:
                     pass
-            result.append(dic)
+            result.append(dict(dic))
         
         return result
     return seperator
@@ -221,6 +221,26 @@ def removeNotes(string):
     '''
     data = re.findall('^[^\(]+', string)[0].strip()
     return data
+
+
+def prepareDataframeForMapping(df, col_name='Production place'):
+    '''
+    Parameters
+    ----------
+    df : Pandas Dataframe
+        Dataframe containing data
+    col_name : str
+        Column name to get counts of for map
+
+    Return
+    ------
+    Returns a pandas dataframe of columns col_name and 'Count' to be passed
+    into the function makeMap in the file BokehMaker.py
+    '''
+    result = df.groupby([col_name]).size().reset_index()
+    result.columns = ['Production place', 'Count']
+    result = result.loc[result.sort_values(['Count'], ascending=False).index]
+    return result
 
 
 if __name__ == "__main__":

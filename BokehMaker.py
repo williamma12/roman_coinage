@@ -11,7 +11,7 @@ from bokeh.models.glyphs import Patches
 from collections import OrderedDict
 
 def makeStackedBar(df, x, y, sort_x=False, x_ascending=True, sort_bars=False, bars_col='', bars_agg=None, bars_ascending=True, 
-                sort_stacks=False, stacks_col='', stacks_agg=None, stacks_ascending=True, colors=grey, title="title"):
+                sort_stacks=False, stacks_col='', stacks_agg=None, stacks_ascending=True, colors=grey, title="title", plot_size=('responsive',)):
     '''
     Parameters
     ----------
@@ -43,6 +43,8 @@ def makeStackedBar(df, x, y, sort_x=False, x_ascending=True, sort_bars=False, ba
         Boolean to sort bars ascending
     colors : color palette
         Pass in a Bokeh color palette
+    plot_size : tuple
+        Either ('responsive') or (width, height)
 
     Returns
     -------
@@ -83,10 +85,18 @@ def makeStackedBar(df, x, y, sort_x=False, x_ascending=True, sort_bars=False, ba
     bar = bar.loc[bar.sort_values(sort, ascending=ascend).index]
     unique_vals = bar[y].unique().size
 
-    bar_plot = Bar(bar, label=cat(columns=x, sort=False), 
-                    palette=colors(unique_vals), values='bar_order', 
-                    stack=y, responsive=True, active_scroll='wheel_zoom',
-                    title=title)
+    if plot_size[0] == 'responsive':
+        bar_plot = Bar(bar, label=cat(columns=x, sort=False), 
+                        palette=colors(unique_vals), values='bar_order', 
+                        stack=y, responsive=True, active_scroll='wheel_zoom',
+                        title=title)
+    elif len(plot_size) == 2:
+        bar_plot = Bar(bar, label=cat(columns=x, sort=False), 
+                        palette=colors(unique_vals), values='bar_order', 
+                        stack=y, active_scroll='wheel_zoom', title=title,
+                        plot_width=plot_size[0], plot_height=plot_size[1])
+    else:
+        raise ValueError('READ THE DOCUMENTATION YOU LAZY FUCK')
 
     return bar_plot
 
@@ -94,7 +104,7 @@ def makeStackedBar(df, x, y, sort_x=False, x_ascending=True, sort_bars=False, ba
 def makeMap(df, locations, vals, x_ranges=(-20000000, 20000000), 
             y_ranges=(-20000000, 20000000), path='', ext='.json', 
             map_tile=STAMEN_TERRAIN, palette=grey, colors_ascending=True, 
-            pt_size=lambda x: x):
+            pt_size=lambda x: x, title='Production place'):
     '''
     Parameters
     ----------
@@ -120,6 +130,8 @@ def makeMap(df, locations, vals, x_ranges=(-20000000, 20000000),
         Boolean wheter colors should ascend the color palette
     pt_size : function
         Function to size the points
+    title : str
+        String containing title of plot
 
     Returns
     -------
@@ -208,7 +220,7 @@ def makeMap(df, locations, vals, x_ranges=(-20000000, 20000000),
     # Create plot with map tile
     map_plot = figure(plot_width=1000, plot_height=480,
                                active_scroll='wheel_zoom',
-                               x_range=x_ranges, y_range=y_ranges)
+                               x_range=x_ranges, y_range=y_ranges, title=title)
     map_plot.add_tile(map_tile)
 
     # Add points and patches objects to graph
@@ -219,8 +231,8 @@ def makeMap(df, locations, vals, x_ranges=(-20000000, 20000000),
     map_plot.add_tools(HoverTool())
     hover = map_plot.select(dict(type=HoverTool))
     hover.tooltips = OrderedDict([
-        (locations, '@' + locations),
-        (vals, '@' + vals)
+        (locations, '@Location'),
+        (vals, '@Count')
         ])
                       
     return map_plot
