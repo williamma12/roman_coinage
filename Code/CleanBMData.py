@@ -1,4 +1,6 @@
 import re
+import numpy as np
+import pandas as pd
 
 def stringToList(sep=', '):
     '''
@@ -219,8 +221,11 @@ def removeNotes(string):
     >>> removeNotes('aureus (cut half)')
     'aureus'
     '''
-    data = re.findall('^[^\(]+', string)[0].strip()
-    return data
+    if len(string) != 0:
+        data = re.findall('^[^\(]+', string)[0].strip()
+        return data
+    else:
+        return string
 
 
 def prepareDataframeForMapping(df, col_name='Production place'):
@@ -238,8 +243,119 @@ def prepareDataframeForMapping(df, col_name='Production place'):
     into the function makeMap in the file BokehMaker.py
     '''
     result = df.groupby([col_name]).size().reset_index()
-    result.columns = ['Production place', 'Count']
+    result.columns = [col_name, 'Count']
     result = result.loc[result.sort_values(['Count'], ascending=False).index]
+    return result
+
+
+def getInscriptions(insc):
+    '''
+    Parameters
+    ----------
+    insc : list of dicts
+        Data of the inscriptions
+
+    Returns
+    -------
+    Returns a panads Series with columns 'Obverse legend' and 'Reverse legend'
+    '''
+    obverse = ''
+    reverse = ''
+    for i in insc:
+        if 'Inscription Transliteration' in i:
+            content = i['Inscription Transliteration']
+        elif 'Inscription Content' in i:
+            content = i['Inscription Content']
+        else: 
+            continue
+        
+        if 'Inscription Position' in i:
+            position = i['Inscription Position']
+            if position == 'obverse':
+                obverse += content + ' '
+            elif position == 'reverse':
+                reverse += content + ' '
+    return pd.Series({'Obverse legend': obverse, 'Reverse legend': reverse})
+
+
+def cleanInscriptions(df, col_name = 'Inscriptions'):
+    '''
+    Parameters
+    ----------
+    df : pandas Dataframe
+        Dataframe contiaining data. Inscriptions should be put as a list of dicts
+    col_name : str
+        Column name of the inscriptions data
+    
+    Returns
+    -------
+    Returns dataframe with the columns 'Obverse legend' and 'Reverse legend'
+    '''
+    result = df.apply(lambda x: getInscriptions(x['Inscriptions']), axis=1)
+    reuslt = df.drop(col_name, axis=1)
+    return result
+
+
+def cleanDF(df, lists, strings, floats, dates, redundant_notes, do_nothing, 
+        dup_cols, production_place='Production place', denomination='Denomination'):
+    '''
+    Parameters
+    ----------
+    df : pandas dataframe 
+        dataframe containing data to clean
+    lists : list of str
+        column names of the columns containing lists
+    strings : list of str
+        column names of the columns containing strings
+    floats : list of str
+        column names of the columns containing floats
+    dates : list of str
+        column names of the columns containing dates
+    redundant_notes : list of str
+        column names of the columns containing parenthses
+    do_nothing : list of str
+        column names of the columns to not touch but keep in final dataframe
+    dup_cols : list of str
+        column names of the columns to check for duplicate coins
+    production_place : str
+        column name of the production place data
+    denomination : str
+        column name of the denomination data
+    
+    Returns
+    -------
+    Returns a dataframe with corresponding input columns cleaned accordinly, the other columns removed, and 
+    removing duplicate coins if all the values in columns dup_cols are the same.
+    '''
+    result = pd.DataFrame()
+    for lst in lists:
+        result[lst] = df[lst].apply(cleanList)
+    for string in strings:
+        result[string] = df[string].apply(cleanString)
+    for flot in floats:
+        result[flot] = df[flot].apply(float_conversion).replace(np.nan, -1)
+    for date in dates:
+        result[date] = df[date].apply(dateRange)
+    for col in redundant_notes:
+        result[col] = result[col].apply(removeNotes)
+    for col in do_nothing:
+        result[col] = df[col]
+    
+    # Reindex dataframe and remove duplicates
+    result = result.reindex_axis(sorted(result.columns), axis=1)
+    result = (result.drop_duplicates(subset=dup_cols).reset_index(drop=True))
+    
+    # Special cases to handle
+    result.loc[result[production_place] == 'Bilbilis|Italica', production_place] = "Spain"
+    result.loc[result[production_place] == 'Spain II', production_place] = "Spain"
+    result.loc[result[production_place] == 'Lyon', production_place] = "Lugdunum"
+    result.loc[result[denomination] == 'Denarius|Struck', denomination] = "Denarius"
+    result.loc[result[denomination] == 'As|Struck', denomination] = "As"
+    result.loc[result[denomination] == '', denomination] = "?"
+    result = result[(result[production_place] != 'Gaul')] #too vague
+    result = result[(result[denomination] != 'unit')]
+    result = result[(result[denomination] != 'Struck')]
+    
     return result
 
 

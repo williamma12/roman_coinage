@@ -102,7 +102,7 @@ def makeStackedBar(df, x, y, sort_x=False, x_ascending=True, sort_bars=False, ba
 
 
 def makeMap(df, locations, vals, x_ranges=(-20000000, 20000000), 
-            y_ranges=(-20000000, 20000000), path='', ext='.json', 
+            y_ranges=(-20000000, 20000000), mintsFile='', path='', ext='.json', 
             map_tile=STAMEN_TERRAIN, palette=grey, colors_ascending=True, 
             pt_size=lambda x: x, title='Production place'):
     '''
@@ -118,6 +118,8 @@ def makeMap(df, locations, vals, x_ranges=(-20000000, 20000000),
         x-axis range in meters
     y_ranges : tuple
         y-axis range in meters
+    mintsFile : str
+        Path to the ANS mints file
     path : str
         Path to the geoJSON file
     ext : str
@@ -148,11 +150,19 @@ def makeMap(df, locations, vals, x_ranges=(-20000000, 20000000),
     colors = palette(len(df[locations].unique()))
     if colors_ascending:
         colors = colors[::-1]
+
+    # Create dictionary of coordinates
+    mintLocations = {}
+    data = pygeoj.load(mintsFile)
+    for feature in data:
+        name = feature.properties['name']
+        coordinate = feature.geometry.coordinates
+        mintLocations[name] = coordinate
         
     # Initialize counter
     row = 0
 
-    # Convert coordinates from lat/long to meters
+    # object to convert coordinates from lat/long to meters
     from_proj = Proj(init="epsg:4326")
     to_proj = Proj(init="epsg:3857")
 
@@ -164,8 +174,11 @@ def makeMap(df, locations, vals, x_ranges=(-20000000, 20000000),
         is_point = False
 
         # Get coordinates of the location
-        data = pygeoj.load(filepath=path+str(loc)+'.'+ext)
-        coors = data[0].geometry.coordinates
+        if loc in mintLocations:
+            coors = mintLocations[loc]
+        else:
+            data = pygeoj.load(filepath=path+str(loc)+'.'+ext)
+            coors = data[0].geometry.coordinates
         if len(coors) == 2:
             is_point = True
             x, y = transform(from_proj, to_proj, coors[0], coors[1])
