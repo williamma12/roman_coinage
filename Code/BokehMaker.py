@@ -147,7 +147,7 @@ def makeMap(df, locations, vals, x_ranges=(-20000000, 20000000),
                             index=range(len(locs)))
     
     # Create colors list
-    colors = palette(len(df[locations].unique()))
+    colors = palette(len(df[vals].unique()))
     if colors_ascending:
         colors = colors[::-1]
 
