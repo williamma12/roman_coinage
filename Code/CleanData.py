@@ -2,8 +2,70 @@ import re
 import numpy as np
 import pandas as pd
 import sqlite3
-            
-def stringToList(sep=', '):
+
+def makeQuery(tableName, columns=['*'], conditions=[]):
+    '''
+    Parameters
+    ----------
+    tableName: str
+        name of the table to get the data from
+    columns: list
+        list of the columns desired
+    conditions: list
+        list of the conditions (contained within a list) to filter the rows 
+        
+    Returns
+    -------
+    Returns a SQL query from the tableName with the columns and filtered by the conditions
+    
+    DocTests
+    --------
+    >>> makeQuery(foo)
+    'SELECT * FROM foo'
+    >>> makeQuery(bar, columns=['foo', 'car'], conditions=[['IN', 'col', 'yes']])
+    'SELECT foo, car FROM bar WHERE col IN (?)
+    '''
+    cols = ', '.join(col for col in columns)
+    conds = []
+    if conditions != []:
+        for cond in conditions:
+            placeholder= '?'
+            placeholders= ', '.join(placeholder for _ in cond[2])
+            cond = cond[1] + ' ' + cond[0] + ' (' + placeholders + ')'
+            conds.append(cond)
+        conds = ' AND '.join(conds)
+        conds = ' WHERE ' + conds
+    else:
+        conds = ''
+    query = 'SELECT ' + cols + ' FROM ' + tableName + conds
+    return query
+
+
+def readQuery(fileName, tableName, columns=['*'], conditions=[]):
+    cnx = sqlite3.connect('../Data/'+fileName)
+    cursor = cnx.cursor()
+    query = makeQuery(tableName, columns=columns, conditions=conditions)
+    if conditions == []:
+        cursor.execute(query)
+    else:
+        vals = []
+        for cond in conditions:
+            vals += cond[2]
+        cursor.execute(query, vals)
+        
+    rows = cursor.fetchall()
+    
+    if columns == ['*']:
+        columnNames = [description[0] for description in cursor.description]
+        df = pd.DataFrame(rows)
+        df.columns = columnNames
+    else:
+        df = pd.DataFrame(rows, columns=columns)
+    
+    return df
+
+
+def stringToList(sep=', ', valType=str):
     '''
     Parameters
     ---------
@@ -22,7 +84,7 @@ def stringToList(sep=', '):
 
     def seperator(string):
         result = string.strip('[]{}')
-        return result.split(sep)
+        return [valType(val) for val in result.split(sep)]
 
     return seperator
 
@@ -394,18 +456,7 @@ def cleanDF(df, lists, strings, floats, dates, redundant_notes, do_nothing,
     # Reindex dataframe and remove duplicates
     result = result.reindex_axis(sorted(result.columns), axis=1)
     result = (result.drop_duplicates(subset=dup_cols).reset_index(drop=True))
-    
-    # Special cases to handle
-    result.loc[result[production_place] == 'Bilbilis|Italica', production_place] = "Spain"
-    result.loc[result[production_place] == 'Spain II', production_place] = "Spain"
-    result.loc[result[production_place] == 'Lyon', production_place] = "Lugdunum"
-    result.loc[result[denomination] == 'Denarius|Struck', denomination] = "Denarius"
-    result.loc[result[denomination] == 'As|Struck', denomination] = "As"
     result.loc[result[denomination] == '', denomination] = "?"
-    result = result[(result[production_place] != 'Gaul')] #too vague
-    result = result[(result[denomination] != 'unit')]
-    result = result[(result[denomination] != 'Struck')]
-    
     return result
 
 
