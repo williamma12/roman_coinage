@@ -51,20 +51,12 @@ def containKeyword(df, keys, col_names):
     Returns a dataframe containing only rows that have the keyword in the given column
     '''
     def containIn(obj, key):
-        contained = False
-        cleaned_key = key.lower()
-        
-        if type(obj) == str:
-            if cleaned_key in obj.lower():
-                return True
-        elif type(obj) == tuple or type(obj) == list:
-            for item in obj:
-                if cleaned_key in item.lower():
-                    contained = True
-                    break
-                    
-        return contained
+        if key.lower() in obj.lower():
+            return True
+        else:
+            return False
     
+
     if len(keys) != len(col_names):
         raise ValueError('length of keys does not equal length of columns')
         
@@ -82,7 +74,7 @@ def containKeyword(df, keys, col_names):
     return result
 
 
-def makeTitle(dates, subject):
+def makeTitle(dates=[], subjects=[]):
     '''
     Parameters
     ----------
@@ -101,54 +93,62 @@ def makeTitle(dates, subject):
     "'Star' in coinage from 44BC to 31BC"
     '''
     result = ''
-    str_dates = []
-    for i, sub in enumerate(subject):
-        result += "'" + sub[0].upper() + sub[1:] + "'"
-        if len(subject) > 1:
-            if i != len(subject)-1:
-                result += ', '
-            if i == len(subject) - 2:
-                result += 'and '
-                
-    result += ' in coinage from '
+    if subjects:
+        for i, sub in enumerate(subjects):
+            result += "'" + sub[0].upper() + sub[1:] + "'"
+            if len(subjects) > 1:
+                if i != len(subjects)-1:
+                    result += ', '
+                if i == len(subjects) - 2:
+                    result += 'and '
+                    
+        result += ' in coinage from '
+    else:
+        result += 'Coinage from '
     
-    for date in dates:
-        if date < 0:
-            str_dates.append(str(abs(date)) + 'BC')
-        else:
-            str_dates.append(str(date) + 'BC')
-    
-    result += str_dates[0] + ' to ' + str_dates[1]
+    if dates:
+        str_dates = []
+        for date in dates:
+            if date < 0:
+                str_dates.append(str(abs(date)) + 'BC')
+            else:
+                str_dates.append(str(date) + 'BC')
+        
+        result += str_dates[0] + ' to ' + str_dates[1]
+        
     return result
 
 
-def makeCoinageStackedBar(df, title='', mint_col='mint', denom_col='denomination', y_label='Location Counts',
-                   y_range=(0, 500), legend_location = 'top_right', plot_size=('responsive',), colors=grey):
+def makeCoinageStackedBar(df, x_col='mint', stack_col='denomination', 
+        y_label='Location Counts', y_range=[], legend_location='top_right', 
+        plot_size=('responsive',), colors=viridis, title=''):
     '''
     '''
-    bar_plot = bp.makeStackedBar(df, mint_col, denom_col, sort_bars=True,
-                               bars_ascending=False, sort_stacks=True, stacks_agg='sum', stacks_ascending=False,
-                              colors=colors, title=title, plot_size=plot_size)
+    bar_plot = bp.makeStackedBar(df, x_col, stack_col, sort_bars=True, 
+            bars_ascending=False, sort_stacks=True, stacks_agg='sum', 
+            stacks_ascending=False, colors=colors, title=title, 
+            plot_size=plot_size)
 
     bar_plot.yaxis.axis_label=y_label
-    bar_plot.y_range = Range1d(y_range[0], y_range[1], bounds=y_range)
+    if y_range:
+        bar_plot.y_range = Range1d(y_range[0], y_range[1], bounds=y_range)
     bar_plot.legend.location = legend_location
-    bar_plot.add_tools(HoverTool(tooltips=[('Denomination', '@denomination'), 
-                                           ('Denomination Count', '@height'),
-                                           ('Location Count', '@Sum')]))
+    bar_plot.add_tools(HoverTool(tooltips=[(stack_col, '@'+stack_col), 
+                                           (stack_col + ' count', '@height'),
+                                           (x_col + ' count', '@Sum')]))
 
     return bar_plot
 
 
 def makeCoinageMap(df, title='', mint_col='mint', x_ranges=(-2.0e6, 5e6), y_ranges=(3.5e6, 7e6),
-                   pt_size=lambda x: x, colors_ascending=False):
+                   pt_size=lambda x: x, colors=grey, colors_ascending=False):
     '''
     '''
     counts = cd.prepareDataframeForMapping(df, col_name=mint_col)
 
     map_plot = bp.makeMap(counts, mint_col, 'Count', x_ranges=x_ranges, y_ranges=y_ranges, 
                           mintsFile='../GeoJSON/mints.geojson', path='../GeoJSON/', ext='html', 
-                          pt_size=pt_size, colors_ascending=colors_ascending)
+                          pt_size=pt_size, colors_ascending=colors_ascending, palette=colors)
     return map_plot
 
 

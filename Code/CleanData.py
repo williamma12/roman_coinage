@@ -84,7 +84,10 @@ def stringToList(sep=', ', valType=str):
 
     def seperator(string):
         result = string.strip('[]{}')
-        return [valType(val) for val in result.split(sep)]
+        if valType == int and result == '':
+            return 0
+        else:
+            return [valType(val) for val in result.split(sep)]
 
     return seperator
 
@@ -286,6 +289,7 @@ def cleanProductionPlace(string):
     place = string.split('Minted in: ')[-1].strip()
     if place == 'Lyon': 
         place = 'Lugdunum'
+    place = ''.join(x for x in place if x.isalpha())
     return place
 
 
@@ -452,7 +456,11 @@ def cleanDF(df, lists, strings, floats, dates, redundant_notes, do_nothing,
         result[col] = result[col].apply(removeNotes)
     for col in do_nothing:
         result[col] = df[col]
-    
+    try:
+        result[production_place] = result[production_place].apply(cleanProductionPlace)
+    except:
+        result[production_place] = df[production_place].apply(cleanProductionPlace)
+        
     # Reindex dataframe and remove duplicates
     result = result.reindex_axis(sorted(result.columns), axis=1)
     result = (result.drop_duplicates(subset=dup_cols).reset_index(drop=True))
