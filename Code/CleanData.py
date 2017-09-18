@@ -85,7 +85,7 @@ def stringToList(sep=', ', valType=str):
     def seperator(string):
         result = string.strip('[]{}')
         if valType == int and result == '':
-            return 0
+            return []
         else:
             return [valType(val) for val in result.split(sep)]
 

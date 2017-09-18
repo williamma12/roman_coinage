@@ -31,8 +31,10 @@ def coinsFromDates(df, date_range, col_name='date'):
         elif len(tup) == 2:
             if tup[0] >= begin and tup[1]<= end:
                 in_range = False
+        else:
+            in_range = False
         return in_range
-    return df[df.apply(lambda x: intWithinTupleRange(x[col_name]), axis=1)]
+    return df.apply(lambda x: intWithinTupleRange(x[col_name]), axis=1)
 
 
 def containKeyword(df, keys, col_names):
@@ -51,27 +53,29 @@ def containKeyword(df, keys, col_names):
     Returns a dataframe containing only rows that have the keyword in the given column
     '''
     def containIn(obj, key):
-        if key.lower() in obj.lower():
-            return True
+        if type(obj) == str:
+            if key.lower() in obj.lower():
+                return True
+            else:
+                return False
         else:
-            return False
+            for item in obj:
+                if key.lower() in obj.lower():
+                    return True
+                else:
+                    return False
     
 
     if len(keys) != len(col_names):
         raise ValueError('length of keys does not equal length of columns')
         
     for i, key in enumerate(keys):
-        if key == keys[0]:
-            try:
-                result = df[df.apply(lambda x: containIn(x[col_names[0]], keys[0]), axis=1)]
-                df = df.drop(df[df.apply(lambda x: containIn(x[col_names[0]], keys[0]), axis=1)], axis=1)
-            except:
-                raise ValueError('Missing keys')
-        else:
-            result.append(df[df.apply(lambda x: containIn(x[col_names[i]], key), axis=1)])
-            df = df.drop(df[df.apply(lambda x: containIn(x[col_names[i]], key), axis=1)], axis=1)
-            
-    return result
+        try:
+            result = df[col_names[0]].str.contains(keys[0], na=False)
+            df = df[result]
+        except:
+            raise ValueError('Missing keys')
+    return df
 
 
 def makeTitle(dates=[], subjects=[]):
