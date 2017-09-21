@@ -4,14 +4,15 @@ import numpy as np
 from pyproj import Proj, transform
 from bokeh.palettes import grey
 from bkcharts import Bar, show, defaults, cat
-from bokeh.models import GeoJSONDataSource, Circle, Legend, HoverTool, ColumnDataSource
+from bokeh.models import GeoJSONDataSource, Circle, Legend, HoverTool, ColumnDataSource, FactorRange
 from bokeh.plotting import figure
 from bokeh.tile_providers import STAMEN_TERRAIN
 from bokeh.models.glyphs import Patches
 from collections import OrderedDict
 
 def makeStackedBar(df, x, y, sort_x=False, x_ascending=True, sort_bars=False, bars_col='', bars_agg=None, bars_ascending=True, 
-                sort_stacks=False, stacks_col='', stacks_agg=None, stacks_ascending=True, colors=grey, title="title", plot_size=('responsive',)):
+                sort_stacks=False, stacks_col='', stacks_agg=None, stacks_ascending=True, colors=grey, title="title", plot_size=('responsive',),
+                stack_order=[]):
     '''
     Parameters
     ----------
@@ -45,6 +46,8 @@ def makeStackedBar(df, x, y, sort_x=False, x_ascending=True, sort_bars=False, ba
         Pass in a Bokeh color palette
     plot_size : tuple
         Either ('responsive') or (width, height)
+    stack_order : list
+        List to order the stacks by
 
     Returns
     -------
@@ -82,7 +85,8 @@ def makeStackedBar(df, x, y, sort_x=False, x_ascending=True, sort_bars=False, ba
     if sort_x:
         sort.append(x)
         ascend.append(x_ascending)
-    bar = bar.loc[bar.sort_values(sort, ascending=ascend).index]
+    if sort != [] and ascend != []:
+        bar = bar.loc[bar.sort_values(sort, ascending=ascend).index]
     unique_vals = bar[y].unique().size
 
     if plot_size[0] == 'responsive':
@@ -97,6 +101,8 @@ def makeStackedBar(df, x, y, sort_x=False, x_ascending=True, sort_bars=False, ba
                         plot_width=plot_size[0], plot_height=plot_size[1])
     else:
         raise ValueError('READ THE DOCUMENTATION YOU LAZY FUCK')
+    if stack_order != []:
+        bar_plot.x_range = FactorRange(factors=stack_order)
 
     return bar_plot
 

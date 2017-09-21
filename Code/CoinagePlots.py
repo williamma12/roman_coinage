@@ -23,18 +23,21 @@ def coinsFromDates(df, date_range, col_name='date'):
     '''
     begin = date_range[0]
     end = date_range[1]
-    def intWithinTupleRange(tup):
-        in_range = False
-        if len(tup) == 1:
-            if tup[0] >= begin and tup[0]<= end:
-                in_range = True
-        elif len(tup) == 2:
-            if tup[0] >= begin and tup[1]<= end:
-                in_range = False
-        else:
+    return df.apply(lambda x: intWithinTupleRange(x[col_name], begin, end), axis=1)
+
+
+def intWithinTupleRange(tup, begin, end):
+    '''Checks if the integer is within the boundaries given'''
+    in_range = False
+    if len(tup) == 1:
+        if tup[0] >= begin and tup[0]<= end:
+            in_range = True
+    elif len(tup) == 2:
+        if tup[0] >= begin and tup[1]<= end:
             in_range = False
-        return in_range
-    return df.apply(lambda x: intWithinTupleRange(x[col_name]), axis=1)
+    else:
+        in_range = False
+    return in_range
 
 
 def containKeyword(df, keys, col_names):
@@ -125,13 +128,14 @@ def makeTitle(dates=[], subjects=[]):
 
 def makeCoinageStackedBar(df, x_col='mint', stack_col='denomination', 
         y_label='Location Counts', y_range=[], legend_location='top_right', 
-        plot_size=('responsive',), colors=viridis, title=''):
+        plot_size=('responsive',), colors=viridis, title='', sort_bars=True,
+        sort_x=False, sort_stacks=True, stack_order=[]):
     '''
     '''
-    bar_plot = bp.makeStackedBar(df, x_col, stack_col, sort_bars=True, 
-            bars_ascending=False, sort_stacks=True, stacks_agg='sum', 
+    bar_plot = bp.makeStackedBar(df, x_col, stack_col, sort_bars=sort_bars, 
+            bars_ascending=False, sort_stacks=sort_stacks, stacks_agg='sum', 
             stacks_ascending=False, colors=colors, title=title, 
-            plot_size=plot_size)
+            plot_size=plot_size, sort_x=sort_x, stack_order=stack_order)
 
     bar_plot.yaxis.axis_label=y_label
     if y_range:
