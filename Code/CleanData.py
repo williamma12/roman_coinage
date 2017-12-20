@@ -463,7 +463,8 @@ def cleanDF(df, lists, strings, floats, dates, redundant_notes, do_nothing,
         
     # Reindex dataframe and remove duplicates
     result = result.reindex_axis(sorted(result.columns), axis=1)
-    result = (result.drop_duplicates(subset=dup_cols).reset_index(drop=True))
+    if dup_cols != None or dup_cols != []:
+        result = (result.drop_duplicates(subset=dup_cols).reset_index(drop=True))
     result.loc[result[denomination] == '', denomination] = "?"
     return result
 
