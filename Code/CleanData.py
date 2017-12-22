@@ -343,6 +343,31 @@ def makeDescription(material, manufacture, obverse, reverse):
     return result
 
 
+def makeDupCheckCol(material, denomination, portrait, mint, year):
+    '''
+    Parameters
+    ----------
+    material: str
+        Coin's material 
+    denomination: str
+        Coin's denomination
+    portrait: type that can be cast into a str
+        Portrait on the coin
+    mint: str
+        Mint of the coin
+    year: type that can be cast into a str
+        However formatted year as long as consistent throughout all entries
+
+    Returns
+    -------
+    Concatenates material, denomination, portrait, mint, and year into one big
+    string to check if the coin has a duplicate.
+    '''
+    result = (material + ' ' + denomination + ' ' + str(portrait) + ' ' 
+            + mint + ' ' + str(year))
+    return result
+
+
 def prepareDataframeForMapping(df, col_name='Production place'):
     '''
     Parameters
@@ -463,8 +488,7 @@ def cleanDF(df, lists, strings, floats, dates, redundant_notes, do_nothing,
         
     # Reindex dataframe and remove duplicates
     result = result.reindex_axis(sorted(result.columns), axis=1)
-    if dup_cols != None or dup_cols != []:
-        result = (result.drop_duplicates(subset=dup_cols).reset_index(drop=True))
+    result = (result.drop_duplicates(subset=dup_cols).reset_index(drop=True))
     result.loc[result[denomination] == '', denomination] = "?"
     return result
 
