@@ -1,0 +1,48 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Bokeh Plot</title>
+        
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-0.12.6.min.css" type="text/css" />
+        
+<script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-0.12.6.min.js"></script>
+<script type="text/javascript">
+    Bokeh.set_log_level("info");
+</script>
+        <style>
+          html {
+            width: 100%;
+            height: 100%;
+          }
+          body {
+            width: 90%;
+            height: 100%;
+            margin: auto;
+          }
+        </style>
+    </head>
+    <body>
+        
+        <div class="bk-root">
+            <div class="bk-plotdiv" id="8113a576-7c97-485e-a22f-7ec2bf868dae"></div>
+        </div>
+        
+        <script type="text/javascript">
+            (function() {
+          var fn = function() {
+            Bokeh.safely(function() {
+              var docs_json = {"1cba90d2-008a-4865-807e-63f83d0d0483":{"roots":{"references":[{"attributes":{"axis_label":"Emperors","formatter":{"id":"92a2f9dc-a292-41b3-9bad-020be6e6bf73","type":"CategoricalTickFormatter"},"major_label_orientation":0.7853981633974483,"plot":{"id":"d8a40556-1369-487a-bd67-5e5d600cf778","subtype":"Chart","type":"Plot"},"ticker":{"id":"67c5150d-a0e7-415e-b3c4-8062e4e8cf5d","type":"CategoricalTicker"}},"id":"f0ea1191-6706-4810-84ae-ed3d93d34361","type":"CategoricalAxis"},{"attributes":{"bottom_units":"screen","fill_alpha":{"value":0.5},"fill_color":{"value":"lightgrey"},"left_units":"screen","level":"overlay","line_alpha":{"value":1.0},"line_color":{"value":"black"},"line_dash":[4,4],"line_width":{"value":2},"plot":null,"render_mode":"css","right_units":"screen","top_units":"screen"},"id":"96cad7b2-50b3-4aa5-90e5-afe0a6151169","type":"BoxAnnotation"},{"attributes":{},"id":"bc2f66e5-6b84-4502-afc9-0b52d2ae2a6e","type":"BasicTicker"},{"attributes":{"active_drag":"auto","active_inspect":"auto","active_scroll":{"id":"f83ebe4b-5660-4dd7-8272-f1806ee1dd29","type":"WheelZoomTool"},"active_tap":"auto","tools":[{"id":"dcf69053-5850-47cd-a13f-526f88361358","type":"PanTool"},{"id":"f83ebe4b-5660-4dd7-8272-f1806ee1dd29","type":"WheelZoomTool"},{"id":"5f9eaa48-14f9-4c30-a3bf-8c10a7b417f9","type":"BoxZoomTool"},{"id":"71119f62-4961-4714-8b7d-2f6e464bd068","type":"SaveTool"},{"id":"fb48ec33-1ac9-4411-afa4-38ef7a9f7303","type":"ResetTool"},{"id":"3484d8b2-0a5c-4233-a53b-320189e48c70","type":"HelpTool"},{"id":"73ead638-2543-456e-9c3e-7feedad61bd9","type":"HoverTool"}]},"id":"966b7aa9-0989-4687-8936-c79a4760c0c0","type":"Toolbar"},{"attributes":{"callback":null,"column_names":["x","y","width","height","color","fill_alpha","line_color","line_alpha","label"],"data":{"chart_index":[{"emperor":"Claudius Gothicus"}],"color":["#f22c40"],"emperor":["Claudius Gothicus"],"fill_alpha":[0.8],"height":[1.0],"label":[{"emperor":"Claudius Gothicus"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Claudius Gothicus"],"y":[0.5]}},"id":"40fd9496-1892-4251-93bb-d56688b9290c","type":"ColumnDataSource"},{"attributes":{},"id":"e5631017-b59a-4cfe-9785-e26504d7c7b8","type":"ToolEvents"},{"attributes":{"data_source":{"id":"40fd9496-1892-4251-93bb-d56688b9290c","type":"ColumnDataSource"},"glyph":{"id":"79423f88-5a69-4942-9ce2-636bbe1ec602","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"41c8f829-2c35-4e5a-85d6-67cc6bdc9056","type":"GlyphRenderer"},{"attributes":{"callback":null,"column_names":["x","y","width","height","color","fill_alpha","line_color","line_alpha","label"],"data":{"chart_index":[{"emperor":"Gallienus"}],"color":["#f22c40"],"emperor":["Gallienus"],"fill_alpha":[0.8],"height":[1.0],"label":[{"emperor":"Gallienus"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Gallienus"],"y":[0.5]}},"id":"d8abd965-44b3-4521-9e58-70ccf838120b","type":"ColumnDataSource"},{"attributes":{"overlay":{"id":"96cad7b2-50b3-4aa5-90e5-afe0a6151169","type":"BoxAnnotation"},"plot":{"id":"d8a40556-1369-487a-bd67-5e5d600cf778","subtype":"Chart","type":"Plot"}},"id":"5f9eaa48-14f9-4c30-a3bf-8c10a7b417f9","type":"BoxZoomTool"},{"attributes":{"plot":{"id":"d8a40556-1369-487a-bd67-5e5d600cf778","subtype":"Chart","type":"Plot"}},"id":"fb48ec33-1ac9-4411-afa4-38ef7a9f7303","type":"ResetTool"},{"attributes":{"plot":{"id":"d8a40556-1369-487a-bd67-5e5d600cf778","subtype":"Chart","type":"Plot"}},"id":"71119f62-4961-4714-8b7d-2f6e464bd068","type":"SaveTool"},{"attributes":{"plot":{"id":"d8a40556-1369-487a-bd67-5e5d600cf778","subtype":"Chart","type":"Plot"}},"id":"f83ebe4b-5660-4dd7-8272-f1806ee1dd29","type":"WheelZoomTool"},{"attributes":{"dimension":1,"plot":{"id":"d8a40556-1369-487a-bd67-5e5d600cf778","subtype":"Chart","type":"Plot"},"ticker":{"id":"bc2f66e5-6b84-4502-afc9-0b52d2ae2a6e","type":"BasicTicker"}},"id":"cd19f8bb-32b5-48c0-99f2-8534a307c9d4","type":"Grid"},{"attributes":{},"id":"67c5150d-a0e7-415e-b3c4-8062e4e8cf5d","type":"CategoricalTicker"},{"attributes":{"plot":{"id":"d8a40556-1369-487a-bd67-5e5d600cf778","subtype":"Chart","type":"Plot"}},"id":"3484d8b2-0a5c-4233-a53b-320189e48c70","type":"HelpTool"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"79423f88-5a69-4942-9ce2-636bbe1ec602","type":"Rect"},{"attributes":{"callback":null,"factors":["Gallienus","Claudius Gothicus"]},"id":"ddaa37ff-bdf1-4cf7-a769-7188e2c6022d","type":"FactorRange"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"46cfcabb-fe72-4925-99e8-986452eba707","type":"Rect"},{"attributes":{},"id":"92a2f9dc-a292-41b3-9bad-020be6e6bf73","type":"CategoricalTickFormatter"},{"attributes":{},"id":"4fe4a050-1cf6-4d7c-bc07-210f76e65b50","type":"BasicTickFormatter"},{"attributes":{"axis_label":"Percentages","formatter":{"id":"4fe4a050-1cf6-4d7c-bc07-210f76e65b50","type":"BasicTickFormatter"},"plot":{"id":"d8a40556-1369-487a-bd67-5e5d600cf778","subtype":"Chart","type":"Plot"},"ticker":{"id":"bc2f66e5-6b84-4502-afc9-0b52d2ae2a6e","type":"BasicTicker"}},"id":"dd59e984-6dd1-487a-9240-682178baaecd","type":"LinearAxis"},{"attributes":{"plot":{"id":"d8a40556-1369-487a-bd67-5e5d600cf778","subtype":"Chart","type":"Plot"}},"id":"dcf69053-5850-47cd-a13f-526f88361358","type":"PanTool"},{"attributes":{"below":[{"id":"f0ea1191-6706-4810-84ae-ed3d93d34361","type":"CategoricalAxis"}],"css_classes":null,"left":[{"id":"dd59e984-6dd1-487a-9240-682178baaecd","type":"LinearAxis"}],"renderers":[{"id":"96cad7b2-50b3-4aa5-90e5-afe0a6151169","type":"BoxAnnotation"},{"id":"397e2c1b-9baf-499b-93a9-44da73db89f4","type":"GlyphRenderer"},{"id":"41c8f829-2c35-4e5a-85d6-67cc6bdc9056","type":"GlyphRenderer"},{"id":"f0ea1191-6706-4810-84ae-ed3d93d34361","type":"CategoricalAxis"},{"id":"dd59e984-6dd1-487a-9240-682178baaecd","type":"LinearAxis"},{"id":"cd19f8bb-32b5-48c0-99f2-8534a307c9d4","type":"Grid"}],"sizing_mode":"scale_width","title":{"id":"3dfc4ce3-4216-46d8-bed2-0019aa71c991","type":"Title"},"tool_events":{"id":"e5631017-b59a-4cfe-9785-e26504d7c7b8","type":"ToolEvents"},"toolbar":{"id":"966b7aa9-0989-4687-8936-c79a4760c0c0","type":"Toolbar"},"x_range":{"id":"ddaa37ff-bdf1-4cf7-a769-7188e2c6022d","type":"FactorRange"},"x_scale":{"id":"38050c06-b37b-4f7e-a9f1-d323bdafbd35","type":"CategoricalScale"},"y_range":{"id":"379bdbc3-bebd-4598-aedc-bf3afc245185","type":"Range1d"},"y_scale":{"id":"ee3b264a-5075-420e-b1bb-93f675d7dc0c","type":"LinearScale"}},"id":"d8a40556-1369-487a-bd67-5e5d600cf778","subtype":"Chart","type":"Plot"},{"attributes":{"plot":null,"text":"Ratio of Radiate by Emperor in hoxneHoard Plot"},"id":"3dfc4ce3-4216-46d8-bed2-0019aa71c991","type":"Title"},{"attributes":{"data_source":{"id":"d8abd965-44b3-4521-9e58-70ccf838120b","type":"ColumnDataSource"},"glyph":{"id":"46cfcabb-fe72-4925-99e8-986452eba707","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"397e2c1b-9baf-499b-93a9-44da73db89f4","type":"GlyphRenderer"},{"attributes":{},"id":"ee3b264a-5075-420e-b1bb-93f675d7dc0c","type":"LinearScale"},{"attributes":{},"id":"38050c06-b37b-4f7e-a9f1-d323bdafbd35","type":"CategoricalScale"},{"attributes":{"callback":null,"plot":{"id":"d8a40556-1369-487a-bd67-5e5d600cf778","subtype":"Chart","type":"Plot"},"tooltips":[["emperor","@emperor"],["Percentage","@percentages"]]},"id":"73ead638-2543-456e-9c3e-7feedad61bd9","type":"HoverTool"},{"attributes":{"callback":null,"end":1.05},"id":"379bdbc3-bebd-4598-aedc-bf3afc245185","type":"Range1d"}],"root_ids":["d8a40556-1369-487a-bd67-5e5d600cf778"]},"title":"Bokeh Application","version":"0.12.6"}};
+              var render_items = [{"docid":"1cba90d2-008a-4865-807e-63f83d0d0483","elementid":"8113a576-7c97-485e-a22f-7ec2bf868dae","modelid":"d8a40556-1369-487a-bd67-5e5d600cf778"}];
+              
+              Bokeh.embed.embed_items(docs_json, render_items);
+            });
+          };
+          if (document.readyState != "loading") fn();
+          else document.addEventListener("DOMContentLoaded", fn);
+        })();
+
+        </script>
+    </body>
+</html>
