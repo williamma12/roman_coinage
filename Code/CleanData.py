@@ -293,6 +293,111 @@ def cleanProductionPlace(string):
     return place
 
 
+def getInscriptions(insc):
+    '''
+    Parameters
+    ----------
+    insc : list of dicts
+        Data of the inscriptions
+
+    Returns
+    -------
+    Returns a panads Series with columns 'Obverse legend' and 'Reverse legend'
+    '''
+    obverse = []
+    reverse = []
+    for i in insc:
+        if 'Inscription Transliteration' in i:
+            content = i['Inscription Transliteration']
+        elif 'Inscription Content' in i:
+            content = i['Inscription Content']
+        else: 
+            continue
+        
+        content = re.sub(r'[^\x00-\x7f]',r' ', content)
+        if 'Inscription Position' in i:
+            position = i['Inscription Position']
+            if position == 'obverse':
+                obverse.append(content)
+            elif position == 'reverse':
+                reverse.append(content)
+    return pd.Series({'Obverse legend': obverse, 'Reverse legend': reverse})
+
+
+def cleanInscriptions(df, col_name = 'Inscriptions'):
+    '''
+    Parameters
+    ----------
+    df : pandas Dataframe
+        Dataframe contiaining data. Inscriptions should be put as a list of dicts
+    col_name : str
+        Column name of the inscriptions data
+    
+    Returns
+    -------
+    Returns dataframe with the columns 'Obverse legend' and 'Reverse legend'
+    '''
+    result = df.apply(lambda x: getInscriptions(x['Inscriptions']), axis=1)
+    reuslt = df.drop(col_name, axis=1)
+    return result
+
+def cleanDescription(desc):
+    """
+    Parameters
+    ----------
+    desc : str
+        String of the original description
+        
+    Returns
+    -------
+    Returns a description with just the description of the 
+    obverse and reversed with only letters and spaces. Also
+    removes extraneous words.
+    
+    DocTest
+    -------
+    >>> cleanDescription('Struck Silver. (obverse) Bust of Gallienus. (reverse) Concordia, draped, standing left.')
+    'Gallienus Concordia draped standing'
+    """
+    lst = re.split(". \([a-z]+\)", desc)
+    
+    if len(lst) == 2:
+        cleanedStr = lst[1]
+    elif len(lst) == 3:
+        cleanedStr = lst[1] + lst[2]
+    else:
+        cleanedStr = ""
+    
+    cleanedStr = re.sub(r'[^a-zA-Z ]+', '', cleanedStr)
+    
+    # Remove extraneous words
+    extra_words = ['Bust', 'of', 'with', 'left', 'who', 'when', 'which', 'there', 'the']
+    for word in extra_words:
+        cleanedStr = cleanedStr.replace(word, '')
+    
+    return cleanedStr.strip()
+
+
+def cleanDenomination(string):
+    '''
+    Parameter
+    ---------
+    string : str
+        String containing the denomination of the coin.
+
+    Return
+    ------
+    Returns the demonation string containing only letters
+
+    Doctests
+    --------
+
+    '''
+    string = string.split("|")[0]
+    string = re.sub(r'[^a-zA-Z ]+', '', string).lower()
+    return string
+
+
 def removeNotes(string):
     '''
     Parameter
@@ -385,55 +490,6 @@ def prepareDataframeForMapping(df, col_name='Production place'):
     result = df.groupby([col_name]).size().reset_index()
     result.columns = [col_name, 'Count']
     result = result.loc[result.sort_values(['Count'], ascending=False).index]
-    return result
-
-
-def getInscriptions(insc):
-    '''
-    Parameters
-    ----------
-    insc : list of dicts
-        Data of the inscriptions
-
-    Returns
-    -------
-    Returns a panads Series with columns 'Obverse legend' and 'Reverse legend'
-    '''
-    obverse = []
-    reverse = []
-    for i in insc:
-        if 'Inscription Transliteration' in i:
-            content = i['Inscription Transliteration']
-        elif 'Inscription Content' in i:
-            content = i['Inscription Content']
-        else: 
-            continue
-        
-        content = re.sub(r'[^\x00-\x7f]',r' ', content)
-        if 'Inscription Position' in i:
-            position = i['Inscription Position']
-            if position == 'obverse':
-                obverse.append(content)
-            elif position == 'reverse':
-                reverse.append(content)
-    return pd.Series({'Obverse legend': obverse, 'Reverse legend': reverse})
-
-
-def cleanInscriptions(df, col_name = 'Inscriptions'):
-    '''
-    Parameters
-    ----------
-    df : pandas Dataframe
-        Dataframe contiaining data. Inscriptions should be put as a list of dicts
-    col_name : str
-        Column name of the inscriptions data
-    
-    Returns
-    -------
-    Returns dataframe with the columns 'Obverse legend' and 'Reverse legend'
-    '''
-    result = df.apply(lambda x: getInscriptions(x['Inscriptions']), axis=1)
-    reuslt = df.drop(col_name, axis=1)
     return result
 
 
