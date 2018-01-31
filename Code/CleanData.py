@@ -17,7 +17,7 @@ def makeQuery(tableName, columns=['*'], conditions=[]):
     Returns
     -------
     Returns a SQL query from the tableName with the columns and filtered by the conditions
-    
+
     DocTests
     --------
     >>> makeQuery(foo)
@@ -54,7 +54,7 @@ def readQuery(fileName, tableName, columns=['*'], conditions=[]):
         cursor.execute(query, vals)
         
     rows = cursor.fetchall()
-    
+
     if columns == ['*']:
         columnNames = [description[0] for description in cursor.description]
         df = pd.DataFrame(rows)
