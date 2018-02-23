@@ -21,36 +21,10 @@ Simply run the code in Analyze Data.ipynb to see the relationships
 
 This project is licensed under the GLP-3.0 License - see the [LICENSE.md](LICENSE.md) file for details
 
-TODO:
+## TODO:
 
  * Add Acknowledgements
  * Complete Built With list
  * Put location counts on map
      * Include interactivity with simulated time passage
  * Explore other relationships
-
-## Plots:
-
-[Plots/americanNumismaticSociety_obverseCount_plot.html](Plots/americanNumismaticSociety_obverseCount_plot.html)
-[Plots/OCRE_radiate_counts_plot.html](Plots/OCRE_radiate_counts_plot.html)
-[Plots/.DS_Store](Plots/.DS_Store)
-[Plots/OCRE_obverseCount_plot.html](Plots/OCRE_obverseCount_plot.html)
-[Plots/allData_obverseCount_plot.html](Plots/allData_obverseCount_plot.html)
-[Plots/americanNumismaticSociety_counts_plot.html](Plots/americanNumismaticSociety_counts_plot.html)
-[Plots/hoxneHoard_ratios_plot.html](Plots/hoxneHoard_ratios_plot.html)
-[Plots/americanNumismaticSociety_ratios_plot.html](Plots/americanNumismaticSociety_ratios_plot.html)
-[Plots/hoxneHoard_counts_plot.html](Plots/hoxneHoard_counts_plot.html)
-[Plots/allData_counts_plot.html](Plots/allData_counts_plot.html)
-[Plots/allData_ratios_plot.html](Plots/allData_ratios_plot.html)
-[Plots/britishMuseum_radiate_counts_plot.html](Plots/britishMuseum_radiate_counts_plot.html)
-[Plots/britishMuseum_obverseCount_plot.html](Plots/britishMuseum_obverseCount_plot.html)
-[Plots/britishMuseum_reverseCount_plot.html](Plots/britishMuseum_reverseCount_plot.html)
-[Plots/allData_reverseCount_plot.html](Plots/allData_reverseCount_plot.html)
-[Plots/OCRE_reverseCount_plot.html](Plots/OCRE_reverseCount_plot.html)
-[Plots/OCRE_counts_plot.html](Plots/OCRE_counts_plot.html)
-[Plots/americanNumismaticSociety_reverseCount_plot.html](Plots/americanNumismaticSociety_reverseCount_plot.html)
-[Plots/britishMuseum_counts_plot.html](Plots/britishMuseum_counts_plot.html)
-[Plots/britishMuseum_ratios_plot.html](Plots/britishMuseum_ratios_plot.html)
-[Plots/OCRE_ratios_plot.html](Plots/OCRE_ratios_plot.html)
-[Plots/allData_radiate_counts_plot.html](Plots/allData_radiate_counts_plot.html)
-[Plots/americanNumismaticSociety_radiate_counts_plot.html](Plots/americanNumismaticSociety_radiate_counts_plot.html)
