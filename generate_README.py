@@ -45,7 +45,7 @@ TODO:
 
 '''
 
-plot_files = ["[Plots/{}]({})".format(f, f) for f in os.listdir('Plots/')]
+plot_files = ["[Plots/{}](Plots/{})".format(f, f) for f in os.listdir('Plots/')]
 plot_files_str = "\n".join(plot_files)
 
 readme = DEFAULT_README1 + plot_files_str
