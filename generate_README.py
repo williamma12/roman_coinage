@@ -12,10 +12,9 @@ import os
 
 DEFAULT_README1 = '''
 # Plots:
-
 '''
 
-plot_files = ["[{}](Plots/{})".format(f, f) for f in os.listdir('Plots/') if (f != '.DS_Store')]
+plot_files = ["\n[{}](Plots/{})\n".format(f, f) for f in os.listdir('Plots/') if (f != '.DS_Store')]
 plot_files_str = "\n".join(plot_files)
 
 readme = DEFAULT_README1 + plot_files_str
