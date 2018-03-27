@@ -1,0 +1,520 @@
+
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-0.12.14.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.14.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-tables-0.12.14.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-gl-0.12.14.min.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/ui/1.10.4/jquery-ui.min.js" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.20/require.min.js" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js" type="text/javascript"></script>
+<script type="text/javascript">function HoloViewsWidget(){
+}
+
+HoloViewsWidget.comms = {};
+HoloViewsWidget.comm_state = {};
+
+HoloViewsWidget.prototype.init_slider = function(init_val){
+  if(this.load_json) {
+    this.from_json()
+  } else {
+    this.update_cache();
+  }
+}
+
+HoloViewsWidget.prototype.populate_cache = function(idx){
+  this.cache[idx].html(this.frames[idx]);
+  if (this.embed) {
+    delete this.frames[idx];
+  }
+}
+
+HoloViewsWidget.prototype.process_error = function(msg){
+
+}
+
+HoloViewsWidget.prototype.from_json = function() {
+  var data_url = this.json_path + this.id + '.json';
+  $.getJSON(data_url, $.proxy(function(json_data) {
+    this.frames = json_data;
+    this.update_cache();
+    this.update(0);
+  }, this));
+}
+
+HoloViewsWidget.prototype.dynamic_update = function(current){
+  if (current === undefined) {
+    return
+  }
+  if(this.dynamic) {
+    current = JSON.stringify(current);
+  }
+  function callback(initialized, msg){
+    /* This callback receives data from Python as a string
+       in order to parse it correctly quotes are sliced off*/
+    if (msg.content.ename != undefined) {
+      this.process_error(msg);
+    }
+    if (msg.msg_type != "execute_result") {
+      console.log("Warning: HoloViews callback returned unexpected data for key: (", current, ") with the following content:", msg.content)
+    } else {
+      if (msg.content.data['text/plain'].includes('Complete')) {
+        if (this.queue.length > 0) {
+          this.time = Date.now();
+          this.dynamic_update(this.queue[this.queue.length-1]);
+          this.queue = [];
+        } else {
+          this.wait = false;
+        }
+        return
+      }
+    }
+  }
+  this.current = current;
+  if ((window.Jupyter !== undefined) && (Jupyter.notebook.kernel != null)) {
+    var kernel = Jupyter.notebook.kernel;
+    callbacks = {iopub: {output: $.proxy(callback, this, this.initialized)}};
+    var cmd = "holoviews.plotting.widgets.NdWidget.widgets['" + this.id + "'].update(" + current + ")";
+    kernel.execute("import holoviews;" + cmd, callbacks, {silent : false});
+  }
+}
+
+HoloViewsWidget.prototype.update_cache = function(force){
+  var frame_len = Object.keys(this.frames).length;
+  for (var i=0; i<frame_len; i++) {
+    if(!this.load_json || this.dynamic)  {
+      frame = Object.keys(this.frames)[i];
+    } else {
+      frame = i;
+    }
+    if(!(frame in this.cache) || force) {
+      if ((frame in this.cache) && force) { this.cache[frame].remove() }
+      this.cache[frame] = $('<div />').appendTo("#"+"_anim_img"+this.id).hide();
+      var cache_id = "_anim_img"+this.id+"_"+frame;
+      this.cache[frame].attr("id", cache_id);
+      this.populate_cache(frame);
+    }
+  }
+}
+
+HoloViewsWidget.prototype.update = function(current){
+  if(current in this.cache) {
+    $.each(this.cache, function(index, value) {
+      value.hide();
+    });
+    this.cache[current].show();
+    this.wait = false;
+  }
+}
+
+HoloViewsWidget.prototype.init_comms = function() {
+  if ((window.Jupyter !== undefined) && (Jupyter.notebook.kernel !== undefined)) {
+    var widget = this;
+    comm_manager = Jupyter.notebook.kernel.comm_manager;
+    comm_manager.register_target(this.id, function (comm) {
+      comm.on_msg(function (msg) { widget.process_msg(msg) });
+    });
+  }
+}
+
+HoloViewsWidget.prototype.process_msg = function(msg) {
+}
+
+function SelectionWidget(frames, id, slider_ids, keyMap, dim_vals, notFound, load_json, mode, cached, json_path, dynamic){
+  this.frames = frames;
+  this.id = id;
+  this.slider_ids = slider_ids;
+  this.keyMap = keyMap
+  this.current_frame = 0;
+  this.current_vals = dim_vals;
+  this.load_json = load_json;
+  this.mode = mode;
+  this.notFound = notFound;
+  this.cached = cached;
+  this.dynamic = dynamic;
+  this.cache = {};
+  this.json_path = json_path;
+  this.init_slider(this.current_vals[0]);
+  this.queue = [];
+  this.wait = false;
+  if (!this.cached || this.dynamic) {
+    this.init_comms()
+  }
+}
+
+SelectionWidget.prototype = new HoloViewsWidget;
+
+
+SelectionWidget.prototype.get_key = function(current_vals) {
+  var key = "(";
+  for (var i=0; i<this.slider_ids.length; i++)
+  {
+    val = this.current_vals[i];
+    if (!(typeof val === 'string')) {
+      if (val % 1 === 0) { val = val.toFixed(1); }
+      else { val = val.toFixed(10); val = val.slice(0, val.length-1);}
+    }
+    key += "'" + val + "'";
+    if(i != this.slider_ids.length-1) { key += ', ';}
+    else if(this.slider_ids.length == 1) { key += ',';}
+  }
+  key += ")";
+  return this.keyMap[key];
+}
+
+SelectionWidget.prototype.set_frame = function(dim_val, dim_idx){
+  this.current_vals[dim_idx] = dim_val;
+  var key = this.current_vals;
+  if (!this.dynamic) {
+    key = this.get_key(key)
+  }
+  if (this.dynamic || !this.cached) {
+    if ((this.time !== undefined) && ((this.wait) && ((this.time + 10000) > Date.now()))) {
+      this.queue.push(key);
+      return
+    }
+    this.queue = [];
+    this.time = Date.now();
+    this.current_frame = key;
+    this.wait = true;
+    this.dynamic_update(key)
+  } else if (key !== undefined) {
+    this.update(key)
+  }
+}
+
+
+/* Define the ScrubberWidget class */
+function ScrubberWidget(frames, num_frames, id, interval, load_json, mode, cached, json_path, dynamic){
+  this.slider_id = "_anim_slider" + id;
+  this.loop_select_id = "_anim_loop_select" + id;
+  this.id = id;
+  this.interval = interval;
+  this.current_frame = 0;
+  this.direction = 0;
+  this.dynamic = dynamic;
+  this.timer = null;
+  this.load_json = load_json;
+  this.mode = mode;
+  this.cached = cached;
+  this.frames = frames;
+  this.cache = {};
+  this.length = num_frames;
+  this.json_path = json_path;
+  document.getElementById(this.slider_id).max = this.length - 1;
+  this.init_slider(0);
+  this.wait = false;
+  this.queue = [];
+  if (!this.cached || this.dynamic) {
+    this.init_comms()
+  }
+}
+
+ScrubberWidget.prototype = new HoloViewsWidget;
+
+ScrubberWidget.prototype.set_frame = function(frame){
+  this.current_frame = frame;
+  widget = document.getElementById(this.slider_id);
+  if (widget === null) {
+    this.pause_animation();
+    return
+  }
+  widget.value = this.current_frame;
+  if(this.cached) {
+    this.update(frame)
+  } else {
+    this.dynamic_update(frame)
+  }
+}
+
+
+ScrubberWidget.prototype.get_loop_state = function(){
+  var button_group = document[this.loop_select_id].state;
+  for (var i = 0; i < button_group.length; i++) {
+    var button = button_group[i];
+    if (button.checked) {
+      return button.value;
+    }
+  }
+  return undefined;
+}
+
+
+ScrubberWidget.prototype.next_frame = function() {
+  this.set_frame(Math.min(this.length - 1, this.current_frame + 1));
+}
+
+ScrubberWidget.prototype.previous_frame = function() {
+  this.set_frame(Math.max(0, this.current_frame - 1));
+}
+
+ScrubberWidget.prototype.first_frame = function() {
+  this.set_frame(0);
+}
+
+ScrubberWidget.prototype.last_frame = function() {
+  this.set_frame(this.length - 1);
+}
+
+ScrubberWidget.prototype.slower = function() {
+  this.interval /= 0.7;
+  if(this.direction > 0){this.play_animation();}
+  else if(this.direction < 0){this.reverse_animation();}
+}
+
+ScrubberWidget.prototype.faster = function() {
+  this.interval *= 0.7;
+  if(this.direction > 0){this.play_animation();}
+  else if(this.direction < 0){this.reverse_animation();}
+}
+
+ScrubberWidget.prototype.anim_step_forward = function() {
+  if(this.current_frame < this.length - 1){
+    this.next_frame();
+  }else{
+    var loop_state = this.get_loop_state();
+    if(loop_state == "loop"){
+      this.first_frame();
+    }else if(loop_state == "reflect"){
+      this.last_frame();
+      this.reverse_animation();
+    }else{
+      this.pause_animation();
+      this.last_frame();
+    }
+  }
+}
+
+ScrubberWidget.prototype.anim_step_reverse = function() {
+  if(this.current_frame > 0){
+    this.previous_frame();
+  } else {
+    var loop_state = this.get_loop_state();
+    if(loop_state == "loop"){
+      this.last_frame();
+    }else if(loop_state == "reflect"){
+      this.first_frame();
+      this.play_animation();
+    }else{
+      this.pause_animation();
+      this.first_frame();
+    }
+  }
+}
+
+ScrubberWidget.prototype.pause_animation = function() {
+  this.direction = 0;
+  if (this.timer){
+    clearInterval(this.timer);
+    this.timer = null;
+  }
+}
+
+ScrubberWidget.prototype.play_animation = function() {
+  this.pause_animation();
+  this.direction = 1;
+  var t = this;
+  if (!this.timer) this.timer = setInterval(function(){t.anim_step_forward();}, this.interval);
+}
+
+ScrubberWidget.prototype.reverse_animation = function() {
+  this.pause_animation();
+  this.direction = -1;
+  var t = this;
+  if (!this.timer) this.timer = setInterval(function(){t.anim_step_reverse();}, this.interval);
+}
+
+function extend(destination, source) {
+  for (var k in source) {
+    if (source.hasOwnProperty(k)) {
+      destination[k] = source[k];
+    }
+  }
+  return destination;
+}
+
+function update_widget(widget, values) {
+  if (widget.hasClass("ui-slider")) {
+    widget.slider('option', {
+      min: 0,
+      max: values.length-1,
+      dim_vals: values,
+      value: 0,
+      dim_labels: values
+	})
+    widget.slider('option', 'slide').call(widget, event, {value: 0})
+  } else {
+    widget.empty();
+    for (var i=0; i<values.length; i++){
+      widget.append($("<option>", {
+        value: i,
+        text: values[i]
+      }))
+    };
+    widget.data('values', values);
+    widget.data('value', 0);
+    widget.trigger("change");
+  };
+}
+
+// Define Bokeh specific subclasses
+function BokehSelectionWidget() {
+	SelectionWidget.apply(this, arguments);
+}
+
+function BokehScrubberWidget() {
+	ScrubberWidget.apply(this, arguments);
+}
+
+// Let them inherit from the baseclasses
+BokehSelectionWidget.prototype = Object.create(SelectionWidget.prototype);
+BokehScrubberWidget.prototype = Object.create(ScrubberWidget.prototype);
+
+// Define methods to override on widgets
+var BokehMethods = {
+	update_cache : function(){
+		$.each(this.frames, $.proxy(function(index, frame) {
+			this.frames[index] = JSON.parse(frame);
+		}, this));
+	},
+	update : function(current){
+		if (current === undefined) {
+			var data = undefined;
+		} else {
+			var data = this.frames[current];
+		}
+		if (data !== undefined) {
+			var doc = Bokeh.index[data.root].model.document;
+			doc.apply_json_patch(data.content);
+		}
+	},
+	init_comms : function() {
+	}
+}
+
+// Extend Bokeh widgets with backend specific methods
+extend(BokehSelectionWidget.prototype, BokehMethods);
+extend(BokehScrubberWidget.prototype, BokehMethods);
+</script>
+
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-0.12.14.min.css">
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.14.min.css">
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-tables-0.12.14.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+<style>div.bk-hbox {
+    display: flex;
+    justify-content: center;
+}
+
+div.bk-hbox div.bk-plot {
+    padding: 8px;
+}
+
+div.bk-hbox div.bk-data-table {
+    padding: 20px;
+}
+
+div.hololayout {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+div.holoframe {
+	width: 75%;
+}
+
+div.holowell {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+form.holoform {
+    background-color: #fafafa;
+    border-radius: 5px;
+    overflow: hidden;
+	padding-left: 0.8em;
+    padding-right: 0.8em;
+    padding-top: 0.4em;
+    padding-bottom: 0.4em;
+}
+
+div.holowidgets {
+    padding-right: 0;
+	width: 25%;
+}
+
+div.holoslider {
+    min-height: 0 !important;
+    height: 0.8em;
+    width: 60%;
+}
+
+div.holoformgroup {
+    padding-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+div.hologroup {
+    padding-left: 0;
+    padding-right: 0.8em;
+    width: 50%;
+}
+
+.holoselect {
+    width: 92%;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.holotext {
+    width: 100%;
+    padding-left:  0.5em;
+    padding-right: 0;
+}
+
+.holowidgets .ui-resizable-se {
+	visibility: hidden
+}
+
+.holoframe > .ui-resizable-se {
+	visibility: hidden
+}
+
+.holowidgets .ui-resizable-s {
+	visibility: hidden
+}
+</style><div style='display: table; margin: 0 auto;'>
+
+<div class="bk-root">
+    <div class="bk-plotdiv" id="9caa8349-759a-4c1d-aac6-7358607295fe"></div>
+</div>
+<script type="text/javascript">
+  (function(root) {
+  function embed_document(root) {
+    
+  var docs_json = {"25242e0d-6313-4474-b812-52d9b3904304":{"roots":{"references":[{"attributes":{"overlay":{"id":"9a0382d8-2aa1-4aa6-81f1-930e82c53e54","type":"BoxAnnotation"}},"id":"607a854a-d9eb-40a9-98a5-86bf1892cba4","type":"BoxZoomTool"},{"attributes":{},"id":"07494915-8502-4d2f-92ea-dd1e66904293","type":"ResetTool"},{"attributes":{},"id":"c3651665-dea3-4d07-ac7f-627c23dedaf5","type":"LinearScale"},{"attributes":{"below":[{"id":"2eb57ecb-2876-4e54-97f9-bc9678130b96","type":"CategoricalAxis"}],"left":[{"id":"d5d6f429-7539-468d-bdd3-5dab36c63124","type":"LinearAxis"}],"min_border_bottom":10,"min_border_left":10,"min_border_right":10,"min_border_top":10,"renderers":[{"id":"2eb57ecb-2876-4e54-97f9-bc9678130b96","type":"CategoricalAxis"},{"id":"30cfd104-f927-4f50-8b75-49848dafea30","type":"Grid"},{"id":"d5d6f429-7539-468d-bdd3-5dab36c63124","type":"LinearAxis"},{"id":"2c7223fd-ead8-4307-95ee-4d4dc3ee3309","type":"Grid"},{"id":"9a0382d8-2aa1-4aa6-81f1-930e82c53e54","type":"BoxAnnotation"},{"id":"c9b9162c-b775-434c-bbd5-55e118e39d78","type":"Legend"},{"id":"56f4ad12-69d8-4e9e-b827-a53dd5fc1e1c","type":"GlyphRenderer"}],"sizing_mode":"stretch_both","title":{"id":"84d3ce77-fc65-4cdd-9ce8-dab87d0acf5e","type":"Title"},"toolbar":{"id":"4e98565c-4cfb-440f-8a4c-f4a84bfcb510","type":"Toolbar"},"x_range":{"id":"4810c66d-a718-4bb8-8618-5df3aacb3144","type":"FactorRange"},"x_scale":{"id":"1221e8f5-baf0-4a05-8e98-e05c4a45c175","type":"CategoricalScale"},"y_range":{"id":"de5d55d9-adc3-4588-a5e6-f789096fab60","type":"Range1d"},"y_scale":{"id":"c3651665-dea3-4d07-ac7f-627c23dedaf5","type":"LinearScale"}},"id":"f5ef3707-1e2b-48a8-9807-2b176bf98421","subtype":"Figure","type":"Plot"},{"attributes":{"grid_line_color":{"value":null},"plot":{"id":"f5ef3707-1e2b-48a8-9807-2b176bf98421","subtype":"Figure","type":"Plot"},"ticker":{"id":"6c0f841a-be4e-4dd8-81c1-bb5f10600004","type":"CategoricalTicker"}},"id":"30cfd104-f927-4f50-8b75-49848dafea30","type":"Grid"},{"attributes":{},"id":"9b4b28af-1306-4382-bf25-e528c158dbb6","type":"BasicTickFormatter"},{"attributes":{"label":{"field":"Word"},"renderers":[{"id":"56f4ad12-69d8-4e9e-b827-a53dd5fc1e1c","type":"GlyphRenderer"}]},"id":"2b14b106-5b2c-4dee-a4a8-a331c178e872","type":"LegendItem"},{"attributes":{},"id":"1df140cb-62be-4ed4-807e-906a8115930b","type":"CategoricalTickFormatter"},{"attributes":{"axis_label":"authority, Word","bounds":"auto","formatter":{"id":"1df140cb-62be-4ed4-807e-906a8115930b","type":"CategoricalTickFormatter"},"major_label_orientation":1.5707963267948966,"plot":{"id":"f5ef3707-1e2b-48a8-9807-2b176bf98421","subtype":"Figure","type":"Plot"},"ticker":{"id":"6c0f841a-be4e-4dd8-81c1-bb5f10600004","type":"CategoricalTicker"}},"id":"2eb57ecb-2876-4e54-97f9-bc9678130b96","type":"CategoricalAxis"},{"attributes":{"bottom":{"field":"bottom"},"fill_alpha":{"value":0.1},"fill_color":{"field":"Word","transform":{"id":"74940a6e-4e9e-48b4-82ee-2e24784025fc","type":"CategoricalColorMapper"}},"line_alpha":{"value":0.1},"line_color":{"value":"#000000"},"top":{"field":"top"},"width":{"value":0.5},"x":{"field":"authority"}},"id":"8854bcc5-72a5-4d78-8603-ae9b79da80d6","type":"VBar"},{"attributes":{"callback":null,"column_names":["bottom","top","authority","Word","Count"],"data":{"Count":[1,4,4,6,2,4,1,52,5,7,42,6,1,1,1,3,4,7,5,2,1,2,7,1,1,1,11,17,17,39,36,7,5,4,4,4,20,40,3,15,2,1,1,4,4,5,5,5,5,316,289,166,169,2,2,1,1,2,2,1,2,2,103,151,1,7,1,69,73,170,168,26,26,130,143,67,77,1,358,280,1,2,2,5,10,2,4,8,226,11,14,1,1,257,82,208,157,39,50,5,16,3,1,420,353,1574,1320,115,125,1,2,2,430,56,14,3,521,280,101,92,24,21,6,5,56,72,6,4,2,3,21,51,77,17,228,296,7,7,387,268,22,50,18,12,23,23,2,132,71,120,329,262,294,7,1,7,2,2,24,26,4,4],"Word":["laureate","laureate","draped","laureate","laureate","laureate","cuirassed","draped","laureate","cuirassed","draped","laureate","cuirassed","draped","laureate","draped","laureate","cuirassed","draped","cuirassed","draped","cuirassed","laureate","draped","cuirassed","draped","cuirassed","draped","laureate","cuirassed","draped","laureate","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","laureate","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","laureate","cuirassed","draped","laureate","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","draped","draped","draped","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","cuirassed","draped","cuirassed","draped","laureate","cuirassed","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","cuirassed","draped","laureate","cuirassed","draped","laureate","cuirassed","draped","laureate","cuirassed","draped","laureate","cuirassed","draped","cuirassed","draped","cuirassed","draped"],"authority":["Tiberius, Divus Augustus","Gaius/Caligula","Nero","Nero","Vespasian","Titus","Trajan","Trajan","Trajan","Hadrian","Hadrian","Hadrian","Hadrian, Divus Trajan","Hadrian, Divus Trajan","Hadrian, Divus Trajan","Antoninus Pius","Antoninus Pius","Marcus Aurelius","Marcus Aurelius","Lucius Verus","Lucius Verus","Commodus","Septimius Severus","Julia Domna","Geta","Geta","Septimius Severus, Caracalla","Septimius Severus, Caracalla","Septimius Severus, Caracalla","Caracalla","Caracalla","Caracalla","Macrinus","Macrinus","Diadumenian","Diadumenian","Elagabalus","Elagabalus","Severus Alexander","Severus Alexander","Severus Alexander","Maximinus I","Maximinus I","Maximinus Thrax","Maximinus Thrax","Balbinus","Balbinus","Pupienus","Pupienus","Gordian III","Gordian III","Philip the Arab","Philip the Arab","Philip II, Philip the Arab","Philip II, Philip the Arab","Philip the Arab, Otacilia Severa","Philip the Arab, Otacilia Severa","Philip II","Philip II","Pacatian","Pacatianus","Pacatianus","Trajan Decius","Trajan Decius","Hostilian","Hostilian","Herennius Etruscus","Volusian","Volusian","Trebonianus Gallus","Trebonianus Gallus","Aemilian","Aemilian","Valerian, Gallienus","Valerian, Gallienus","Valerian I","Valerian I","Valerian I","Gallienus","Gallienus","Gallienus","Valerian II","Valerian II","Saloninus","Saloninus","Valerian II Divus","Valerian II Divus","Postumus","Postumus","Macrianus Minor","Quietus","Macrianus II","Vabalathus","Claudius II Gothicus","Claudius II Gothicus","Claudius Gothicus","Claudius Gothicus","Quintillus","Quintillus","Marius","Marius","Laelianus","Laelianus","Victorinus","Victorinus","Tetricus I","Tetricus I","Tetricus II","Tetricus II","Claudius Gothicus Divus","uncertain","uncertain","Aurelian","Aurelian","Aurelian","Aurelian, Vabalathus","Probus","Probus","Tacitus","Tacitus","Florianus","Florianus","Florian","Florian","Carus","Carus","Carinus","Carinus","Numerian","Numerian","Numerian, Carinus","Numerian, Carinus","Carinus, Numerian","Carinus, Numerian","Diocletian","Diocletian","Constantius I","Constantius I","Maximian","Maximian","Carausius","Carausius","Allectus","Allectus","Maximinus Daia","Maximinus Daia","Maximinus Daia","Constantine I","Constantine I","Constantine I","Licinius","Licinius","Licinius","Licinius I","Licinius I","Licinius I","Constantine II","Constantine II","Constans","Constans","Constantius II","Constantius II"],"bottom":{"__ndarray__":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwPwAAAAAAgEpAAAAAAAAAAAAAAAAAAAAcQAAAAAAAgEhAAAAAAAAAAAAAAAAAAADwPwAAAAAAAABAAAAAAAAAAAAAAAAAAAAIQAAAAAAAAAAAAAAAAAAAHEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwPwAAAAAAAAAAAAAAAAAAJkAAAAAAAAA8QAAAAAAAAAAAAAAAAACAQ0AAAAAAAMBSQAAAAAAAAAAAAAAAAAAAFEAAAAAAAAAAAAAAAAAAABBAAAAAAAAAAAAAAAAAAAA0QAAAAAAAAAAAAAAAAAAACEAAAAAAAAAyQAAAAAAAAAAAAAAAAAAA8D8AAAAAAAAAAAAAAAAAABBAAAAAAAAAAAAAAAAAAAAUQAAAAAAAAAAAAAAAAAAAFEAAAAAAAAAAAAAAAAAAwHNAAAAAAAAAAAAAAAAAAMBkQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAPA/AAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAADAWUAAAAAAAAAAAAAAAAAAAPA/AAAAAAAAAAAAAAAAAAAAAAAAAAAAQFFAAAAAAAAAAAAAAAAAAEBlQAAAAAAAAAAAAAAAAAAAOkAAAAAAAAAAAAAAAAAAQGBAAAAAAAAAAAAAAAAAAMBQQAAAAAAAAGJAAAAAAAAAAAAAAAAAAGB2QAAAAAAA8INAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAFEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAgQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBwQAAAAAAAAAAAAAAAAAAAakAAAAAAAAAAAAAAAAAAgENAAAAAAAAAAAAAAAAAAAAUQAAAAAAAAAAAAAAAAAAACEAAAAAAAAAAAAAAAAAAQHpAAAAAAAAAAAAAAAAAAJiYQAAAAAAAAAAAAAAAAADAXEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAA4HpAAAAAAABgfkAAAAAAAAAAAAAAAAAAAAAAAAAAAABIgEAAAAAAAAAAAAAAAAAAQFlAAAAAAAAAAAAAAAAAAAA4QAAAAAAAAAAAAAAAAAAAGEAAAAAAAAAAAAAAAAAAAExAAAAAAAAAAAAAAAAAAAAYQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAADVAAAAAAAAAAAAAAAAAAEBTQAAAAAAAAAAAAAAAAACAbEAAAAAAAAAAAAAAAAAAABxAAAAAAAAAAAAAAAAAADB4QAAAAAAAAAAAAAAAAAAANkAAAAAAAAAAAAAAAAAAADJAAAAAAAAAAAAAAAAAAAA3QAAAAAAAAEdAAAAAAAAAAAAAAAAAAIBgQAAAAAAAYGlAAAAAAAAAAAAAAAAAAJB0QAAAAAAAeIJAAAAAAAAAAAAAAAAAAAAcQAAAAAAAACBAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAOEAAAAAAAAAAAAAAAAAAABBA","dtype":"float64","shape":[162]},"top":{"__ndarray__":"AAAAAAAA8D8AAAAAAAAQQAAAAAAAABBAAAAAAAAAJEAAAAAAAAAAQAAAAAAAABBAAAAAAAAA8D8AAAAAAIBKQAAAAAAAAE1AAAAAAAAAHEAAAAAAAIBIQAAAAAAAgEtAAAAAAAAA8D8AAAAAAAAAQAAAAAAAAAhAAAAAAAAACEAAAAAAAAAcQAAAAAAAABxAAAAAAAAAKEAAAAAAAAAAQAAAAAAAAAhAAAAAAAAAAEAAAAAAAAAcQAAAAAAAAPA/AAAAAAAA8D8AAAAAAAAAQAAAAAAAACZAAAAAAAAAPEAAAAAAAIBGQAAAAAAAgENAAAAAAADAUkAAAAAAAIBUQAAAAAAAABRAAAAAAAAAIkAAAAAAAAAQQAAAAAAAACBAAAAAAAAANEAAAAAAAABOQAAAAAAAAAhAAAAAAAAAMkAAAAAAAAA0QAAAAAAAAPA/AAAAAAAAAEAAAAAAAAAQQAAAAAAAACBAAAAAAAAAFEAAAAAAAAAkQAAAAAAAABRAAAAAAAAAJEAAAAAAAMBzQAAAAAAA6IJAAAAAAADAZEAAAAAAAPB0QAAAAAAAAABAAAAAAAAAEEAAAAAAAADwPwAAAAAAAABAAAAAAAAAAEAAAAAAAAAQQAAAAAAAAPA/AAAAAAAAAEAAAAAAAAAQQAAAAAAAwFlAAAAAAADAb0AAAAAAAADwPwAAAAAAACBAAAAAAAAA8D8AAAAAAEBRQAAAAAAAwGFAAAAAAABAZUAAAAAAACB1QAAAAAAAADpAAAAAAAAASkAAAAAAAEBgQAAAAAAAEHFAAAAAAADAUEAAAAAAAABiQAAAAAAAIGJAAAAAAABgdkAAAAAAAPCDQAAAAAAA+INAAAAAAAAAAEAAAAAAAAAQQAAAAAAAABRAAAAAAAAALkAAAAAAAAAAQAAAAAAAABhAAAAAAAAAIEAAAAAAAEBtQAAAAAAAACZAAAAAAAAALEAAAAAAAADwPwAAAAAAAPA/AAAAAAAQcEAAAAAAADB1QAAAAAAAAGpAAAAAAADQdkAAAAAAAIBDQAAAAAAAQFZAAAAAAAAAFEAAAAAAAAA1QAAAAAAAAAhAAAAAAAAAEEAAAAAAAEB6QAAAAAAAKIhAAAAAAACYmEAAAAAAAJymQAAAAAAAwFxAAAAAAAAAbkAAAAAAAADwPwAAAAAAAABAAAAAAAAAEEAAAAAAAOB6QAAAAAAAYH5AAAAAAABAf0AAAAAAAAAIQAAAAAAASIBAAAAAAAAIiUAAAAAAAEBZQAAAAAAAIGhAAAAAAAAAOEAAAAAAAIBGQAAAAAAAABhAAAAAAAAAJkAAAAAAAABMQAAAAAAAAGBAAAAAAAAAGEAAAAAAAAAkQAAAAAAAAABAAAAAAAAAFEAAAAAAAAA1QAAAAAAAAFJAAAAAAABAU0AAAAAAAIBXQAAAAAAAgGxAAAAAAABggEAAAAAAAAAcQAAAAAAAACxAAAAAAAAweEAAAAAAAHiEQAAAAAAAADZAAAAAAAAAUkAAAAAAAAAyQAAAAAAAAD5AAAAAAAAAN0AAAAAAAABHQAAAAAAAAEhAAAAAAACAYEAAAAAAAGBpQAAAAAAAMHRAAAAAAACQdEAAAAAAAHiCQAAAAAAAqItAAAAAAAAAHEAAAAAAAAAgQAAAAAAAAC5AAAAAAAAAAEAAAAAAAAAQQAAAAAAAADhAAAAAAAAASUAAAAAAAAAQQAAAAAAAACBA","dtype":"float64","shape":[162]}}},"id":"fcea0000-03fa-4ed8-8a73-b1b3488d025b","type":"ColumnDataSource"},{"attributes":{},"id":"1221e8f5-baf0-4a05-8e98-e05c4a45c175","type":"CategoricalScale"},{"attributes":{},"id":"f285ff4b-6feb-4d60-9e05-5252328c7e23","type":"SaveTool"},{"attributes":{"bottom":{"field":"bottom"},"fill_color":{"field":"Word","transform":{"id":"74940a6e-4e9e-48b4-82ee-2e24784025fc","type":"CategoricalColorMapper"}},"line_color":{"value":"#000000"},"top":{"field":"top"},"width":{"value":0.5},"x":{"field":"authority"}},"id":"55f81b80-736a-4a62-9da6-1497b38af481","type":"VBar"},{"attributes":{"axis_label":"Count","bounds":"auto","formatter":{"id":"9b4b28af-1306-4382-bf25-e528c158dbb6","type":"BasicTickFormatter"},"major_label_orientation":"horizontal","plot":{"id":"f5ef3707-1e2b-48a8-9807-2b176bf98421","subtype":"Figure","type":"Plot"},"ticker":{"id":"e72a71e2-60fe-432e-acf7-22343c07e1e7","type":"BasicTicker"}},"id":"d5d6f429-7539-468d-bdd3-5dab36c63124","type":"LinearAxis"},{"attributes":{"active_drag":"auto","active_inspect":"auto","active_scroll":"auto","active_tap":"auto","tools":[{"id":"2989b1a3-50f8-4960-9cee-8bebbc8a8647","type":"HoverTool"},{"id":"f285ff4b-6feb-4d60-9e05-5252328c7e23","type":"SaveTool"},{"id":"9a8fa943-801d-4486-9d9c-69de7bd8909b","type":"PanTool"},{"id":"df122e27-02f6-4ee2-b1a7-f46a95ed3051","type":"WheelZoomTool"},{"id":"607a854a-d9eb-40a9-98a5-86bf1892cba4","type":"BoxZoomTool"},{"id":"07494915-8502-4d2f-92ea-dd1e66904293","type":"ResetTool"},{"id":"9af3c473-6f25-4137-a76b-e2091e55e715","type":"WheelZoomTool"}]},"id":"4e98565c-4cfb-440f-8a4c-f4a84bfcb510","type":"Toolbar"},{"attributes":{},"id":"e72a71e2-60fe-432e-acf7-22343c07e1e7","type":"BasicTicker"},{"attributes":{"callback":null,"factors":["Tiberius, Divus Augustus","Gaius/Caligula","Nero","Vespasian","Titus","Trajan","Hadrian","Hadrian, Divus Trajan","Antoninus Pius","Marcus Aurelius","Lucius Verus","Commodus","Septimius Severus","Julia Domna","Geta","Septimius Severus, Caracalla","Caracalla","Macrinus","Diadumenian","Elagabalus","Severus Alexander","Maximinus I","Maximinus Thrax","Balbinus","Pupienus","Gordian III","Philip the Arab","Philip II, Philip the Arab","Philip the Arab, Otacilia Severa","Philip II","Pacatian","Pacatianus","Trajan Decius","Hostilian","Herennius Etruscus","Volusian","Trebonianus Gallus","Aemilian","Valerian, Gallienus","Valerian I","Gallienus","Valerian II","Saloninus","Valerian II Divus","Postumus","Macrianus Minor","Quietus","Macrianus II","Vabalathus","Claudius II Gothicus","Claudius Gothicus","Quintillus","Marius","Laelianus","Victorinus","Tetricus I","Tetricus II","Claudius Gothicus Divus","uncertain","Aurelian","Aurelian, Vabalathus","Probus","Tacitus","Florianus","Florian","Carus","Carinus","Numerian","Numerian, Carinus","Carinus, Numerian","Diocletian","Constantius I","Maximian","Carausius","Allectus","Maximinus Daia","Constantine I","Licinius","Licinius I","Constantine II","Constans","Constantius II"]},"id":"4810c66d-a718-4bb8-8618-5df3aacb3144","type":"FactorRange"},{"attributes":{"plot":null,"text":"Other Words on Obverse of 'radiate' Coins from americanNumismaticSociety by authority","text_color":{"value":"black"},"text_font_size":{"value":"12pt"}},"id":"84d3ce77-fc65-4cdd-9ce8-dab87d0acf5e","type":"Title"},{"attributes":{"items":[{"id":"2b14b106-5b2c-4dee-a4a8-a331c178e872","type":"LegendItem"}],"location":"top_left","plot":{"id":"f5ef3707-1e2b-48a8-9807-2b176bf98421","subtype":"Figure","type":"Plot"}},"id":"c9b9162c-b775-434c-bbd5-55e118e39d78","type":"Legend"},{"attributes":{"callback":null,"renderers":[{"id":"56f4ad12-69d8-4e9e-b827-a53dd5fc1e1c","type":"GlyphRenderer"}],"tooltips":[["authority","@{authority}"],["Word","@{Word}"],["Count","@{Count}"]]},"id":"2989b1a3-50f8-4960-9cee-8bebbc8a8647","type":"HoverTool"},{"attributes":{"dimensions":"width"},"id":"9af3c473-6f25-4137-a76b-e2091e55e715","type":"WheelZoomTool"},{"attributes":{},"id":"9a8fa943-801d-4486-9d9c-69de7bd8909b","type":"PanTool"},{"attributes":{"bottom_units":"screen","fill_alpha":{"value":0.5},"fill_color":{"value":"lightgrey"},"left_units":"screen","level":"overlay","line_alpha":{"value":1.0},"line_color":{"value":"black"},"line_dash":[4,4],"line_width":{"value":2},"plot":null,"render_mode":"css","right_units":"screen","top_units":"screen"},"id":"9a0382d8-2aa1-4aa6-81f1-930e82c53e54","type":"BoxAnnotation"},{"attributes":{"data_source":{"id":"fcea0000-03fa-4ed8-8a73-b1b3488d025b","type":"ColumnDataSource"},"glyph":{"id":"55f81b80-736a-4a62-9da6-1497b38af481","type":"VBar"},"hover_glyph":null,"muted_glyph":null,"nonselection_glyph":{"id":"8854bcc5-72a5-4d78-8603-ae9b79da80d6","type":"VBar"},"selection_glyph":null,"view":{"id":"3f989120-ac90-4bc2-8ef3-3426607500d3","type":"CDSView"}},"id":"56f4ad12-69d8-4e9e-b827-a53dd5fc1e1c","type":"GlyphRenderer"},{"attributes":{"dimension":1,"grid_line_color":{"value":null},"plot":{"id":"f5ef3707-1e2b-48a8-9807-2b176bf98421","subtype":"Figure","type":"Plot"},"ticker":{"id":"e72a71e2-60fe-432e-acf7-22343c07e1e7","type":"BasicTicker"}},"id":"2c7223fd-ead8-4307-95ee-4d4dc3ee3309","type":"Grid"},{"attributes":{},"id":"6c0f841a-be4e-4dd8-81c1-bb5f10600004","type":"CategoricalTicker"},{"attributes":{"callback":null,"end":2894.0},"id":"de5d55d9-adc3-4588-a5e6-f789096fab60","type":"Range1d"},{"attributes":{"source":{"id":"fcea0000-03fa-4ed8-8a73-b1b3488d025b","type":"ColumnDataSource"}},"id":"3f989120-ac90-4bc2-8ef3-3426607500d3","type":"CDSView"},{"attributes":{},"id":"df122e27-02f6-4ee2-b1a7-f46a95ed3051","type":"WheelZoomTool"},{"attributes":{"factors":["laureate","draped","cuirassed"],"palette":["#30a2da","#fc4f30","#e5ae38"]},"id":"74940a6e-4e9e-48b4-82ee-2e24784025fc","type":"CategoricalColorMapper"}],"root_ids":["f5ef3707-1e2b-48a8-9807-2b176bf98421"]},"title":"Bokeh Application","version":"0.12.14"}};
+  var render_items = [{"docid":"25242e0d-6313-4474-b812-52d9b3904304","elementid":"9caa8349-759a-4c1d-aac6-7358607295fe","modelid":"f5ef3707-1e2b-48a8-9807-2b176bf98421"}];
+  root.Bokeh.embed.embed_items_notebook(docs_json, render_items);
+
+  }
+  if (root.Bokeh !== undefined) {
+    embed_document(root);
+  } else {
+    var attempts = 0;
+    var timer = setInterval(function(root) {
+      if (root.Bokeh !== undefined) {
+        embed_document(root);
+        clearInterval(timer);
+      }
+      attempts++;
+      if (attempts > 100) {
+        console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing")
+        clearInterval(timer);
+      }
+    }, 10, root)
+  }
+})(window);
+</script>
+</div>

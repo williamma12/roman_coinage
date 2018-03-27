@@ -1,0 +1,520 @@
+
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-0.12.14.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.14.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-tables-0.12.14.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-gl-0.12.14.min.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/ui/1.10.4/jquery-ui.min.js" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.20/require.min.js" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js" type="text/javascript"></script>
+<script type="text/javascript">function HoloViewsWidget(){
+}
+
+HoloViewsWidget.comms = {};
+HoloViewsWidget.comm_state = {};
+
+HoloViewsWidget.prototype.init_slider = function(init_val){
+  if(this.load_json) {
+    this.from_json()
+  } else {
+    this.update_cache();
+  }
+}
+
+HoloViewsWidget.prototype.populate_cache = function(idx){
+  this.cache[idx].html(this.frames[idx]);
+  if (this.embed) {
+    delete this.frames[idx];
+  }
+}
+
+HoloViewsWidget.prototype.process_error = function(msg){
+
+}
+
+HoloViewsWidget.prototype.from_json = function() {
+  var data_url = this.json_path + this.id + '.json';
+  $.getJSON(data_url, $.proxy(function(json_data) {
+    this.frames = json_data;
+    this.update_cache();
+    this.update(0);
+  }, this));
+}
+
+HoloViewsWidget.prototype.dynamic_update = function(current){
+  if (current === undefined) {
+    return
+  }
+  if(this.dynamic) {
+    current = JSON.stringify(current);
+  }
+  function callback(initialized, msg){
+    /* This callback receives data from Python as a string
+       in order to parse it correctly quotes are sliced off*/
+    if (msg.content.ename != undefined) {
+      this.process_error(msg);
+    }
+    if (msg.msg_type != "execute_result") {
+      console.log("Warning: HoloViews callback returned unexpected data for key: (", current, ") with the following content:", msg.content)
+    } else {
+      if (msg.content.data['text/plain'].includes('Complete')) {
+        if (this.queue.length > 0) {
+          this.time = Date.now();
+          this.dynamic_update(this.queue[this.queue.length-1]);
+          this.queue = [];
+        } else {
+          this.wait = false;
+        }
+        return
+      }
+    }
+  }
+  this.current = current;
+  if ((window.Jupyter !== undefined) && (Jupyter.notebook.kernel != null)) {
+    var kernel = Jupyter.notebook.kernel;
+    callbacks = {iopub: {output: $.proxy(callback, this, this.initialized)}};
+    var cmd = "holoviews.plotting.widgets.NdWidget.widgets['" + this.id + "'].update(" + current + ")";
+    kernel.execute("import holoviews;" + cmd, callbacks, {silent : false});
+  }
+}
+
+HoloViewsWidget.prototype.update_cache = function(force){
+  var frame_len = Object.keys(this.frames).length;
+  for (var i=0; i<frame_len; i++) {
+    if(!this.load_json || this.dynamic)  {
+      frame = Object.keys(this.frames)[i];
+    } else {
+      frame = i;
+    }
+    if(!(frame in this.cache) || force) {
+      if ((frame in this.cache) && force) { this.cache[frame].remove() }
+      this.cache[frame] = $('<div />').appendTo("#"+"_anim_img"+this.id).hide();
+      var cache_id = "_anim_img"+this.id+"_"+frame;
+      this.cache[frame].attr("id", cache_id);
+      this.populate_cache(frame);
+    }
+  }
+}
+
+HoloViewsWidget.prototype.update = function(current){
+  if(current in this.cache) {
+    $.each(this.cache, function(index, value) {
+      value.hide();
+    });
+    this.cache[current].show();
+    this.wait = false;
+  }
+}
+
+HoloViewsWidget.prototype.init_comms = function() {
+  if ((window.Jupyter !== undefined) && (Jupyter.notebook.kernel !== undefined)) {
+    var widget = this;
+    comm_manager = Jupyter.notebook.kernel.comm_manager;
+    comm_manager.register_target(this.id, function (comm) {
+      comm.on_msg(function (msg) { widget.process_msg(msg) });
+    });
+  }
+}
+
+HoloViewsWidget.prototype.process_msg = function(msg) {
+}
+
+function SelectionWidget(frames, id, slider_ids, keyMap, dim_vals, notFound, load_json, mode, cached, json_path, dynamic){
+  this.frames = frames;
+  this.id = id;
+  this.slider_ids = slider_ids;
+  this.keyMap = keyMap
+  this.current_frame = 0;
+  this.current_vals = dim_vals;
+  this.load_json = load_json;
+  this.mode = mode;
+  this.notFound = notFound;
+  this.cached = cached;
+  this.dynamic = dynamic;
+  this.cache = {};
+  this.json_path = json_path;
+  this.init_slider(this.current_vals[0]);
+  this.queue = [];
+  this.wait = false;
+  if (!this.cached || this.dynamic) {
+    this.init_comms()
+  }
+}
+
+SelectionWidget.prototype = new HoloViewsWidget;
+
+
+SelectionWidget.prototype.get_key = function(current_vals) {
+  var key = "(";
+  for (var i=0; i<this.slider_ids.length; i++)
+  {
+    val = this.current_vals[i];
+    if (!(typeof val === 'string')) {
+      if (val % 1 === 0) { val = val.toFixed(1); }
+      else { val = val.toFixed(10); val = val.slice(0, val.length-1);}
+    }
+    key += "'" + val + "'";
+    if(i != this.slider_ids.length-1) { key += ', ';}
+    else if(this.slider_ids.length == 1) { key += ',';}
+  }
+  key += ")";
+  return this.keyMap[key];
+}
+
+SelectionWidget.prototype.set_frame = function(dim_val, dim_idx){
+  this.current_vals[dim_idx] = dim_val;
+  var key = this.current_vals;
+  if (!this.dynamic) {
+    key = this.get_key(key)
+  }
+  if (this.dynamic || !this.cached) {
+    if ((this.time !== undefined) && ((this.wait) && ((this.time + 10000) > Date.now()))) {
+      this.queue.push(key);
+      return
+    }
+    this.queue = [];
+    this.time = Date.now();
+    this.current_frame = key;
+    this.wait = true;
+    this.dynamic_update(key)
+  } else if (key !== undefined) {
+    this.update(key)
+  }
+}
+
+
+/* Define the ScrubberWidget class */
+function ScrubberWidget(frames, num_frames, id, interval, load_json, mode, cached, json_path, dynamic){
+  this.slider_id = "_anim_slider" + id;
+  this.loop_select_id = "_anim_loop_select" + id;
+  this.id = id;
+  this.interval = interval;
+  this.current_frame = 0;
+  this.direction = 0;
+  this.dynamic = dynamic;
+  this.timer = null;
+  this.load_json = load_json;
+  this.mode = mode;
+  this.cached = cached;
+  this.frames = frames;
+  this.cache = {};
+  this.length = num_frames;
+  this.json_path = json_path;
+  document.getElementById(this.slider_id).max = this.length - 1;
+  this.init_slider(0);
+  this.wait = false;
+  this.queue = [];
+  if (!this.cached || this.dynamic) {
+    this.init_comms()
+  }
+}
+
+ScrubberWidget.prototype = new HoloViewsWidget;
+
+ScrubberWidget.prototype.set_frame = function(frame){
+  this.current_frame = frame;
+  widget = document.getElementById(this.slider_id);
+  if (widget === null) {
+    this.pause_animation();
+    return
+  }
+  widget.value = this.current_frame;
+  if(this.cached) {
+    this.update(frame)
+  } else {
+    this.dynamic_update(frame)
+  }
+}
+
+
+ScrubberWidget.prototype.get_loop_state = function(){
+  var button_group = document[this.loop_select_id].state;
+  for (var i = 0; i < button_group.length; i++) {
+    var button = button_group[i];
+    if (button.checked) {
+      return button.value;
+    }
+  }
+  return undefined;
+}
+
+
+ScrubberWidget.prototype.next_frame = function() {
+  this.set_frame(Math.min(this.length - 1, this.current_frame + 1));
+}
+
+ScrubberWidget.prototype.previous_frame = function() {
+  this.set_frame(Math.max(0, this.current_frame - 1));
+}
+
+ScrubberWidget.prototype.first_frame = function() {
+  this.set_frame(0);
+}
+
+ScrubberWidget.prototype.last_frame = function() {
+  this.set_frame(this.length - 1);
+}
+
+ScrubberWidget.prototype.slower = function() {
+  this.interval /= 0.7;
+  if(this.direction > 0){this.play_animation();}
+  else if(this.direction < 0){this.reverse_animation();}
+}
+
+ScrubberWidget.prototype.faster = function() {
+  this.interval *= 0.7;
+  if(this.direction > 0){this.play_animation();}
+  else if(this.direction < 0){this.reverse_animation();}
+}
+
+ScrubberWidget.prototype.anim_step_forward = function() {
+  if(this.current_frame < this.length - 1){
+    this.next_frame();
+  }else{
+    var loop_state = this.get_loop_state();
+    if(loop_state == "loop"){
+      this.first_frame();
+    }else if(loop_state == "reflect"){
+      this.last_frame();
+      this.reverse_animation();
+    }else{
+      this.pause_animation();
+      this.last_frame();
+    }
+  }
+}
+
+ScrubberWidget.prototype.anim_step_reverse = function() {
+  if(this.current_frame > 0){
+    this.previous_frame();
+  } else {
+    var loop_state = this.get_loop_state();
+    if(loop_state == "loop"){
+      this.last_frame();
+    }else if(loop_state == "reflect"){
+      this.first_frame();
+      this.play_animation();
+    }else{
+      this.pause_animation();
+      this.first_frame();
+    }
+  }
+}
+
+ScrubberWidget.prototype.pause_animation = function() {
+  this.direction = 0;
+  if (this.timer){
+    clearInterval(this.timer);
+    this.timer = null;
+  }
+}
+
+ScrubberWidget.prototype.play_animation = function() {
+  this.pause_animation();
+  this.direction = 1;
+  var t = this;
+  if (!this.timer) this.timer = setInterval(function(){t.anim_step_forward();}, this.interval);
+}
+
+ScrubberWidget.prototype.reverse_animation = function() {
+  this.pause_animation();
+  this.direction = -1;
+  var t = this;
+  if (!this.timer) this.timer = setInterval(function(){t.anim_step_reverse();}, this.interval);
+}
+
+function extend(destination, source) {
+  for (var k in source) {
+    if (source.hasOwnProperty(k)) {
+      destination[k] = source[k];
+    }
+  }
+  return destination;
+}
+
+function update_widget(widget, values) {
+  if (widget.hasClass("ui-slider")) {
+    widget.slider('option', {
+      min: 0,
+      max: values.length-1,
+      dim_vals: values,
+      value: 0,
+      dim_labels: values
+	})
+    widget.slider('option', 'slide').call(widget, event, {value: 0})
+  } else {
+    widget.empty();
+    for (var i=0; i<values.length; i++){
+      widget.append($("<option>", {
+        value: i,
+        text: values[i]
+      }))
+    };
+    widget.data('values', values);
+    widget.data('value', 0);
+    widget.trigger("change");
+  };
+}
+
+// Define Bokeh specific subclasses
+function BokehSelectionWidget() {
+	SelectionWidget.apply(this, arguments);
+}
+
+function BokehScrubberWidget() {
+	ScrubberWidget.apply(this, arguments);
+}
+
+// Let them inherit from the baseclasses
+BokehSelectionWidget.prototype = Object.create(SelectionWidget.prototype);
+BokehScrubberWidget.prototype = Object.create(ScrubberWidget.prototype);
+
+// Define methods to override on widgets
+var BokehMethods = {
+	update_cache : function(){
+		$.each(this.frames, $.proxy(function(index, frame) {
+			this.frames[index] = JSON.parse(frame);
+		}, this));
+	},
+	update : function(current){
+		if (current === undefined) {
+			var data = undefined;
+		} else {
+			var data = this.frames[current];
+		}
+		if (data !== undefined) {
+			var doc = Bokeh.index[data.root].model.document;
+			doc.apply_json_patch(data.content);
+		}
+	},
+	init_comms : function() {
+	}
+}
+
+// Extend Bokeh widgets with backend specific methods
+extend(BokehSelectionWidget.prototype, BokehMethods);
+extend(BokehScrubberWidget.prototype, BokehMethods);
+</script>
+
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-0.12.14.min.css">
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.14.min.css">
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-tables-0.12.14.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+<style>div.bk-hbox {
+    display: flex;
+    justify-content: center;
+}
+
+div.bk-hbox div.bk-plot {
+    padding: 8px;
+}
+
+div.bk-hbox div.bk-data-table {
+    padding: 20px;
+}
+
+div.hololayout {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+div.holoframe {
+	width: 75%;
+}
+
+div.holowell {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+form.holoform {
+    background-color: #fafafa;
+    border-radius: 5px;
+    overflow: hidden;
+	padding-left: 0.8em;
+    padding-right: 0.8em;
+    padding-top: 0.4em;
+    padding-bottom: 0.4em;
+}
+
+div.holowidgets {
+    padding-right: 0;
+	width: 25%;
+}
+
+div.holoslider {
+    min-height: 0 !important;
+    height: 0.8em;
+    width: 60%;
+}
+
+div.holoformgroup {
+    padding-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+div.hologroup {
+    padding-left: 0;
+    padding-right: 0.8em;
+    width: 50%;
+}
+
+.holoselect {
+    width: 92%;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.holotext {
+    width: 100%;
+    padding-left:  0.5em;
+    padding-right: 0;
+}
+
+.holowidgets .ui-resizable-se {
+	visibility: hidden
+}
+
+.holoframe > .ui-resizable-se {
+	visibility: hidden
+}
+
+.holowidgets .ui-resizable-s {
+	visibility: hidden
+}
+</style><div style='display: table; margin: 0 auto;'>
+
+<div class="bk-root">
+    <div class="bk-plotdiv" id="89fe6e9e-aa3a-4c6c-843f-e983143e0cd6"></div>
+</div>
+<script type="text/javascript">
+  (function(root) {
+  function embed_document(root) {
+    
+  var docs_json = {"43be2f9a-632b-44df-89e3-c0430558a6ff":{"roots":{"references":[{"attributes":{},"id":"d490af15-9e21-470c-8699-8fe79d266008","type":"CategoricalTickFormatter"},{"attributes":{"callback":null,"renderers":[{"id":"5250a57e-73c7-4170-bb17-3ab7e88c8a43","type":"GlyphRenderer"}],"tooltips":[["authority","@{authority}"],["reverseType","@{reverseType}"]]},"id":"4ff561ef-12fb-421b-a712-c3253e348644","type":"HoverTool"},{"attributes":{},"id":"5fda26ca-931e-4a42-81b8-a9dc4e0bb362","type":"BasicTickFormatter"},{"attributes":{},"id":"426b51b4-5a71-4306-8544-aa18ce108a02","type":"CategoricalTicker"},{"attributes":{"overlay":{"id":"c58d48b4-b7fa-4112-b1c8-dd35d744a441","type":"BoxAnnotation"}},"id":"95906b1b-d4a7-42c7-a662-a743998816e7","type":"BoxZoomTool"},{"attributes":{},"id":"623811a2-417b-4af5-a99d-17093760e1ef","type":"CategoricalScale"},{"attributes":{"plot":null,"text":"'radiate' on Obverse and 'sol' on Reverse Coins from OCRE by Authority","text_color":{"value":"black"},"text_font_size":{"value":"12pt"}},"id":"eb1df792-7bbb-4286-a8ec-d6fdabaf83ec","type":"Title"},{"attributes":{},"id":"d5b3d5b7-dd9e-4a82-91fc-5e6a0f56ccce","type":"WheelZoomTool"},{"attributes":{"source":{"id":"b9556a98-97f0-4d95-90aa-f867ff9aa3d4","type":"ColumnDataSource"}},"id":"ef114f20-b635-438c-aeab-59be8d9a8c4a","type":"CDSView"},{"attributes":{},"id":"b92e690a-39b7-492d-9113-c84a488a5b65","type":"LinearScale"},{"attributes":{"items":[],"plot":{"id":"395e9ba5-8dab-411d-bf30-4049f348bc80","subtype":"Figure","type":"Plot"}},"id":"318890ae-f88f-440f-8991-36fa325357be","type":"Legend"},{"attributes":{"bottom_units":"screen","fill_alpha":{"value":0.5},"fill_color":{"value":"lightgrey"},"left_units":"screen","level":"overlay","line_alpha":{"value":1.0},"line_color":{"value":"black"},"line_dash":[4,4],"line_width":{"value":2},"plot":null,"render_mode":"css","right_units":"screen","top_units":"screen"},"id":"c58d48b4-b7fa-4112-b1c8-dd35d744a441","type":"BoxAnnotation"},{"attributes":{"dimension":1,"grid_line_color":{"value":null},"plot":{"id":"395e9ba5-8dab-411d-bf30-4049f348bc80","subtype":"Figure","type":"Plot"},"ticker":{"id":"0518277c-5b6c-4c88-870a-82e9e3795fd3","type":"BasicTicker"}},"id":"4b99b005-c705-4226-b69a-6d5d57559d43","type":"Grid"},{"attributes":{"below":[{"id":"27c9d74f-a041-45d7-831d-74b19b8b52f4","type":"CategoricalAxis"}],"left":[{"id":"4290c568-021f-45de-9207-5ba884c44bde","type":"LinearAxis"}],"min_border_bottom":10,"min_border_left":10,"min_border_right":10,"min_border_top":10,"renderers":[{"id":"27c9d74f-a041-45d7-831d-74b19b8b52f4","type":"CategoricalAxis"},{"id":"4cbd0c69-ef2c-4825-8d4f-67066cbd95f3","type":"Grid"},{"id":"4290c568-021f-45de-9207-5ba884c44bde","type":"LinearAxis"},{"id":"4b99b005-c705-4226-b69a-6d5d57559d43","type":"Grid"},{"id":"c58d48b4-b7fa-4112-b1c8-dd35d744a441","type":"BoxAnnotation"},{"id":"318890ae-f88f-440f-8991-36fa325357be","type":"Legend"},{"id":"5250a57e-73c7-4170-bb17-3ab7e88c8a43","type":"GlyphRenderer"}],"sizing_mode":"stretch_both","title":{"id":"eb1df792-7bbb-4286-a8ec-d6fdabaf83ec","type":"Title"},"toolbar":{"id":"04ae40cf-184b-4e14-ab36-247086928d69","type":"Toolbar"},"x_range":{"id":"eb52e1a0-e6da-4db7-a135-6dfb794e5fbf","type":"FactorRange"},"x_scale":{"id":"623811a2-417b-4af5-a99d-17093760e1ef","type":"CategoricalScale"},"y_range":{"id":"ba65fe07-6495-4e8a-ba31-878e04e803ef","type":"Range1d"},"y_scale":{"id":"b92e690a-39b7-492d-9113-c84a488a5b65","type":"LinearScale"}},"id":"395e9ba5-8dab-411d-bf30-4049f348bc80","subtype":"Figure","type":"Plot"},{"attributes":{"grid_line_color":{"value":null},"plot":{"id":"395e9ba5-8dab-411d-bf30-4049f348bc80","subtype":"Figure","type":"Plot"},"ticker":{"id":"426b51b4-5a71-4306-8544-aa18ce108a02","type":"CategoricalTicker"}},"id":"4cbd0c69-ef2c-4825-8d4f-67066cbd95f3","type":"Grid"},{"attributes":{},"id":"fcbce15e-cd61-4f14-a611-5296f6da20a1","type":"ResetTool"},{"attributes":{"axis_label":"reverseType","bounds":"auto","formatter":{"id":"5fda26ca-931e-4a42-81b8-a9dc4e0bb362","type":"BasicTickFormatter"},"major_label_orientation":"horizontal","plot":{"id":"395e9ba5-8dab-411d-bf30-4049f348bc80","subtype":"Figure","type":"Plot"},"ticker":{"id":"0518277c-5b6c-4c88-870a-82e9e3795fd3","type":"BasicTicker"}},"id":"4290c568-021f-45de-9207-5ba884c44bde","type":"LinearAxis"},{"attributes":{"callback":null,"factors":["Caracalla","Elagabalus","Severus Alexander","Gordian III","Philip the Arab","Valerian I","Valerian, Gallienus","Gallienus","Macrianus Minor","Quietus","Postumus","Claudius Gothicus","Claudius II Gothicus","Marius","Victorinus","Tetricus I","Quintillus","Aurelian","Probus","Tacitus","Florian","Florianus","Carus","Numerian","Numerian, Carinus","Maximian","Diocletian","Carausius","Constantine I"]},"id":"eb52e1a0-e6da-4db7-a135-6dfb794e5fbf","type":"FactorRange"},{"attributes":{"data_source":{"id":"b9556a98-97f0-4d95-90aa-f867ff9aa3d4","type":"ColumnDataSource"},"glyph":{"id":"4e5a5b5f-75b2-4613-a179-d366440a974d","type":"VBar"},"hover_glyph":null,"muted_glyph":null,"nonselection_glyph":{"id":"de2691f4-48ab-4109-a4f1-0e00dfe9bdfb","type":"VBar"},"selection_glyph":null,"view":{"id":"ef114f20-b635-438c-aeab-59be8d9a8c4a","type":"CDSView"}},"id":"5250a57e-73c7-4170-bb17-3ab7e88c8a43","type":"GlyphRenderer"},{"attributes":{"fill_color":{"value":"#30a2da"},"line_color":{"value":"#000000"},"top":{"field":"reverseType"},"width":{"value":0.5},"x":{"field":"authority"}},"id":"4e5a5b5f-75b2-4613-a179-d366440a974d","type":"VBar"},{"attributes":{},"id":"0518277c-5b6c-4c88-870a-82e9e3795fd3","type":"BasicTicker"},{"attributes":{"callback":null,"column_names":["authority","reverseType"],"data":{"authority":["Caracalla","Elagabalus","Severus Alexander","Gordian III","Philip the Arab","Valerian I","Valerian, Gallienus","Gallienus","Macrianus Minor","Quietus","Postumus","Claudius Gothicus","Claudius II Gothicus","Marius","Victorinus","Tetricus I","Quintillus","Aurelian","Probus","Tacitus","Florian","Florianus","Carus","Numerian","Numerian, Carinus","Maximian","Diocletian","Carausius","Constantine I"],"reverseType":[7,1,5,17,4,12,15,138,4,4,9,15,47,2,241,10,4,102,63,4,1,1,6,1,2,5,1,1,2]}},"id":"b9556a98-97f0-4d95-90aa-f867ff9aa3d4","type":"ColumnDataSource"},{"attributes":{},"id":"797ade9c-3095-4de3-a818-2884d57342e8","type":"SaveTool"},{"attributes":{},"id":"4e07d1c2-73fc-44bf-953f-a60fcb13d4fb","type":"PanTool"},{"attributes":{"active_drag":"auto","active_inspect":"auto","active_scroll":"auto","active_tap":"auto","tools":[{"id":"4ff561ef-12fb-421b-a712-c3253e348644","type":"HoverTool"},{"id":"797ade9c-3095-4de3-a818-2884d57342e8","type":"SaveTool"},{"id":"4e07d1c2-73fc-44bf-953f-a60fcb13d4fb","type":"PanTool"},{"id":"d5b3d5b7-dd9e-4a82-91fc-5e6a0f56ccce","type":"WheelZoomTool"},{"id":"95906b1b-d4a7-42c7-a662-a743998816e7","type":"BoxZoomTool"},{"id":"fcbce15e-cd61-4f14-a611-5296f6da20a1","type":"ResetTool"},{"id":"757be99c-0198-4c4a-86ab-1800f45decca","type":"WheelZoomTool"}]},"id":"04ae40cf-184b-4e14-ab36-247086928d69","type":"Toolbar"},{"attributes":{"axis_label":"authority","bounds":"auto","formatter":{"id":"d490af15-9e21-470c-8699-8fe79d266008","type":"CategoricalTickFormatter"},"major_label_orientation":1.5707963267948966,"plot":{"id":"395e9ba5-8dab-411d-bf30-4049f348bc80","subtype":"Figure","type":"Plot"},"ticker":{"id":"426b51b4-5a71-4306-8544-aa18ce108a02","type":"CategoricalTicker"}},"id":"27c9d74f-a041-45d7-831d-74b19b8b52f4","type":"CategoricalAxis"},{"attributes":{"callback":null,"end":241},"id":"ba65fe07-6495-4e8a-ba31-878e04e803ef","type":"Range1d"},{"attributes":{"dimensions":"width"},"id":"757be99c-0198-4c4a-86ab-1800f45decca","type":"WheelZoomTool"},{"attributes":{"fill_alpha":{"value":0.1},"fill_color":{"value":"#30a2da"},"line_alpha":{"value":0.1},"line_color":{"value":"#000000"},"top":{"field":"reverseType"},"width":{"value":0.5},"x":{"field":"authority"}},"id":"de2691f4-48ab-4109-a4f1-0e00dfe9bdfb","type":"VBar"}],"root_ids":["395e9ba5-8dab-411d-bf30-4049f348bc80"]},"title":"Bokeh Application","version":"0.12.14"}};
+  var render_items = [{"docid":"43be2f9a-632b-44df-89e3-c0430558a6ff","elementid":"89fe6e9e-aa3a-4c6c-843f-e983143e0cd6","modelid":"395e9ba5-8dab-411d-bf30-4049f348bc80"}];
+  root.Bokeh.embed.embed_items_notebook(docs_json, render_items);
+
+  }
+  if (root.Bokeh !== undefined) {
+    embed_document(root);
+  } else {
+    var attempts = 0;
+    var timer = setInterval(function(root) {
+      if (root.Bokeh !== undefined) {
+        embed_document(root);
+        clearInterval(timer);
+      }
+      attempts++;
+      if (attempts > 100) {
+        console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing")
+        clearInterval(timer);
+      }
+    }, 10, root)
+  }
+})(window);
+</script>
+</div>
