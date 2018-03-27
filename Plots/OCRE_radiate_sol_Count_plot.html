@@ -1,48 +1,520 @@
 
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <title>Bokeh Plot</title>
-        
-<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-0.12.6.min.css" type="text/css" />
-        
-<script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-0.12.6.min.js"></script>
-<script type="text/javascript">
-    Bokeh.set_log_level("info");
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-0.12.14.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.14.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-tables-0.12.14.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-gl-0.12.14.min.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/ui/1.10.4/jquery-ui.min.js" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.20/require.min.js" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js" type="text/javascript"></script>
+<script type="text/javascript">function HoloViewsWidget(){
+}
+
+HoloViewsWidget.comms = {};
+HoloViewsWidget.comm_state = {};
+
+HoloViewsWidget.prototype.init_slider = function(init_val){
+  if(this.load_json) {
+    this.from_json()
+  } else {
+    this.update_cache();
+  }
+}
+
+HoloViewsWidget.prototype.populate_cache = function(idx){
+  this.cache[idx].html(this.frames[idx]);
+  if (this.embed) {
+    delete this.frames[idx];
+  }
+}
+
+HoloViewsWidget.prototype.process_error = function(msg){
+
+}
+
+HoloViewsWidget.prototype.from_json = function() {
+  var data_url = this.json_path + this.id + '.json';
+  $.getJSON(data_url, $.proxy(function(json_data) {
+    this.frames = json_data;
+    this.update_cache();
+    this.update(0);
+  }, this));
+}
+
+HoloViewsWidget.prototype.dynamic_update = function(current){
+  if (current === undefined) {
+    return
+  }
+  if(this.dynamic) {
+    current = JSON.stringify(current);
+  }
+  function callback(initialized, msg){
+    /* This callback receives data from Python as a string
+       in order to parse it correctly quotes are sliced off*/
+    if (msg.content.ename != undefined) {
+      this.process_error(msg);
+    }
+    if (msg.msg_type != "execute_result") {
+      console.log("Warning: HoloViews callback returned unexpected data for key: (", current, ") with the following content:", msg.content)
+    } else {
+      if (msg.content.data['text/plain'].includes('Complete')) {
+        if (this.queue.length > 0) {
+          this.time = Date.now();
+          this.dynamic_update(this.queue[this.queue.length-1]);
+          this.queue = [];
+        } else {
+          this.wait = false;
+        }
+        return
+      }
+    }
+  }
+  this.current = current;
+  if ((window.Jupyter !== undefined) && (Jupyter.notebook.kernel != null)) {
+    var kernel = Jupyter.notebook.kernel;
+    callbacks = {iopub: {output: $.proxy(callback, this, this.initialized)}};
+    var cmd = "holoviews.plotting.widgets.NdWidget.widgets['" + this.id + "'].update(" + current + ")";
+    kernel.execute("import holoviews;" + cmd, callbacks, {silent : false});
+  }
+}
+
+HoloViewsWidget.prototype.update_cache = function(force){
+  var frame_len = Object.keys(this.frames).length;
+  for (var i=0; i<frame_len; i++) {
+    if(!this.load_json || this.dynamic)  {
+      frame = Object.keys(this.frames)[i];
+    } else {
+      frame = i;
+    }
+    if(!(frame in this.cache) || force) {
+      if ((frame in this.cache) && force) { this.cache[frame].remove() }
+      this.cache[frame] = $('<div />').appendTo("#"+"_anim_img"+this.id).hide();
+      var cache_id = "_anim_img"+this.id+"_"+frame;
+      this.cache[frame].attr("id", cache_id);
+      this.populate_cache(frame);
+    }
+  }
+}
+
+HoloViewsWidget.prototype.update = function(current){
+  if(current in this.cache) {
+    $.each(this.cache, function(index, value) {
+      value.hide();
+    });
+    this.cache[current].show();
+    this.wait = false;
+  }
+}
+
+HoloViewsWidget.prototype.init_comms = function() {
+  if ((window.Jupyter !== undefined) && (Jupyter.notebook.kernel !== undefined)) {
+    var widget = this;
+    comm_manager = Jupyter.notebook.kernel.comm_manager;
+    comm_manager.register_target(this.id, function (comm) {
+      comm.on_msg(function (msg) { widget.process_msg(msg) });
+    });
+  }
+}
+
+HoloViewsWidget.prototype.process_msg = function(msg) {
+}
+
+function SelectionWidget(frames, id, slider_ids, keyMap, dim_vals, notFound, load_json, mode, cached, json_path, dynamic){
+  this.frames = frames;
+  this.id = id;
+  this.slider_ids = slider_ids;
+  this.keyMap = keyMap
+  this.current_frame = 0;
+  this.current_vals = dim_vals;
+  this.load_json = load_json;
+  this.mode = mode;
+  this.notFound = notFound;
+  this.cached = cached;
+  this.dynamic = dynamic;
+  this.cache = {};
+  this.json_path = json_path;
+  this.init_slider(this.current_vals[0]);
+  this.queue = [];
+  this.wait = false;
+  if (!this.cached || this.dynamic) {
+    this.init_comms()
+  }
+}
+
+SelectionWidget.prototype = new HoloViewsWidget;
+
+
+SelectionWidget.prototype.get_key = function(current_vals) {
+  var key = "(";
+  for (var i=0; i<this.slider_ids.length; i++)
+  {
+    val = this.current_vals[i];
+    if (!(typeof val === 'string')) {
+      if (val % 1 === 0) { val = val.toFixed(1); }
+      else { val = val.toFixed(10); val = val.slice(0, val.length-1);}
+    }
+    key += "'" + val + "'";
+    if(i != this.slider_ids.length-1) { key += ', ';}
+    else if(this.slider_ids.length == 1) { key += ',';}
+  }
+  key += ")";
+  return this.keyMap[key];
+}
+
+SelectionWidget.prototype.set_frame = function(dim_val, dim_idx){
+  this.current_vals[dim_idx] = dim_val;
+  var key = this.current_vals;
+  if (!this.dynamic) {
+    key = this.get_key(key)
+  }
+  if (this.dynamic || !this.cached) {
+    if ((this.time !== undefined) && ((this.wait) && ((this.time + 10000) > Date.now()))) {
+      this.queue.push(key);
+      return
+    }
+    this.queue = [];
+    this.time = Date.now();
+    this.current_frame = key;
+    this.wait = true;
+    this.dynamic_update(key)
+  } else if (key !== undefined) {
+    this.update(key)
+  }
+}
+
+
+/* Define the ScrubberWidget class */
+function ScrubberWidget(frames, num_frames, id, interval, load_json, mode, cached, json_path, dynamic){
+  this.slider_id = "_anim_slider" + id;
+  this.loop_select_id = "_anim_loop_select" + id;
+  this.id = id;
+  this.interval = interval;
+  this.current_frame = 0;
+  this.direction = 0;
+  this.dynamic = dynamic;
+  this.timer = null;
+  this.load_json = load_json;
+  this.mode = mode;
+  this.cached = cached;
+  this.frames = frames;
+  this.cache = {};
+  this.length = num_frames;
+  this.json_path = json_path;
+  document.getElementById(this.slider_id).max = this.length - 1;
+  this.init_slider(0);
+  this.wait = false;
+  this.queue = [];
+  if (!this.cached || this.dynamic) {
+    this.init_comms()
+  }
+}
+
+ScrubberWidget.prototype = new HoloViewsWidget;
+
+ScrubberWidget.prototype.set_frame = function(frame){
+  this.current_frame = frame;
+  widget = document.getElementById(this.slider_id);
+  if (widget === null) {
+    this.pause_animation();
+    return
+  }
+  widget.value = this.current_frame;
+  if(this.cached) {
+    this.update(frame)
+  } else {
+    this.dynamic_update(frame)
+  }
+}
+
+
+ScrubberWidget.prototype.get_loop_state = function(){
+  var button_group = document[this.loop_select_id].state;
+  for (var i = 0; i < button_group.length; i++) {
+    var button = button_group[i];
+    if (button.checked) {
+      return button.value;
+    }
+  }
+  return undefined;
+}
+
+
+ScrubberWidget.prototype.next_frame = function() {
+  this.set_frame(Math.min(this.length - 1, this.current_frame + 1));
+}
+
+ScrubberWidget.prototype.previous_frame = function() {
+  this.set_frame(Math.max(0, this.current_frame - 1));
+}
+
+ScrubberWidget.prototype.first_frame = function() {
+  this.set_frame(0);
+}
+
+ScrubberWidget.prototype.last_frame = function() {
+  this.set_frame(this.length - 1);
+}
+
+ScrubberWidget.prototype.slower = function() {
+  this.interval /= 0.7;
+  if(this.direction > 0){this.play_animation();}
+  else if(this.direction < 0){this.reverse_animation();}
+}
+
+ScrubberWidget.prototype.faster = function() {
+  this.interval *= 0.7;
+  if(this.direction > 0){this.play_animation();}
+  else if(this.direction < 0){this.reverse_animation();}
+}
+
+ScrubberWidget.prototype.anim_step_forward = function() {
+  if(this.current_frame < this.length - 1){
+    this.next_frame();
+  }else{
+    var loop_state = this.get_loop_state();
+    if(loop_state == "loop"){
+      this.first_frame();
+    }else if(loop_state == "reflect"){
+      this.last_frame();
+      this.reverse_animation();
+    }else{
+      this.pause_animation();
+      this.last_frame();
+    }
+  }
+}
+
+ScrubberWidget.prototype.anim_step_reverse = function() {
+  if(this.current_frame > 0){
+    this.previous_frame();
+  } else {
+    var loop_state = this.get_loop_state();
+    if(loop_state == "loop"){
+      this.last_frame();
+    }else if(loop_state == "reflect"){
+      this.first_frame();
+      this.play_animation();
+    }else{
+      this.pause_animation();
+      this.first_frame();
+    }
+  }
+}
+
+ScrubberWidget.prototype.pause_animation = function() {
+  this.direction = 0;
+  if (this.timer){
+    clearInterval(this.timer);
+    this.timer = null;
+  }
+}
+
+ScrubberWidget.prototype.play_animation = function() {
+  this.pause_animation();
+  this.direction = 1;
+  var t = this;
+  if (!this.timer) this.timer = setInterval(function(){t.anim_step_forward();}, this.interval);
+}
+
+ScrubberWidget.prototype.reverse_animation = function() {
+  this.pause_animation();
+  this.direction = -1;
+  var t = this;
+  if (!this.timer) this.timer = setInterval(function(){t.anim_step_reverse();}, this.interval);
+}
+
+function extend(destination, source) {
+  for (var k in source) {
+    if (source.hasOwnProperty(k)) {
+      destination[k] = source[k];
+    }
+  }
+  return destination;
+}
+
+function update_widget(widget, values) {
+  if (widget.hasClass("ui-slider")) {
+    widget.slider('option', {
+      min: 0,
+      max: values.length-1,
+      dim_vals: values,
+      value: 0,
+      dim_labels: values
+	})
+    widget.slider('option', 'slide').call(widget, event, {value: 0})
+  } else {
+    widget.empty();
+    for (var i=0; i<values.length; i++){
+      widget.append($("<option>", {
+        value: i,
+        text: values[i]
+      }))
+    };
+    widget.data('values', values);
+    widget.data('value', 0);
+    widget.trigger("change");
+  };
+}
+
+// Define Bokeh specific subclasses
+function BokehSelectionWidget() {
+	SelectionWidget.apply(this, arguments);
+}
+
+function BokehScrubberWidget() {
+	ScrubberWidget.apply(this, arguments);
+}
+
+// Let them inherit from the baseclasses
+BokehSelectionWidget.prototype = Object.create(SelectionWidget.prototype);
+BokehScrubberWidget.prototype = Object.create(ScrubberWidget.prototype);
+
+// Define methods to override on widgets
+var BokehMethods = {
+	update_cache : function(){
+		$.each(this.frames, $.proxy(function(index, frame) {
+			this.frames[index] = JSON.parse(frame);
+		}, this));
+	},
+	update : function(current){
+		if (current === undefined) {
+			var data = undefined;
+		} else {
+			var data = this.frames[current];
+		}
+		if (data !== undefined) {
+			var doc = Bokeh.index[data.root].model.document;
+			doc.apply_json_patch(data.content);
+		}
+	},
+	init_comms : function() {
+	}
+}
+
+// Extend Bokeh widgets with backend specific methods
+extend(BokehSelectionWidget.prototype, BokehMethods);
+extend(BokehScrubberWidget.prototype, BokehMethods);
 </script>
-        <style>
-          html {
-            width: 100%;
-            height: 100%;
-          }
-          body {
-            width: 90%;
-            height: 100%;
-            margin: auto;
-          }
-        </style>
-    </head>
-    <body>
-        
-        <div class="bk-root">
-            <div class="bk-plotdiv" id="e5b7b846-ec50-4494-9d44-9e1629ed28fb"></div>
-        </div>
-        
-        <script type="text/javascript">
-            (function() {
-          var fn = function() {
-            Bokeh.safely(function() {
-              var docs_json = {"69360cce-e5c8-4759-bc35-0f75e26a9f7c":{"roots":{"references":[{"attributes":{"label":{"value":"Caracalla"},"renderers":[{"id":"d104ad64-3345-4bea-835d-1ebbf6146077","type":"GlyphRenderer"}]},"id":"00c4f6c5-ba8f-4533-9d53-b55f563fca3a","type":"LegendItem"},{"attributes":{"data_source":{"id":"b6bc3770-a289-4da7-ab05-401dad357e3b","type":"ColumnDataSource"},"glyph":{"id":"a05b0d76-5f84-4d73-8b05-9df7245dab00","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"1c249b40-53bd-47b3-886d-f7c7db92659b","type":"GlyphRenderer"},{"attributes":{"callback":null,"column_names":["line_color","line_alpha","color","fill_alpha","height","width","y","x","label"],"data":{"authority":["Probus"],"chart_index":[{"authority":"Probus"}],"color":["#f22c40"],"fill_alpha":[0.8],"height":[4.0],"label":[{"authority":"Probus"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Probus"],"y":[2.0]}},"id":"35730295-4335-4cec-bb84-ce228638fa52","type":"ColumnDataSource"},{"attributes":{"label":{"value":"Florianus"},"renderers":[{"id":"6b433a37-7938-4f59-9f1d-13099a62fa79","type":"GlyphRenderer"}]},"id":"2c57307c-689f-4321-a80c-47e375b33b35","type":"LegendItem"},{"attributes":{"callback":null,"column_names":["line_color","line_alpha","color","fill_alpha","height","width","y","x","label"],"data":{"authority":["Quintillus"],"chart_index":[{"authority":"Quintillus"}],"color":["#f22c40"],"fill_alpha":[0.8],"height":[2.0],"label":[{"authority":"Quintillus"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Quintillus"],"y":[1.0]}},"id":"d9f39784-2f8e-4bc5-a593-9d6d75965f89","type":"ColumnDataSource"},{"attributes":{"label":{"value":"Postumus"},"renderers":[{"id":"2a8b8ab1-8d15-4802-bc49-35f46b36f68d","type":"GlyphRenderer"}]},"id":"676a8666-1eca-49cd-863d-72bf4bc5178f","type":"LegendItem"},{"attributes":{"data_source":{"id":"edfc6009-c878-4c7c-b883-1f4754f65d5b","type":"ColumnDataSource"},"glyph":{"id":"e9247c0b-620f-4b0b-adf5-4a986a9014df","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"f157add4-fd35-477a-bc54-5438577a5328","type":"GlyphRenderer"},{"attributes":{"axis_label":"Count","formatter":{"id":"2862e808-75f7-4812-836b-6a805e9b5baa","type":"BasicTickFormatter"},"plot":{"id":"34bca1c7-a9ea-4f08-b7b6-dd41672a845e","subtype":"Chart","type":"Plot"},"ticker":{"id":"8952bc97-5f1e-478f-9788-8c34213a8ec1","type":"BasicTicker"}},"id":"256f2d54-c4f0-4222-8189-e80cb500e6f2","type":"LinearAxis"},{"attributes":{"callback":null,"column_names":["line_color","line_alpha","color","fill_alpha","height","width","y","x","label"],"data":{"authority":["Numerian"],"chart_index":[{"authority":"Numerian"}],"color":["#f22c40"],"fill_alpha":[0.8],"height":[1.0],"label":[{"authority":"Numerian"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Numerian"],"y":[0.5]}},"id":"6e3f047c-443b-493a-8123-558be5ac77ed","type":"ColumnDataSource"},{"attributes":{"data_source":{"id":"d9f39784-2f8e-4bc5-a593-9d6d75965f89","type":"ColumnDataSource"},"glyph":{"id":"775b6809-f2eb-4be1-abc0-021fffd3c2ef","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"ea4299bd-8959-4da8-a173-515299c8f4f6","type":"GlyphRenderer"},{"attributes":{"label":{"value":"Elagabalus"},"renderers":[{"id":"053b7f77-7311-4c75-9640-cd19f7efad35","type":"GlyphRenderer"}]},"id":"029d2850-13b3-404e-a650-609a3d52679f","type":"LegendItem"},{"attributes":{"plot":{"id":"34bca1c7-a9ea-4f08-b7b6-dd41672a845e","subtype":"Chart","type":"Plot"}},"id":"4a088e77-47a0-4759-b68b-fc2c08f74e98","type":"HelpTool"},{"attributes":{"label":{"value":"Probus"},"renderers":[{"id":"733278a9-d04c-407f-b917-d2f02229407c","type":"GlyphRenderer"}]},"id":"32b98a88-bc2e-4569-8399-904edf8571b6","type":"LegendItem"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"f4bbfb69-0f57-4419-b758-9c5b0a321295","type":"Rect"},{"attributes":{"data_source":{"id":"8a620151-9182-4d53-92ce-49d28788008e","type":"ColumnDataSource"},"glyph":{"id":"4ab363dd-05e2-4021-92ab-dee12b520e06","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"3f628c4c-7368-481f-8e61-4f27e2650f61","type":"GlyphRenderer"},{"attributes":{"callback":null,"column_names":["line_color","line_alpha","color","fill_alpha","height","width","y","x","label"],"data":{"authority":["Postumus"],"chart_index":[{"authority":"Postumus"}],"color":["#f22c40"],"fill_alpha":[0.8],"height":[1.0],"label":[{"authority":"Postumus"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Postumus"],"y":[0.5]}},"id":"15fb15f4-ca2d-4271-baf9-7af6edbbafc6","type":"ColumnDataSource"},{"attributes":{"label":{"value":"Gordian III"},"renderers":[{"id":"c5494681-b78a-445b-958a-79872d8e2152","type":"GlyphRenderer"}]},"id":"cba111aa-6096-4af5-9632-825e05e0f268","type":"LegendItem"},{"attributes":{"callback":null,"column_names":["line_color","line_alpha","color","fill_alpha","height","width","y","x","label"],"data":{"authority":["Caracalla"],"chart_index":[{"authority":"Caracalla"}],"color":["#f22c40"],"fill_alpha":[0.8],"height":[2.0],"label":[{"authority":"Caracalla"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Caracalla"],"y":[1.0]}},"id":"6fc21c45-8a3d-48d3-a3d7-7745871510e9","type":"ColumnDataSource"},{"attributes":{},"id":"2862e808-75f7-4812-836b-6a805e9b5baa","type":"BasicTickFormatter"},{"attributes":{},"id":"230647fc-3e31-41bc-b6ec-b76ec43747af","type":"ToolEvents"},{"attributes":{"label":{"value":"Tetricus I"},"renderers":[{"id":"28b03722-5a6a-4048-874a-b94b5e954b45","type":"GlyphRenderer"}]},"id":"ba8b0d6d-fe91-45cb-b360-30201dc32197","type":"LegendItem"},{"attributes":{"active_drag":"auto","active_inspect":"auto","active_scroll":"auto","active_tap":"auto","tools":[{"id":"74adcd7d-3d8d-4972-a8e1-f60d9ba1933f","type":"PanTool"},{"id":"6c05333d-c897-4b91-bbd2-d0005a843fc3","type":"WheelZoomTool"},{"id":"69680bb2-3868-4d85-8b92-ca5a6104ee55","type":"BoxZoomTool"},{"id":"8c3c7d28-59c6-42cf-91f9-910b6b04615c","type":"SaveTool"},{"id":"f527ad81-ad53-4754-8890-971d1e921f7d","type":"ResetTool"},{"id":"4a088e77-47a0-4759-b68b-fc2c08f74e98","type":"HelpTool"},{"id":"d33ef304-5126-4c62-a9ff-d53de7bb0894","type":"HoverTool"}]},"id":"d444347c-c4a3-4f4f-be5f-128d1e872ba6","type":"Toolbar"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"5aab00fb-acde-436d-9e3d-95b1d274cc6b","type":"Rect"},{"attributes":{"dimension":1,"plot":{"id":"34bca1c7-a9ea-4f08-b7b6-dd41672a845e","subtype":"Chart","type":"Plot"},"ticker":{"id":"8952bc97-5f1e-478f-9788-8c34213a8ec1","type":"BasicTicker"}},"id":"5a6c5d2b-6507-4021-a528-a87212fdf20e","type":"Grid"},{"attributes":{"axis_label":"Authority","formatter":{"id":"30d73f91-243d-413f-a583-fd197f278172","type":"CategoricalTickFormatter"},"major_label_orientation":0.7853981633974483,"plot":{"id":"34bca1c7-a9ea-4f08-b7b6-dd41672a845e","subtype":"Chart","type":"Plot"},"ticker":{"id":"e42486fa-3892-4c3e-babc-27560fe091a6","type":"CategoricalTicker"}},"id":"a1e8cc64-9331-47a1-ba83-2f4422420c0f","type":"CategoricalAxis"},{"attributes":{"data_source":{"id":"fea621b9-2f40-4b16-a611-a943cee93481","type":"ColumnDataSource"},"glyph":{"id":"66dab08f-732e-4f5b-94a9-28a25c3720d8","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"28b03722-5a6a-4048-874a-b94b5e954b45","type":"GlyphRenderer"},{"attributes":{"items":[{"id":"00c4f6c5-ba8f-4533-9d53-b55f563fca3a","type":"LegendItem"},{"id":"029d2850-13b3-404e-a650-609a3d52679f","type":"LegendItem"},{"id":"2b8df0c6-dbdb-4c81-aa53-87be1e3abfc6","type":"LegendItem"},{"id":"cba111aa-6096-4af5-9632-825e05e0f268","type":"LegendItem"},{"id":"7a5d1f66-f032-4fd2-ad0a-6239706cf8d4","type":"LegendItem"},{"id":"31b13f2d-a4ae-4773-b5f1-075b07d6a5da","type":"LegendItem"},{"id":"eb7b67ae-b1a0-470d-9f11-83a8a124c8db","type":"LegendItem"},{"id":"b64679e3-995c-4ba2-9975-bf9da3264ab0","type":"LegendItem"},{"id":"ebcc4e7b-0d55-422e-b826-540651f34010","type":"LegendItem"},{"id":"676a8666-1eca-49cd-863d-72bf4bc5178f","type":"LegendItem"},{"id":"278c833e-086c-4ced-98a3-f50aeb55675b","type":"LegendItem"},{"id":"ba8b0d6d-fe91-45cb-b360-30201dc32197","type":"LegendItem"},{"id":"d3689d3a-68df-4f2c-9252-0c7b707b25f1","type":"LegendItem"},{"id":"80ffb93b-1f7c-4bf6-bc1f-2d76bb5ea51d","type":"LegendItem"},{"id":"32b98a88-bc2e-4569-8399-904edf8571b6","type":"LegendItem"},{"id":"1709c33b-e6df-446e-8330-fb77da69e20d","type":"LegendItem"},{"id":"6d94c7f4-5102-4cf0-a6e1-c0ac1a82e20b","type":"LegendItem"},{"id":"2c57307c-689f-4321-a80c-47e375b33b35","type":"LegendItem"},{"id":"fd420090-e1de-4d50-833b-abe739c6212e","type":"LegendItem"},{"id":"a4670f22-0df5-4819-97b2-3291155161bf","type":"LegendItem"},{"id":"2328c613-dc08-415f-8125-075a6ec9517c","type":"LegendItem"}],"plot":{"id":"34bca1c7-a9ea-4f08-b7b6-dd41672a845e","subtype":"Chart","type":"Plot"}},"id":"bf62350f-0ce9-4ee1-9bbe-07dfb033bdde","type":"Legend"},{"attributes":{"callback":null,"column_names":["line_color","line_alpha","color","fill_alpha","height","width","y","x","label"],"data":{"authority":["Florianus"],"chart_index":[{"authority":"Florianus"}],"color":["#f22c40"],"fill_alpha":[0.8],"height":[1.0],"label":[{"authority":"Florianus"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Florianus"],"y":[0.5]}},"id":"a0dd26ba-2dc7-413d-a13d-e226b1ad8e12","type":"ColumnDataSource"},{"attributes":{"callback":null,"column_names":["line_color","line_alpha","color","fill_alpha","height","width","y","x","label"],"data":{"authority":["Claudius Gothicus"],"chart_index":[{"authority":"Claudius Gothicus"}],"color":["#f22c40"],"fill_alpha":[0.8],"height":[1.0],"label":[{"authority":"Claudius Gothicus"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Claudius Gothicus"],"y":[0.5]}},"id":"7399e94c-37b6-4f99-9532-19fda537f0e2","type":"ColumnDataSource"},{"attributes":{"plot":{"id":"34bca1c7-a9ea-4f08-b7b6-dd41672a845e","subtype":"Chart","type":"Plot"}},"id":"8c3c7d28-59c6-42cf-91f9-910b6b04615c","type":"SaveTool"},{"attributes":{"plot":{"id":"34bca1c7-a9ea-4f08-b7b6-dd41672a845e","subtype":"Chart","type":"Plot"}},"id":"6c05333d-c897-4b91-bbd2-d0005a843fc3","type":"WheelZoomTool"},{"attributes":{"label":{"value":"Gallienus"},"renderers":[{"id":"1b57943b-bd01-46c4-9d0c-1232f6443613","type":"GlyphRenderer"}]},"id":"ebcc4e7b-0d55-422e-b826-540651f34010","type":"LegendItem"},{"attributes":{"callback":null,"column_names":["line_color","line_alpha","color","fill_alpha","height","width","y","x","label"],"data":{"authority":["Valerian I"],"chart_index":[{"authority":"Valerian I"}],"color":["#f22c40"],"fill_alpha":[0.8],"height":[4.0],"label":[{"authority":"Valerian I"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Valerian I"],"y":[2.0]}},"id":"edfc6009-c878-4c7c-b883-1f4754f65d5b","type":"ColumnDataSource"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"a2aa5f00-fa8a-43da-be6a-73eb1b062d92","type":"Rect"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"775b6809-f2eb-4be1-abc0-021fffd3c2ef","type":"Rect"},{"attributes":{},"id":"30d73f91-243d-413f-a583-fd197f278172","type":"CategoricalTickFormatter"},{"attributes":{"callback":null,"column_names":["line_color","line_alpha","color","fill_alpha","height","width","y","x","label"],"data":{"authority":["Elagabalus"],"chart_index":[{"authority":"Elagabalus"}],"color":["#f22c40"],"fill_alpha":[0.8],"height":[1.0],"label":[{"authority":"Elagabalus"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Elagabalus"],"y":[0.5]}},"id":"b9c22fde-569f-4490-baab-925eb569becb","type":"ColumnDataSource"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"fbb862c3-27ce-4861-b8d3-638691cff285","type":"Rect"},{"attributes":{"callback":null,"factors":["Caracalla","Elagabalus","Severus Alexander","Gordian III","Philip the Arab","Valerian I","Valerian, Gallienus","Quietus","Gallienus","Postumus","Claudius Gothicus","Tetricus I","Quintillus","Aurelian","Probus","Tacitus","Florian","Florianus","Carus","Numerian","Constantine I"]},"id":"0d242604-7ff4-4683-bf89-cf2c5cc29655","type":"FactorRange"},{"attributes":{"callback":null,"plot":{"id":"34bca1c7-a9ea-4f08-b7b6-dd41672a845e","subtype":"Chart","type":"Plot"},"tooltips":[["Word","@Word"],["Count","@Count"]]},"id":"d33ef304-5126-4c62-a9ff-d53de7bb0894","type":"HoverTool"},{"attributes":{"label":{"value":"Valerian I"},"renderers":[{"id":"f157add4-fd35-477a-bc54-5438577a5328","type":"GlyphRenderer"}]},"id":"31b13f2d-a4ae-4773-b5f1-075b07d6a5da","type":"LegendItem"},{"attributes":{"callback":null,"column_names":["line_color","line_alpha","color","fill_alpha","height","width","y","x","label"],"data":{"authority":["Aurelian"],"chart_index":[{"authority":"Aurelian"}],"color":["#f22c40"],"fill_alpha":[0.8],"height":[7.0],"label":[{"authority":"Aurelian"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Aurelian"],"y":[3.5]}},"id":"a9e2d2d0-fb17-4c6f-a4dd-1f24653cf339","type":"ColumnDataSource"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"e9247c0b-620f-4b0b-adf5-4a986a9014df","type":"Rect"},{"attributes":{"callback":null,"column_names":["line_color","line_alpha","color","fill_alpha","height","width","y","x","label"],"data":{"authority":["Severus Alexander"],"chart_index":[{"authority":"Severus Alexander"}],"color":["#f22c40"],"fill_alpha":[0.8],"height":[2.0],"label":[{"authority":"Severus Alexander"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Severus Alexander"],"y":[1.0]}},"id":"d01fe8d5-8bc4-4551-8204-37d60badaabd","type":"ColumnDataSource"},{"attributes":{},"id":"904b470a-198d-4221-bd5c-2355d243256a","type":"CategoricalScale"},{"attributes":{"plot":null,"text":"'radiate' on Obverse and 'sol' on Reverse Coins from OCRE by Authority"},"id":"41602905-db58-476d-883d-c4de907985af","type":"Title"},{"attributes":{},"id":"8952bc97-5f1e-478f-9788-8c34213a8ec1","type":"BasicTicker"},{"attributes":{"callback":null,"column_names":["line_color","line_alpha","color","fill_alpha","height","width","y","x","label"],"data":{"authority":["Philip the Arab"],"chart_index":[{"authority":"Philip the Arab"}],"color":["#f22c40"],"fill_alpha":[0.8],"height":[1.0],"label":[{"authority":"Philip the Arab"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Philip the Arab"],"y":[0.5]}},"id":"b6bc3770-a289-4da7-ab05-401dad357e3b","type":"ColumnDataSource"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"4ab363dd-05e2-4021-92ab-dee12b520e06","type":"Rect"},{"attributes":{"plot":{"id":"34bca1c7-a9ea-4f08-b7b6-dd41672a845e","subtype":"Chart","type":"Plot"}},"id":"f527ad81-ad53-4754-8890-971d1e921f7d","type":"ResetTool"},{"attributes":{"callback":null,"column_names":["line_color","line_alpha","color","fill_alpha","height","width","y","x","label"],"data":{"authority":["Tacitus"],"chart_index":[{"authority":"Tacitus"}],"color":["#f22c40"],"fill_alpha":[0.8],"height":[1.0],"label":[{"authority":"Tacitus"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Tacitus"],"y":[0.5]}},"id":"7faa9a7a-8a32-4129-9572-8e61080f5639","type":"ColumnDataSource"},{"attributes":{"label":{"value":"Numerian"},"renderers":[{"id":"071459e5-8f24-460b-b3b4-96ee5533dade","type":"GlyphRenderer"}]},"id":"a4670f22-0df5-4819-97b2-3291155161bf","type":"LegendItem"},{"attributes":{"data_source":{"id":"7399e94c-37b6-4f99-9532-19fda537f0e2","type":"ColumnDataSource"},"glyph":{"id":"4917648e-2bf8-4d8c-a4f0-b879d5372467","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"de1a8967-6cc7-4cd2-a1d8-8c7404af60f5","type":"GlyphRenderer"},{"attributes":{"callback":null,"column_names":["line_color","line_alpha","color","fill_alpha","height","width","y","x","label"],"data":{"authority":["Gordian III"],"chart_index":[{"authority":"Gordian III"}],"color":["#f22c40"],"fill_alpha":[0.8],"height":[1.0],"label":[{"authority":"Gordian III"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Gordian III"],"y":[0.5]}},"id":"fea34816-4d13-4494-891a-18b42c0a54d2","type":"ColumnDataSource"},{"attributes":{"data_source":{"id":"15fb15f4-ca2d-4271-baf9-7af6edbbafc6","type":"ColumnDataSource"},"glyph":{"id":"93d3390e-2302-4e80-b0b9-502ac4a9dddf","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"2a8b8ab1-8d15-4802-bc49-35f46b36f68d","type":"GlyphRenderer"},{"attributes":{"label":{"value":"Constantine I"},"renderers":[{"id":"1c96d2aa-825b-451a-b1ac-cadc9027bef2","type":"GlyphRenderer"}]},"id":"2328c613-dc08-415f-8125-075a6ec9517c","type":"LegendItem"},{"attributes":{},"id":"e42486fa-3892-4c3e-babc-27560fe091a6","type":"CategoricalTicker"},{"attributes":{"data_source":{"id":"6e3f047c-443b-493a-8123-558be5ac77ed","type":"ColumnDataSource"},"glyph":{"id":"3a957943-0c86-4d7d-b1ab-7f63f9652dd5","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"071459e5-8f24-460b-b3b4-96ee5533dade","type":"GlyphRenderer"},{"attributes":{"label":{"value":"Carus"},"renderers":[{"id":"3f628c4c-7368-481f-8e61-4f27e2650f61","type":"GlyphRenderer"}]},"id":"fd420090-e1de-4d50-833b-abe739c6212e","type":"LegendItem"},{"attributes":{"label":{"value":"Quietus"},"renderers":[{"id":"ea42bdbe-db82-4dfd-8ff6-40813adfd519","type":"GlyphRenderer"}]},"id":"b64679e3-995c-4ba2-9975-bf9da3264ab0","type":"LegendItem"},{"attributes":{"data_source":{"id":"65c49f8b-4cef-46ef-b733-efbc7b8515a5","type":"ColumnDataSource"},"glyph":{"id":"f4bbfb69-0f57-4419-b758-9c5b0a321295","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"cb33a676-b7d2-4748-b7a8-c8c49a77f880","type":"GlyphRenderer"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"9413cfd2-0377-4739-8acc-be9fd0016966","type":"Rect"},{"attributes":{"label":{"value":"Severus Alexander"},"renderers":[{"id":"f88727b4-a137-4ebe-b233-a950e6ac58d2","type":"GlyphRenderer"}]},"id":"2b8df0c6-dbdb-4c81-aa53-87be1e3abfc6","type":"LegendItem"},{"attributes":{"label":{"value":"Philip the Arab"},"renderers":[{"id":"1c249b40-53bd-47b3-886d-f7c7db92659b","type":"GlyphRenderer"}]},"id":"7a5d1f66-f032-4fd2-ad0a-6239706cf8d4","type":"LegendItem"},{"attributes":{"data_source":{"id":"a0dd26ba-2dc7-413d-a13d-e226b1ad8e12","type":"ColumnDataSource"},"glyph":{"id":"6b87a46f-2259-4e43-9672-b5dbe51a2b70","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"6b433a37-7938-4f59-9f1d-13099a62fa79","type":"GlyphRenderer"},{"attributes":{"callback":null,"column_names":["line_color","line_alpha","color","fill_alpha","height","width","y","x","label"],"data":{"authority":["Quietus"],"chart_index":[{"authority":"Quietus"}],"color":["#f22c40"],"fill_alpha":[0.8],"height":[1.0],"label":[{"authority":"Quietus"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Quietus"],"y":[0.5]}},"id":"5bfb0e6b-e679-4ca0-8a1f-df378dee3fcb","type":"ColumnDataSource"},{"attributes":{"label":{"value":"Quintillus"},"renderers":[{"id":"ea4299bd-8959-4da8-a173-515299c8f4f6","type":"GlyphRenderer"}]},"id":"d3689d3a-68df-4f2c-9252-0c7b707b25f1","type":"LegendItem"},{"attributes":{"data_source":{"id":"35730295-4335-4cec-bb84-ce228638fa52","type":"ColumnDataSource"},"glyph":{"id":"46453141-6176-466e-a782-8158c20df31c","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"733278a9-d04c-407f-b917-d2f02229407c","type":"GlyphRenderer"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"cb8f6994-1414-4593-8e1a-746048c8bf09","type":"Rect"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"3a957943-0c86-4d7d-b1ab-7f63f9652dd5","type":"Rect"},{"attributes":{"label":{"value":"Aurelian"},"renderers":[{"id":"c922d17f-e9bd-460d-a883-f2671e5f3e90","type":"GlyphRenderer"}]},"id":"80ffb93b-1f7c-4bf6-bc1f-2d76bb5ea51d","type":"LegendItem"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"2c309419-4a1d-43f0-ac78-0f1b6ea0fb39","type":"Rect"},{"attributes":{"callback":null,"column_names":["line_color","line_alpha","color","fill_alpha","height","width","y","x","label"],"data":{"authority":["Tetricus I"],"chart_index":[{"authority":"Tetricus I"}],"color":["#f22c40"],"fill_alpha":[0.8],"height":[2.0],"label":[{"authority":"Tetricus I"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Tetricus I"],"y":[1.0]}},"id":"fea621b9-2f40-4b16-a611-a943cee93481","type":"ColumnDataSource"},{"attributes":{"below":[{"id":"a1e8cc64-9331-47a1-ba83-2f4422420c0f","type":"CategoricalAxis"}],"css_classes":null,"left":[{"id":"256f2d54-c4f0-4222-8189-e80cb500e6f2","type":"LinearAxis"}],"renderers":[{"id":"de85e511-01ef-4d0e-a14e-a5d3875db4c0","type":"BoxAnnotation"},{"id":"d104ad64-3345-4bea-835d-1ebbf6146077","type":"GlyphRenderer"},{"id":"053b7f77-7311-4c75-9640-cd19f7efad35","type":"GlyphRenderer"},{"id":"f88727b4-a137-4ebe-b233-a950e6ac58d2","type":"GlyphRenderer"},{"id":"c5494681-b78a-445b-958a-79872d8e2152","type":"GlyphRenderer"},{"id":"1c249b40-53bd-47b3-886d-f7c7db92659b","type":"GlyphRenderer"},{"id":"f157add4-fd35-477a-bc54-5438577a5328","type":"GlyphRenderer"},{"id":"cb33a676-b7d2-4748-b7a8-c8c49a77f880","type":"GlyphRenderer"},{"id":"ea42bdbe-db82-4dfd-8ff6-40813adfd519","type":"GlyphRenderer"},{"id":"1b57943b-bd01-46c4-9d0c-1232f6443613","type":"GlyphRenderer"},{"id":"2a8b8ab1-8d15-4802-bc49-35f46b36f68d","type":"GlyphRenderer"},{"id":"de1a8967-6cc7-4cd2-a1d8-8c7404af60f5","type":"GlyphRenderer"},{"id":"28b03722-5a6a-4048-874a-b94b5e954b45","type":"GlyphRenderer"},{"id":"ea4299bd-8959-4da8-a173-515299c8f4f6","type":"GlyphRenderer"},{"id":"c922d17f-e9bd-460d-a883-f2671e5f3e90","type":"GlyphRenderer"},{"id":"733278a9-d04c-407f-b917-d2f02229407c","type":"GlyphRenderer"},{"id":"2f41e2ad-dbc8-4e5d-9048-e9fe2434a854","type":"GlyphRenderer"},{"id":"e47a7f97-39e9-4f68-8516-c4c288eb8fea","type":"GlyphRenderer"},{"id":"6b433a37-7938-4f59-9f1d-13099a62fa79","type":"GlyphRenderer"},{"id":"3f628c4c-7368-481f-8e61-4f27e2650f61","type":"GlyphRenderer"},{"id":"071459e5-8f24-460b-b3b4-96ee5533dade","type":"GlyphRenderer"},{"id":"1c96d2aa-825b-451a-b1ac-cadc9027bef2","type":"GlyphRenderer"},{"id":"bf62350f-0ce9-4ee1-9bbe-07dfb033bdde","type":"Legend"},{"id":"a1e8cc64-9331-47a1-ba83-2f4422420c0f","type":"CategoricalAxis"},{"id":"256f2d54-c4f0-4222-8189-e80cb500e6f2","type":"LinearAxis"},{"id":"5a6c5d2b-6507-4021-a528-a87212fdf20e","type":"Grid"}],"sizing_mode":"scale_width","title":{"id":"41602905-db58-476d-883d-c4de907985af","type":"Title"},"tool_events":{"id":"230647fc-3e31-41bc-b6ec-b76ec43747af","type":"ToolEvents"},"toolbar":{"id":"d444347c-c4a3-4f4f-be5f-128d1e872ba6","type":"Toolbar"},"x_range":{"id":"0d242604-7ff4-4683-bf89-cf2c5cc29655","type":"FactorRange"},"x_scale":{"id":"904b470a-198d-4221-bd5c-2355d243256a","type":"CategoricalScale"},"y_range":{"id":"7ec16510-5e21-4237-839c-0323295f187b","type":"Range1d"},"y_scale":{"id":"6df224f9-ef77-4ea4-92d7-ea1798056255","type":"LinearScale"}},"id":"34bca1c7-a9ea-4f08-b7b6-dd41672a845e","subtype":"Chart","type":"Plot"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"6b87a46f-2259-4e43-9672-b5dbe51a2b70","type":"Rect"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"93d3390e-2302-4e80-b0b9-502ac4a9dddf","type":"Rect"},{"attributes":{"callback":null,"column_names":["line_color","line_alpha","color","fill_alpha","height","width","y","x","label"],"data":{"authority":["Gallienus"],"chart_index":[{"authority":"Gallienus"}],"color":["#f22c40"],"fill_alpha":[0.8],"height":[2.0],"label":[{"authority":"Gallienus"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Gallienus"],"y":[1.0]}},"id":"a8ba6c9a-8805-4060-82e7-76280adf623a","type":"ColumnDataSource"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"2dd9e31c-3474-4871-9dc6-8866455268d0","type":"Rect"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"569eac07-f6ac-49e4-ae0f-783ea0e4ec45","type":"Rect"},{"attributes":{"data_source":{"id":"c575ed54-b0ca-4c21-93de-4bc01f8ff7be","type":"ColumnDataSource"},"glyph":{"id":"9413cfd2-0377-4739-8acc-be9fd0016966","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"e47a7f97-39e9-4f68-8516-c4c288eb8fea","type":"GlyphRenderer"},{"attributes":{"data_source":{"id":"b9c22fde-569f-4490-baab-925eb569becb","type":"ColumnDataSource"},"glyph":{"id":"4a23214a-08c9-43f2-95af-ef931ce218cd","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"053b7f77-7311-4c75-9640-cd19f7efad35","type":"GlyphRenderer"},{"attributes":{"data_source":{"id":"1b6a3dd5-3975-4b8e-aca0-a4629aee73a0","type":"ColumnDataSource"},"glyph":{"id":"569eac07-f6ac-49e4-ae0f-783ea0e4ec45","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"1c96d2aa-825b-451a-b1ac-cadc9027bef2","type":"GlyphRenderer"},{"attributes":{"callback":null,"column_names":["line_color","line_alpha","color","fill_alpha","height","width","y","x","label"],"data":{"authority":["Florian"],"chart_index":[{"authority":"Florian"}],"color":["#f22c40"],"fill_alpha":[0.8],"height":[1.0],"label":[{"authority":"Florian"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Florian"],"y":[0.5]}},"id":"c575ed54-b0ca-4c21-93de-4bc01f8ff7be","type":"ColumnDataSource"},{"attributes":{},"id":"6df224f9-ef77-4ea4-92d7-ea1798056255","type":"LinearScale"},{"attributes":{"callback":null,"end":7.35},"id":"7ec16510-5e21-4237-839c-0323295f187b","type":"Range1d"},{"attributes":{"data_source":{"id":"d01fe8d5-8bc4-4551-8204-37d60badaabd","type":"ColumnDataSource"},"glyph":{"id":"2c309419-4a1d-43f0-ac78-0f1b6ea0fb39","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"f88727b4-a137-4ebe-b233-a950e6ac58d2","type":"GlyphRenderer"},{"attributes":{"callback":null,"column_names":["line_color","line_alpha","color","fill_alpha","height","width","y","x","label"],"data":{"authority":["Constantine I"],"chart_index":[{"authority":"Constantine I"}],"color":["#f22c40"],"fill_alpha":[0.8],"height":[1.0],"label":[{"authority":"Constantine I"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Constantine I"],"y":[0.5]}},"id":"1b6a3dd5-3975-4b8e-aca0-a4629aee73a0","type":"ColumnDataSource"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"4a23214a-08c9-43f2-95af-ef931ce218cd","type":"Rect"},{"attributes":{"data_source":{"id":"fea34816-4d13-4494-891a-18b42c0a54d2","type":"ColumnDataSource"},"glyph":{"id":"ff2a82bb-f3b6-4d87-a66c-ad0d0b6a3f08","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"c5494681-b78a-445b-958a-79872d8e2152","type":"GlyphRenderer"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"66dab08f-732e-4f5b-94a9-28a25c3720d8","type":"Rect"},{"attributes":{"data_source":{"id":"a9e2d2d0-fb17-4c6f-a4dd-1f24653cf339","type":"ColumnDataSource"},"glyph":{"id":"2dd9e31c-3474-4871-9dc6-8866455268d0","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"c922d17f-e9bd-460d-a883-f2671e5f3e90","type":"GlyphRenderer"},{"attributes":{"label":{"value":"Valerian, Gallienus"},"renderers":[{"id":"cb33a676-b7d2-4748-b7a8-c8c49a77f880","type":"GlyphRenderer"}]},"id":"eb7b67ae-b1a0-470d-9f11-83a8a124c8db","type":"LegendItem"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"ff2a82bb-f3b6-4d87-a66c-ad0d0b6a3f08","type":"Rect"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"4917648e-2bf8-4d8c-a4f0-b879d5372467","type":"Rect"},{"attributes":{"label":{"value":"Florian"},"renderers":[{"id":"e47a7f97-39e9-4f68-8516-c4c288eb8fea","type":"GlyphRenderer"}]},"id":"6d94c7f4-5102-4cf0-a6e1-c0ac1a82e20b","type":"LegendItem"},{"attributes":{"plot":{"id":"34bca1c7-a9ea-4f08-b7b6-dd41672a845e","subtype":"Chart","type":"Plot"}},"id":"74adcd7d-3d8d-4972-a8e1-f60d9ba1933f","type":"PanTool"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"46453141-6176-466e-a782-8158c20df31c","type":"Rect"},{"attributes":{"data_source":{"id":"6fc21c45-8a3d-48d3-a3d7-7745871510e9","type":"ColumnDataSource"},"glyph":{"id":"a2aa5f00-fa8a-43da-be6a-73eb1b062d92","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"d104ad64-3345-4bea-835d-1ebbf6146077","type":"GlyphRenderer"},{"attributes":{"data_source":{"id":"7faa9a7a-8a32-4129-9572-8e61080f5639","type":"ColumnDataSource"},"glyph":{"id":"5aab00fb-acde-436d-9e3d-95b1d274cc6b","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"2f41e2ad-dbc8-4e5d-9048-e9fe2434a854","type":"GlyphRenderer"},{"attributes":{"data_source":{"id":"5bfb0e6b-e679-4ca0-8a1f-df378dee3fcb","type":"ColumnDataSource"},"glyph":{"id":"cb8f6994-1414-4593-8e1a-746048c8bf09","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"ea42bdbe-db82-4dfd-8ff6-40813adfd519","type":"GlyphRenderer"},{"attributes":{"callback":null,"column_names":["line_color","line_alpha","color","fill_alpha","height","width","y","x","label"],"data":{"authority":["Carus"],"chart_index":[{"authority":"Carus"}],"color":["#f22c40"],"fill_alpha":[0.8],"height":[1.0],"label":[{"authority":"Carus"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Carus"],"y":[0.5]}},"id":"8a620151-9182-4d53-92ce-49d28788008e","type":"ColumnDataSource"},{"attributes":{"overlay":{"id":"de85e511-01ef-4d0e-a14e-a5d3875db4c0","type":"BoxAnnotation"},"plot":{"id":"34bca1c7-a9ea-4f08-b7b6-dd41672a845e","subtype":"Chart","type":"Plot"}},"id":"69680bb2-3868-4d85-8b92-ca5a6104ee55","type":"BoxZoomTool"},{"attributes":{"label":{"value":"Claudius Gothicus"},"renderers":[{"id":"de1a8967-6cc7-4cd2-a1d8-8c7404af60f5","type":"GlyphRenderer"}]},"id":"278c833e-086c-4ced-98a3-f50aeb55675b","type":"LegendItem"},{"attributes":{"label":{"value":"Tacitus"},"renderers":[{"id":"2f41e2ad-dbc8-4e5d-9048-e9fe2434a854","type":"GlyphRenderer"}]},"id":"1709c33b-e6df-446e-8330-fb77da69e20d","type":"LegendItem"},{"attributes":{"data_source":{"id":"a8ba6c9a-8805-4060-82e7-76280adf623a","type":"ColumnDataSource"},"glyph":{"id":"fbb862c3-27ce-4861-b8d3-638691cff285","type":"Rect"},"hover_glyph":null,"muted_glyph":null},"id":"1b57943b-bd01-46c4-9d0c-1232f6443613","type":"GlyphRenderer"},{"attributes":{"bottom_units":"screen","fill_alpha":{"value":0.5},"fill_color":{"value":"lightgrey"},"left_units":"screen","level":"overlay","line_alpha":{"value":1.0},"line_color":{"value":"black"},"line_dash":[4,4],"line_width":{"value":2},"plot":null,"render_mode":"css","right_units":"screen","top_units":"screen"},"id":"de85e511-01ef-4d0e-a14e-a5d3875db4c0","type":"BoxAnnotation"},{"attributes":{"callback":null,"column_names":["line_color","line_alpha","color","fill_alpha","height","width","y","x","label"],"data":{"authority":["Valerian, Gallienus"],"chart_index":[{"authority":"Valerian, Gallienus"}],"color":["#f22c40"],"fill_alpha":[0.8],"height":[4.0],"label":[{"authority":"Valerian, Gallienus"}],"line_alpha":[1.0],"line_color":["white"],"width":[0.8],"x":["Valerian, Gallienus"],"y":[2.0]}},"id":"65c49f8b-4cef-46ef-b733-efbc7b8515a5","type":"ColumnDataSource"},{"attributes":{"fill_alpha":{"field":"fill_alpha"},"fill_color":{"field":"color"},"height":{"field":"height","units":"data"},"line_color":{"field":"line_color"},"width":{"field":"width","units":"data"},"x":{"field":"x"},"y":{"field":"y"}},"id":"a05b0d76-5f84-4d73-8b05-9df7245dab00","type":"Rect"}],"root_ids":["34bca1c7-a9ea-4f08-b7b6-dd41672a845e"]},"title":"Bokeh Application","version":"0.12.6"}};
-              var render_items = [{"docid":"69360cce-e5c8-4759-bc35-0f75e26a9f7c","elementid":"e5b7b846-ec50-4494-9d44-9e1629ed28fb","modelid":"34bca1c7-a9ea-4f08-b7b6-dd41672a845e"}];
-              
-              Bokeh.embed.embed_items(docs_json, render_items);
-            });
-          };
-          if (document.readyState != "loading") fn();
-          else document.addEventListener("DOMContentLoaded", fn);
-        })();
-        
-        </script>
-    </body>
-</html>
+
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-0.12.14.min.css">
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.14.min.css">
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-tables-0.12.14.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+<style>div.bk-hbox {
+    display: flex;
+    justify-content: center;
+}
+
+div.bk-hbox div.bk-plot {
+    padding: 8px;
+}
+
+div.bk-hbox div.bk-data-table {
+    padding: 20px;
+}
+
+div.hololayout {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+div.holoframe {
+	width: 75%;
+}
+
+div.holowell {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+form.holoform {
+    background-color: #fafafa;
+    border-radius: 5px;
+    overflow: hidden;
+	padding-left: 0.8em;
+    padding-right: 0.8em;
+    padding-top: 0.4em;
+    padding-bottom: 0.4em;
+}
+
+div.holowidgets {
+    padding-right: 0;
+	width: 25%;
+}
+
+div.holoslider {
+    min-height: 0 !important;
+    height: 0.8em;
+    width: 60%;
+}
+
+div.holoformgroup {
+    padding-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+div.hologroup {
+    padding-left: 0;
+    padding-right: 0.8em;
+    width: 50%;
+}
+
+.holoselect {
+    width: 92%;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.holotext {
+    width: 100%;
+    padding-left:  0.5em;
+    padding-right: 0;
+}
+
+.holowidgets .ui-resizable-se {
+	visibility: hidden
+}
+
+.holoframe > .ui-resizable-se {
+	visibility: hidden
+}
+
+.holowidgets .ui-resizable-s {
+	visibility: hidden
+}
+</style><div style='display: table; margin: 0 auto;'>
+
+<div class="bk-root">
+    <div class="bk-plotdiv" id="89fe6e9e-aa3a-4c6c-843f-e983143e0cd6"></div>
+</div>
+<script type="text/javascript">
+  (function(root) {
+  function embed_document(root) {
+    
+  var docs_json = {"43be2f9a-632b-44df-89e3-c0430558a6ff":{"roots":{"references":[{"attributes":{},"id":"d490af15-9e21-470c-8699-8fe79d266008","type":"CategoricalTickFormatter"},{"attributes":{"callback":null,"renderers":[{"id":"5250a57e-73c7-4170-bb17-3ab7e88c8a43","type":"GlyphRenderer"}],"tooltips":[["authority","@{authority}"],["reverseType","@{reverseType}"]]},"id":"4ff561ef-12fb-421b-a712-c3253e348644","type":"HoverTool"},{"attributes":{},"id":"5fda26ca-931e-4a42-81b8-a9dc4e0bb362","type":"BasicTickFormatter"},{"attributes":{},"id":"426b51b4-5a71-4306-8544-aa18ce108a02","type":"CategoricalTicker"},{"attributes":{"overlay":{"id":"c58d48b4-b7fa-4112-b1c8-dd35d744a441","type":"BoxAnnotation"}},"id":"95906b1b-d4a7-42c7-a662-a743998816e7","type":"BoxZoomTool"},{"attributes":{},"id":"623811a2-417b-4af5-a99d-17093760e1ef","type":"CategoricalScale"},{"attributes":{"plot":null,"text":"'radiate' on Obverse and 'sol' on Reverse Coins from OCRE by Authority","text_color":{"value":"black"},"text_font_size":{"value":"12pt"}},"id":"eb1df792-7bbb-4286-a8ec-d6fdabaf83ec","type":"Title"},{"attributes":{},"id":"d5b3d5b7-dd9e-4a82-91fc-5e6a0f56ccce","type":"WheelZoomTool"},{"attributes":{"source":{"id":"b9556a98-97f0-4d95-90aa-f867ff9aa3d4","type":"ColumnDataSource"}},"id":"ef114f20-b635-438c-aeab-59be8d9a8c4a","type":"CDSView"},{"attributes":{},"id":"b92e690a-39b7-492d-9113-c84a488a5b65","type":"LinearScale"},{"attributes":{"items":[],"plot":{"id":"395e9ba5-8dab-411d-bf30-4049f348bc80","subtype":"Figure","type":"Plot"}},"id":"318890ae-f88f-440f-8991-36fa325357be","type":"Legend"},{"attributes":{"bottom_units":"screen","fill_alpha":{"value":0.5},"fill_color":{"value":"lightgrey"},"left_units":"screen","level":"overlay","line_alpha":{"value":1.0},"line_color":{"value":"black"},"line_dash":[4,4],"line_width":{"value":2},"plot":null,"render_mode":"css","right_units":"screen","top_units":"screen"},"id":"c58d48b4-b7fa-4112-b1c8-dd35d744a441","type":"BoxAnnotation"},{"attributes":{"dimension":1,"grid_line_color":{"value":null},"plot":{"id":"395e9ba5-8dab-411d-bf30-4049f348bc80","subtype":"Figure","type":"Plot"},"ticker":{"id":"0518277c-5b6c-4c88-870a-82e9e3795fd3","type":"BasicTicker"}},"id":"4b99b005-c705-4226-b69a-6d5d57559d43","type":"Grid"},{"attributes":{"below":[{"id":"27c9d74f-a041-45d7-831d-74b19b8b52f4","type":"CategoricalAxis"}],"left":[{"id":"4290c568-021f-45de-9207-5ba884c44bde","type":"LinearAxis"}],"min_border_bottom":10,"min_border_left":10,"min_border_right":10,"min_border_top":10,"renderers":[{"id":"27c9d74f-a041-45d7-831d-74b19b8b52f4","type":"CategoricalAxis"},{"id":"4cbd0c69-ef2c-4825-8d4f-67066cbd95f3","type":"Grid"},{"id":"4290c568-021f-45de-9207-5ba884c44bde","type":"LinearAxis"},{"id":"4b99b005-c705-4226-b69a-6d5d57559d43","type":"Grid"},{"id":"c58d48b4-b7fa-4112-b1c8-dd35d744a441","type":"BoxAnnotation"},{"id":"318890ae-f88f-440f-8991-36fa325357be","type":"Legend"},{"id":"5250a57e-73c7-4170-bb17-3ab7e88c8a43","type":"GlyphRenderer"}],"sizing_mode":"stretch_both","title":{"id":"eb1df792-7bbb-4286-a8ec-d6fdabaf83ec","type":"Title"},"toolbar":{"id":"04ae40cf-184b-4e14-ab36-247086928d69","type":"Toolbar"},"x_range":{"id":"eb52e1a0-e6da-4db7-a135-6dfb794e5fbf","type":"FactorRange"},"x_scale":{"id":"623811a2-417b-4af5-a99d-17093760e1ef","type":"CategoricalScale"},"y_range":{"id":"ba65fe07-6495-4e8a-ba31-878e04e803ef","type":"Range1d"},"y_scale":{"id":"b92e690a-39b7-492d-9113-c84a488a5b65","type":"LinearScale"}},"id":"395e9ba5-8dab-411d-bf30-4049f348bc80","subtype":"Figure","type":"Plot"},{"attributes":{"grid_line_color":{"value":null},"plot":{"id":"395e9ba5-8dab-411d-bf30-4049f348bc80","subtype":"Figure","type":"Plot"},"ticker":{"id":"426b51b4-5a71-4306-8544-aa18ce108a02","type":"CategoricalTicker"}},"id":"4cbd0c69-ef2c-4825-8d4f-67066cbd95f3","type":"Grid"},{"attributes":{},"id":"fcbce15e-cd61-4f14-a611-5296f6da20a1","type":"ResetTool"},{"attributes":{"axis_label":"reverseType","bounds":"auto","formatter":{"id":"5fda26ca-931e-4a42-81b8-a9dc4e0bb362","type":"BasicTickFormatter"},"major_label_orientation":"horizontal","plot":{"id":"395e9ba5-8dab-411d-bf30-4049f348bc80","subtype":"Figure","type":"Plot"},"ticker":{"id":"0518277c-5b6c-4c88-870a-82e9e3795fd3","type":"BasicTicker"}},"id":"4290c568-021f-45de-9207-5ba884c44bde","type":"LinearAxis"},{"attributes":{"callback":null,"factors":["Caracalla","Elagabalus","Severus Alexander","Gordian III","Philip the Arab","Valerian I","Valerian, Gallienus","Gallienus","Macrianus Minor","Quietus","Postumus","Claudius Gothicus","Claudius II Gothicus","Marius","Victorinus","Tetricus I","Quintillus","Aurelian","Probus","Tacitus","Florian","Florianus","Carus","Numerian","Numerian, Carinus","Maximian","Diocletian","Carausius","Constantine I"]},"id":"eb52e1a0-e6da-4db7-a135-6dfb794e5fbf","type":"FactorRange"},{"attributes":{"data_source":{"id":"b9556a98-97f0-4d95-90aa-f867ff9aa3d4","type":"ColumnDataSource"},"glyph":{"id":"4e5a5b5f-75b2-4613-a179-d366440a974d","type":"VBar"},"hover_glyph":null,"muted_glyph":null,"nonselection_glyph":{"id":"de2691f4-48ab-4109-a4f1-0e00dfe9bdfb","type":"VBar"},"selection_glyph":null,"view":{"id":"ef114f20-b635-438c-aeab-59be8d9a8c4a","type":"CDSView"}},"id":"5250a57e-73c7-4170-bb17-3ab7e88c8a43","type":"GlyphRenderer"},{"attributes":{"fill_color":{"value":"#30a2da"},"line_color":{"value":"#000000"},"top":{"field":"reverseType"},"width":{"value":0.5},"x":{"field":"authority"}},"id":"4e5a5b5f-75b2-4613-a179-d366440a974d","type":"VBar"},{"attributes":{},"id":"0518277c-5b6c-4c88-870a-82e9e3795fd3","type":"BasicTicker"},{"attributes":{"callback":null,"column_names":["authority","reverseType"],"data":{"authority":["Caracalla","Elagabalus","Severus Alexander","Gordian III","Philip the Arab","Valerian I","Valerian, Gallienus","Gallienus","Macrianus Minor","Quietus","Postumus","Claudius Gothicus","Claudius II Gothicus","Marius","Victorinus","Tetricus I","Quintillus","Aurelian","Probus","Tacitus","Florian","Florianus","Carus","Numerian","Numerian, Carinus","Maximian","Diocletian","Carausius","Constantine I"],"reverseType":[7,1,5,17,4,12,15,138,4,4,9,15,47,2,241,10,4,102,63,4,1,1,6,1,2,5,1,1,2]}},"id":"b9556a98-97f0-4d95-90aa-f867ff9aa3d4","type":"ColumnDataSource"},{"attributes":{},"id":"797ade9c-3095-4de3-a818-2884d57342e8","type":"SaveTool"},{"attributes":{},"id":"4e07d1c2-73fc-44bf-953f-a60fcb13d4fb","type":"PanTool"},{"attributes":{"active_drag":"auto","active_inspect":"auto","active_scroll":"auto","active_tap":"auto","tools":[{"id":"4ff561ef-12fb-421b-a712-c3253e348644","type":"HoverTool"},{"id":"797ade9c-3095-4de3-a818-2884d57342e8","type":"SaveTool"},{"id":"4e07d1c2-73fc-44bf-953f-a60fcb13d4fb","type":"PanTool"},{"id":"d5b3d5b7-dd9e-4a82-91fc-5e6a0f56ccce","type":"WheelZoomTool"},{"id":"95906b1b-d4a7-42c7-a662-a743998816e7","type":"BoxZoomTool"},{"id":"fcbce15e-cd61-4f14-a611-5296f6da20a1","type":"ResetTool"},{"id":"757be99c-0198-4c4a-86ab-1800f45decca","type":"WheelZoomTool"}]},"id":"04ae40cf-184b-4e14-ab36-247086928d69","type":"Toolbar"},{"attributes":{"axis_label":"authority","bounds":"auto","formatter":{"id":"d490af15-9e21-470c-8699-8fe79d266008","type":"CategoricalTickFormatter"},"major_label_orientation":1.5707963267948966,"plot":{"id":"395e9ba5-8dab-411d-bf30-4049f348bc80","subtype":"Figure","type":"Plot"},"ticker":{"id":"426b51b4-5a71-4306-8544-aa18ce108a02","type":"CategoricalTicker"}},"id":"27c9d74f-a041-45d7-831d-74b19b8b52f4","type":"CategoricalAxis"},{"attributes":{"callback":null,"end":241},"id":"ba65fe07-6495-4e8a-ba31-878e04e803ef","type":"Range1d"},{"attributes":{"dimensions":"width"},"id":"757be99c-0198-4c4a-86ab-1800f45decca","type":"WheelZoomTool"},{"attributes":{"fill_alpha":{"value":0.1},"fill_color":{"value":"#30a2da"},"line_alpha":{"value":0.1},"line_color":{"value":"#000000"},"top":{"field":"reverseType"},"width":{"value":0.5},"x":{"field":"authority"}},"id":"de2691f4-48ab-4109-a4f1-0e00dfe9bdfb","type":"VBar"}],"root_ids":["395e9ba5-8dab-411d-bf30-4049f348bc80"]},"title":"Bokeh Application","version":"0.12.14"}};
+  var render_items = [{"docid":"43be2f9a-632b-44df-89e3-c0430558a6ff","elementid":"89fe6e9e-aa3a-4c6c-843f-e983143e0cd6","modelid":"395e9ba5-8dab-411d-bf30-4049f348bc80"}];
+  root.Bokeh.embed.embed_items_notebook(docs_json, render_items);
+
+  }
+  if (root.Bokeh !== undefined) {
+    embed_document(root);
+  } else {
+    var attempts = 0;
+    var timer = setInterval(function(root) {
+      if (root.Bokeh !== undefined) {
+        embed_document(root);
+        clearInterval(timer);
+      }
+      attempts++;
+      if (attempts > 100) {
+        console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing")
+        clearInterval(timer);
+      }
+    }, 10, root)
+  }
+})(window);
+</script>
+</div>
