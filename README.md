@@ -34,6 +34,9 @@
 [OCRE_material_radiate_counts_plot.html](Plots/OCRE_material_radiate_counts_plot.html)
 
 
+[OCRE_radiate_apollo_Count_plot.html](Plots/OCRE_radiate_apollo_Count_plot.html)
+
+
 [OCRE_radiate_jupiter_Count_plot.html](Plots/OCRE_radiate_jupiter_Count_plot.html)
 
 
@@ -53,6 +56,9 @@
 
 
 [OCRE_radiate_venus_Count_plot.html](Plots/OCRE_radiate_venus_Count_plot.html)
+
+
+[OCRE_radiate_victoria_Count_plot.html](Plots/OCRE_radiate_victoria_Count_plot.html)
 
 
 [OCRE_radiate_victory_Count_plot.html](Plots/OCRE_radiate_victory_Count_plot.html)
@@ -91,6 +97,9 @@
 [allData_material_radiate_counts_plot.html](Plots/allData_material_radiate_counts_plot.html)
 
 
+[allData_radiate_apollo_Count_plot.html](Plots/allData_radiate_apollo_Count_plot.html)
+
+
 [allData_radiate_jupiter_Count_plot.html](Plots/allData_radiate_jupiter_Count_plot.html)
 
 
@@ -110,6 +119,9 @@
 
 
 [allData_radiate_venus_Count_plot.html](Plots/allData_radiate_venus_Count_plot.html)
+
+
+[allData_radiate_victoria_Count_plot.html](Plots/allData_radiate_victoria_Count_plot.html)
 
 
 [allData_radiate_victory_Count_plot.html](Plots/allData_radiate_victory_Count_plot.html)
@@ -148,6 +160,9 @@
 [americanNumismaticSociety_material_radiate_counts_plot.html](Plots/americanNumismaticSociety_material_radiate_counts_plot.html)
 
 
+[americanNumismaticSociety_radiate_apollo_Count_plot.html](Plots/americanNumismaticSociety_radiate_apollo_Count_plot.html)
+
+
 [americanNumismaticSociety_radiate_jupiter_Count_plot.html](Plots/americanNumismaticSociety_radiate_jupiter_Count_plot.html)
 
 
@@ -167,6 +182,9 @@
 
 
 [americanNumismaticSociety_radiate_venus_Count_plot.html](Plots/americanNumismaticSociety_radiate_venus_Count_plot.html)
+
+
+[americanNumismaticSociety_radiate_victoria_Count_plot.html](Plots/americanNumismaticSociety_radiate_victoria_Count_plot.html)
 
 
 [americanNumismaticSociety_radiate_victory_Count_plot.html](Plots/americanNumismaticSociety_radiate_victory_Count_plot.html)
@@ -205,6 +223,9 @@
 [britishMuseum_material_radiate_counts_plot.html](Plots/britishMuseum_material_radiate_counts_plot.html)
 
 
+[britishMuseum_radiate_apollo_Count_plot.html](Plots/britishMuseum_radiate_apollo_Count_plot.html)
+
+
 [britishMuseum_radiate_jupiter_Count_plot.html](Plots/britishMuseum_radiate_jupiter_Count_plot.html)
 
 
@@ -224,6 +245,9 @@
 
 
 [britishMuseum_radiate_venus_Count_plot.html](Plots/britishMuseum_radiate_venus_Count_plot.html)
+
+
+[britishMuseum_radiate_victoria_Count_plot.html](Plots/britishMuseum_radiate_victoria_Count_plot.html)
 
 
 [britishMuseum_radiate_victory_Count_plot.html](Plots/britishMuseum_radiate_victory_Count_plot.html)
