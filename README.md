@@ -10,7 +10,22 @@
 [OCRE_Word_reverse_word_count_plot.html](Plots/OCRE_Word_reverse_word_count_plot.html)
 
 
+[OCRE_apollo_ratios_authority_plot.html](Plots/OCRE_apollo_ratios_authority_plot.html)
+
+
+[OCRE_apollo_ratios_emperor_plot.html](Plots/OCRE_apollo_ratios_emperor_plot.html)
+
+
+[OCRE_authority_apollo_counts_plot.html](Plots/OCRE_authority_apollo_counts_plot.html)
+
+
 [OCRE_authority_counts_plot.html](Plots/OCRE_authority_counts_plot.html)
+
+
+[OCRE_authority_jupiter_counts_plot.html](Plots/OCRE_authority_jupiter_counts_plot.html)
+
+
+[OCRE_authority_mars_counts_plot.html](Plots/OCRE_authority_mars_counts_plot.html)
 
 
 [OCRE_authority_obverse_word_count_plot.html](Plots/OCRE_authority_obverse_word_count_plot.html)
@@ -22,16 +37,55 @@
 [OCRE_authority_reverse_word_count_plot.html](Plots/OCRE_authority_reverse_word_count_plot.html)
 
 
+[OCRE_authority_sol_counts_plot.html](Plots/OCRE_authority_sol_counts_plot.html)
+
+
+[OCRE_authority_venus_counts_plot.html](Plots/OCRE_authority_venus_counts_plot.html)
+
+
+[OCRE_authority_victoria_counts_plot.html](Plots/OCRE_authority_victoria_counts_plot.html)
+
+
+[OCRE_authority_victory_counts_plot.html](Plots/OCRE_authority_victory_counts_plot.html)
+
+
+[OCRE_emperor_apollo_counts_plot.html](Plots/OCRE_emperor_apollo_counts_plot.html)
+
+
 [OCRE_emperor_counts_plot.html](Plots/OCRE_emperor_counts_plot.html)
+
+
+[OCRE_emperor_jupiter_counts_plot.html](Plots/OCRE_emperor_jupiter_counts_plot.html)
+
+
+[OCRE_emperor_mars_counts_plot.html](Plots/OCRE_emperor_mars_counts_plot.html)
 
 
 [OCRE_emperor_radiate_counts_plot.html](Plots/OCRE_emperor_radiate_counts_plot.html)
 
 
-[OCRE_material_counts_plot.html](Plots/OCRE_material_counts_plot.html)
+[OCRE_emperor_sol_counts_plot.html](Plots/OCRE_emperor_sol_counts_plot.html)
 
 
-[OCRE_material_radiate_counts_plot.html](Plots/OCRE_material_radiate_counts_plot.html)
+[OCRE_emperor_venus_counts_plot.html](Plots/OCRE_emperor_venus_counts_plot.html)
+
+
+[OCRE_emperor_victoria_counts_plot.html](Plots/OCRE_emperor_victoria_counts_plot.html)
+
+
+[OCRE_emperor_victory_counts_plot.html](Plots/OCRE_emperor_victory_counts_plot.html)
+
+
+[OCRE_jupiter_ratios_authority_plot.html](Plots/OCRE_jupiter_ratios_authority_plot.html)
+
+
+[OCRE_jupiter_ratios_emperor_plot.html](Plots/OCRE_jupiter_ratios_emperor_plot.html)
+
+
+[OCRE_mars_ratios_authority_plot.html](Plots/OCRE_mars_ratios_authority_plot.html)
+
+
+[OCRE_mars_ratios_emperor_plot.html](Plots/OCRE_mars_ratios_emperor_plot.html)
 
 
 [OCRE_radiate_apollo_Count_plot.html](Plots/OCRE_radiate_apollo_Count_plot.html)
@@ -49,9 +103,6 @@
 [OCRE_radiate_ratios_emperor_plot.html](Plots/OCRE_radiate_ratios_emperor_plot.html)
 
 
-[OCRE_radiate_ratios_plot.html](Plots/OCRE_radiate_ratios_plot.html)
-
-
 [OCRE_radiate_sol_Count_plot.html](Plots/OCRE_radiate_sol_Count_plot.html)
 
 
@@ -64,6 +115,30 @@
 [OCRE_radiate_victory_Count_plot.html](Plots/OCRE_radiate_victory_Count_plot.html)
 
 
+[OCRE_sol_ratios_authority_plot.html](Plots/OCRE_sol_ratios_authority_plot.html)
+
+
+[OCRE_sol_ratios_emperor_plot.html](Plots/OCRE_sol_ratios_emperor_plot.html)
+
+
+[OCRE_venus_ratios_authority_plot.html](Plots/OCRE_venus_ratios_authority_plot.html)
+
+
+[OCRE_venus_ratios_emperor_plot.html](Plots/OCRE_venus_ratios_emperor_plot.html)
+
+
+[OCRE_victoria_ratios_authority_plot.html](Plots/OCRE_victoria_ratios_authority_plot.html)
+
+
+[OCRE_victoria_ratios_emperor_plot.html](Plots/OCRE_victoria_ratios_emperor_plot.html)
+
+
+[OCRE_victory_ratios_authority_plot.html](Plots/OCRE_victory_ratios_authority_plot.html)
+
+
+[OCRE_victory_ratios_emperor_plot.html](Plots/OCRE_victory_ratios_emperor_plot.html)
+
+
 [allData_Constanine_Word_Count_plot.html](Plots/allData_Constanine_Word_Count_plot.html)
 
 
@@ -73,7 +148,22 @@
 [allData_Word_reverse_word_count_plot.html](Plots/allData_Word_reverse_word_count_plot.html)
 
 
+[allData_apollo_ratios_authority_plot.html](Plots/allData_apollo_ratios_authority_plot.html)
+
+
+[allData_apollo_ratios_emperor_plot.html](Plots/allData_apollo_ratios_emperor_plot.html)
+
+
+[allData_authority_apollo_counts_plot.html](Plots/allData_authority_apollo_counts_plot.html)
+
+
 [allData_authority_counts_plot.html](Plots/allData_authority_counts_plot.html)
+
+
+[allData_authority_jupiter_counts_plot.html](Plots/allData_authority_jupiter_counts_plot.html)
+
+
+[allData_authority_mars_counts_plot.html](Plots/allData_authority_mars_counts_plot.html)
 
 
 [allData_authority_obverse_word_count_plot.html](Plots/allData_authority_obverse_word_count_plot.html)
@@ -85,16 +175,55 @@
 [allData_authority_reverse_word_count_plot.html](Plots/allData_authority_reverse_word_count_plot.html)
 
 
+[allData_authority_sol_counts_plot.html](Plots/allData_authority_sol_counts_plot.html)
+
+
+[allData_authority_venus_counts_plot.html](Plots/allData_authority_venus_counts_plot.html)
+
+
+[allData_authority_victoria_counts_plot.html](Plots/allData_authority_victoria_counts_plot.html)
+
+
+[allData_authority_victory_counts_plot.html](Plots/allData_authority_victory_counts_plot.html)
+
+
+[allData_emperor_apollo_counts_plot.html](Plots/allData_emperor_apollo_counts_plot.html)
+
+
 [allData_emperor_counts_plot.html](Plots/allData_emperor_counts_plot.html)
+
+
+[allData_emperor_jupiter_counts_plot.html](Plots/allData_emperor_jupiter_counts_plot.html)
+
+
+[allData_emperor_mars_counts_plot.html](Plots/allData_emperor_mars_counts_plot.html)
 
 
 [allData_emperor_radiate_counts_plot.html](Plots/allData_emperor_radiate_counts_plot.html)
 
 
-[allData_material_counts_plot.html](Plots/allData_material_counts_plot.html)
+[allData_emperor_sol_counts_plot.html](Plots/allData_emperor_sol_counts_plot.html)
 
 
-[allData_material_radiate_counts_plot.html](Plots/allData_material_radiate_counts_plot.html)
+[allData_emperor_venus_counts_plot.html](Plots/allData_emperor_venus_counts_plot.html)
+
+
+[allData_emperor_victoria_counts_plot.html](Plots/allData_emperor_victoria_counts_plot.html)
+
+
+[allData_emperor_victory_counts_plot.html](Plots/allData_emperor_victory_counts_plot.html)
+
+
+[allData_jupiter_ratios_authority_plot.html](Plots/allData_jupiter_ratios_authority_plot.html)
+
+
+[allData_jupiter_ratios_emperor_plot.html](Plots/allData_jupiter_ratios_emperor_plot.html)
+
+
+[allData_mars_ratios_authority_plot.html](Plots/allData_mars_ratios_authority_plot.html)
+
+
+[allData_mars_ratios_emperor_plot.html](Plots/allData_mars_ratios_emperor_plot.html)
 
 
 [allData_radiate_apollo_Count_plot.html](Plots/allData_radiate_apollo_Count_plot.html)
@@ -112,9 +241,6 @@
 [allData_radiate_ratios_emperor_plot.html](Plots/allData_radiate_ratios_emperor_plot.html)
 
 
-[allData_radiate_ratios_plot.html](Plots/allData_radiate_ratios_plot.html)
-
-
 [allData_radiate_sol_Count_plot.html](Plots/allData_radiate_sol_Count_plot.html)
 
 
@@ -127,6 +253,30 @@
 [allData_radiate_victory_Count_plot.html](Plots/allData_radiate_victory_Count_plot.html)
 
 
+[allData_sol_ratios_authority_plot.html](Plots/allData_sol_ratios_authority_plot.html)
+
+
+[allData_sol_ratios_emperor_plot.html](Plots/allData_sol_ratios_emperor_plot.html)
+
+
+[allData_venus_ratios_authority_plot.html](Plots/allData_venus_ratios_authority_plot.html)
+
+
+[allData_venus_ratios_emperor_plot.html](Plots/allData_venus_ratios_emperor_plot.html)
+
+
+[allData_victoria_ratios_authority_plot.html](Plots/allData_victoria_ratios_authority_plot.html)
+
+
+[allData_victoria_ratios_emperor_plot.html](Plots/allData_victoria_ratios_emperor_plot.html)
+
+
+[allData_victory_ratios_authority_plot.html](Plots/allData_victory_ratios_authority_plot.html)
+
+
+[allData_victory_ratios_emperor_plot.html](Plots/allData_victory_ratios_emperor_plot.html)
+
+
 [americanNumismaticSociety_Constanine_Word_Count_plot.html](Plots/americanNumismaticSociety_Constanine_Word_Count_plot.html)
 
 
@@ -136,7 +286,22 @@
 [americanNumismaticSociety_Word_reverse_word_count_plot.html](Plots/americanNumismaticSociety_Word_reverse_word_count_plot.html)
 
 
+[americanNumismaticSociety_apollo_ratios_authority_plot.html](Plots/americanNumismaticSociety_apollo_ratios_authority_plot.html)
+
+
+[americanNumismaticSociety_apollo_ratios_emperor_plot.html](Plots/americanNumismaticSociety_apollo_ratios_emperor_plot.html)
+
+
+[americanNumismaticSociety_authority_apollo_counts_plot.html](Plots/americanNumismaticSociety_authority_apollo_counts_plot.html)
+
+
 [americanNumismaticSociety_authority_counts_plot.html](Plots/americanNumismaticSociety_authority_counts_plot.html)
+
+
+[americanNumismaticSociety_authority_jupiter_counts_plot.html](Plots/americanNumismaticSociety_authority_jupiter_counts_plot.html)
+
+
+[americanNumismaticSociety_authority_mars_counts_plot.html](Plots/americanNumismaticSociety_authority_mars_counts_plot.html)
 
 
 [americanNumismaticSociety_authority_obverse_word_count_plot.html](Plots/americanNumismaticSociety_authority_obverse_word_count_plot.html)
@@ -148,16 +313,55 @@
 [americanNumismaticSociety_authority_reverse_word_count_plot.html](Plots/americanNumismaticSociety_authority_reverse_word_count_plot.html)
 
 
+[americanNumismaticSociety_authority_sol_counts_plot.html](Plots/americanNumismaticSociety_authority_sol_counts_plot.html)
+
+
+[americanNumismaticSociety_authority_venus_counts_plot.html](Plots/americanNumismaticSociety_authority_venus_counts_plot.html)
+
+
+[americanNumismaticSociety_authority_victoria_counts_plot.html](Plots/americanNumismaticSociety_authority_victoria_counts_plot.html)
+
+
+[americanNumismaticSociety_authority_victory_counts_plot.html](Plots/americanNumismaticSociety_authority_victory_counts_plot.html)
+
+
+[americanNumismaticSociety_emperor_apollo_counts_plot.html](Plots/americanNumismaticSociety_emperor_apollo_counts_plot.html)
+
+
 [americanNumismaticSociety_emperor_counts_plot.html](Plots/americanNumismaticSociety_emperor_counts_plot.html)
+
+
+[americanNumismaticSociety_emperor_jupiter_counts_plot.html](Plots/americanNumismaticSociety_emperor_jupiter_counts_plot.html)
+
+
+[americanNumismaticSociety_emperor_mars_counts_plot.html](Plots/americanNumismaticSociety_emperor_mars_counts_plot.html)
 
 
 [americanNumismaticSociety_emperor_radiate_counts_plot.html](Plots/americanNumismaticSociety_emperor_radiate_counts_plot.html)
 
 
-[americanNumismaticSociety_material_counts_plot.html](Plots/americanNumismaticSociety_material_counts_plot.html)
+[americanNumismaticSociety_emperor_sol_counts_plot.html](Plots/americanNumismaticSociety_emperor_sol_counts_plot.html)
 
 
-[americanNumismaticSociety_material_radiate_counts_plot.html](Plots/americanNumismaticSociety_material_radiate_counts_plot.html)
+[americanNumismaticSociety_emperor_venus_counts_plot.html](Plots/americanNumismaticSociety_emperor_venus_counts_plot.html)
+
+
+[americanNumismaticSociety_emperor_victoria_counts_plot.html](Plots/americanNumismaticSociety_emperor_victoria_counts_plot.html)
+
+
+[americanNumismaticSociety_emperor_victory_counts_plot.html](Plots/americanNumismaticSociety_emperor_victory_counts_plot.html)
+
+
+[americanNumismaticSociety_jupiter_ratios_authority_plot.html](Plots/americanNumismaticSociety_jupiter_ratios_authority_plot.html)
+
+
+[americanNumismaticSociety_jupiter_ratios_emperor_plot.html](Plots/americanNumismaticSociety_jupiter_ratios_emperor_plot.html)
+
+
+[americanNumismaticSociety_mars_ratios_authority_plot.html](Plots/americanNumismaticSociety_mars_ratios_authority_plot.html)
+
+
+[americanNumismaticSociety_mars_ratios_emperor_plot.html](Plots/americanNumismaticSociety_mars_ratios_emperor_plot.html)
 
 
 [americanNumismaticSociety_radiate_apollo_Count_plot.html](Plots/americanNumismaticSociety_radiate_apollo_Count_plot.html)
@@ -175,9 +379,6 @@
 [americanNumismaticSociety_radiate_ratios_emperor_plot.html](Plots/americanNumismaticSociety_radiate_ratios_emperor_plot.html)
 
 
-[americanNumismaticSociety_radiate_ratios_plot.html](Plots/americanNumismaticSociety_radiate_ratios_plot.html)
-
-
 [americanNumismaticSociety_radiate_sol_Count_plot.html](Plots/americanNumismaticSociety_radiate_sol_Count_plot.html)
 
 
@@ -190,6 +391,30 @@
 [americanNumismaticSociety_radiate_victory_Count_plot.html](Plots/americanNumismaticSociety_radiate_victory_Count_plot.html)
 
 
+[americanNumismaticSociety_sol_ratios_authority_plot.html](Plots/americanNumismaticSociety_sol_ratios_authority_plot.html)
+
+
+[americanNumismaticSociety_sol_ratios_emperor_plot.html](Plots/americanNumismaticSociety_sol_ratios_emperor_plot.html)
+
+
+[americanNumismaticSociety_venus_ratios_authority_plot.html](Plots/americanNumismaticSociety_venus_ratios_authority_plot.html)
+
+
+[americanNumismaticSociety_venus_ratios_emperor_plot.html](Plots/americanNumismaticSociety_venus_ratios_emperor_plot.html)
+
+
+[americanNumismaticSociety_victoria_ratios_authority_plot.html](Plots/americanNumismaticSociety_victoria_ratios_authority_plot.html)
+
+
+[americanNumismaticSociety_victoria_ratios_emperor_plot.html](Plots/americanNumismaticSociety_victoria_ratios_emperor_plot.html)
+
+
+[americanNumismaticSociety_victory_ratios_authority_plot.html](Plots/americanNumismaticSociety_victory_ratios_authority_plot.html)
+
+
+[americanNumismaticSociety_victory_ratios_emperor_plot.html](Plots/americanNumismaticSociety_victory_ratios_emperor_plot.html)
+
+
 [britishMuseum_Constanine_Word_Count_plot.html](Plots/britishMuseum_Constanine_Word_Count_plot.html)
 
 
@@ -199,7 +424,22 @@
 [britishMuseum_Word_reverse_word_count_plot.html](Plots/britishMuseum_Word_reverse_word_count_plot.html)
 
 
+[britishMuseum_apollo_ratios_authority_plot.html](Plots/britishMuseum_apollo_ratios_authority_plot.html)
+
+
+[britishMuseum_apollo_ratios_emperor_plot.html](Plots/britishMuseum_apollo_ratios_emperor_plot.html)
+
+
+[britishMuseum_authority_apollo_counts_plot.html](Plots/britishMuseum_authority_apollo_counts_plot.html)
+
+
 [britishMuseum_authority_counts_plot.html](Plots/britishMuseum_authority_counts_plot.html)
+
+
+[britishMuseum_authority_jupiter_counts_plot.html](Plots/britishMuseum_authority_jupiter_counts_plot.html)
+
+
+[britishMuseum_authority_mars_counts_plot.html](Plots/britishMuseum_authority_mars_counts_plot.html)
 
 
 [britishMuseum_authority_obverse_word_count_plot.html](Plots/britishMuseum_authority_obverse_word_count_plot.html)
@@ -211,16 +451,55 @@
 [britishMuseum_authority_reverse_word_count_plot.html](Plots/britishMuseum_authority_reverse_word_count_plot.html)
 
 
+[britishMuseum_authority_sol_counts_plot.html](Plots/britishMuseum_authority_sol_counts_plot.html)
+
+
+[britishMuseum_authority_venus_counts_plot.html](Plots/britishMuseum_authority_venus_counts_plot.html)
+
+
+[britishMuseum_authority_victoria_counts_plot.html](Plots/britishMuseum_authority_victoria_counts_plot.html)
+
+
+[britishMuseum_authority_victory_counts_plot.html](Plots/britishMuseum_authority_victory_counts_plot.html)
+
+
+[britishMuseum_emperor_apollo_counts_plot.html](Plots/britishMuseum_emperor_apollo_counts_plot.html)
+
+
 [britishMuseum_emperor_counts_plot.html](Plots/britishMuseum_emperor_counts_plot.html)
+
+
+[britishMuseum_emperor_jupiter_counts_plot.html](Plots/britishMuseum_emperor_jupiter_counts_plot.html)
+
+
+[britishMuseum_emperor_mars_counts_plot.html](Plots/britishMuseum_emperor_mars_counts_plot.html)
 
 
 [britishMuseum_emperor_radiate_counts_plot.html](Plots/britishMuseum_emperor_radiate_counts_plot.html)
 
 
-[britishMuseum_material_counts_plot.html](Plots/britishMuseum_material_counts_plot.html)
+[britishMuseum_emperor_sol_counts_plot.html](Plots/britishMuseum_emperor_sol_counts_plot.html)
 
 
-[britishMuseum_material_radiate_counts_plot.html](Plots/britishMuseum_material_radiate_counts_plot.html)
+[britishMuseum_emperor_venus_counts_plot.html](Plots/britishMuseum_emperor_venus_counts_plot.html)
+
+
+[britishMuseum_emperor_victoria_counts_plot.html](Plots/britishMuseum_emperor_victoria_counts_plot.html)
+
+
+[britishMuseum_emperor_victory_counts_plot.html](Plots/britishMuseum_emperor_victory_counts_plot.html)
+
+
+[britishMuseum_jupiter_ratios_authority_plot.html](Plots/britishMuseum_jupiter_ratios_authority_plot.html)
+
+
+[britishMuseum_jupiter_ratios_emperor_plot.html](Plots/britishMuseum_jupiter_ratios_emperor_plot.html)
+
+
+[britishMuseum_mars_ratios_authority_plot.html](Plots/britishMuseum_mars_ratios_authority_plot.html)
+
+
+[britishMuseum_mars_ratios_emperor_plot.html](Plots/britishMuseum_mars_ratios_emperor_plot.html)
 
 
 [britishMuseum_radiate_apollo_Count_plot.html](Plots/britishMuseum_radiate_apollo_Count_plot.html)
@@ -238,9 +517,6 @@
 [britishMuseum_radiate_ratios_emperor_plot.html](Plots/britishMuseum_radiate_ratios_emperor_plot.html)
 
 
-[britishMuseum_radiate_ratios_plot.html](Plots/britishMuseum_radiate_ratios_plot.html)
-
-
 [britishMuseum_radiate_sol_Count_plot.html](Plots/britishMuseum_radiate_sol_Count_plot.html)
 
 
@@ -251,3 +527,27 @@
 
 
 [britishMuseum_radiate_victory_Count_plot.html](Plots/britishMuseum_radiate_victory_Count_plot.html)
+
+
+[britishMuseum_sol_ratios_authority_plot.html](Plots/britishMuseum_sol_ratios_authority_plot.html)
+
+
+[britishMuseum_sol_ratios_emperor_plot.html](Plots/britishMuseum_sol_ratios_emperor_plot.html)
+
+
+[britishMuseum_venus_ratios_authority_plot.html](Plots/britishMuseum_venus_ratios_authority_plot.html)
+
+
+[britishMuseum_venus_ratios_emperor_plot.html](Plots/britishMuseum_venus_ratios_emperor_plot.html)
+
+
+[britishMuseum_victoria_ratios_authority_plot.html](Plots/britishMuseum_victoria_ratios_authority_plot.html)
+
+
+[britishMuseum_victoria_ratios_emperor_plot.html](Plots/britishMuseum_victoria_ratios_emperor_plot.html)
+
+
+[britishMuseum_victory_ratios_authority_plot.html](Plots/britishMuseum_victory_ratios_authority_plot.html)
+
+
+[britishMuseum_victory_ratios_emperor_plot.html](Plots/britishMuseum_victory_ratios_emperor_plot.html)
