@@ -1,0 +1,520 @@
+
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-0.12.15.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.15.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-tables-0.12.15.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-gl-0.12.15.min.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/ui/1.10.4/jquery-ui.min.js" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.20/require.min.js" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js" type="text/javascript"></script>
+<script type="text/javascript">function HoloViewsWidget(){
+}
+
+HoloViewsWidget.comms = {};
+HoloViewsWidget.comm_state = {};
+
+HoloViewsWidget.prototype.init_slider = function(init_val){
+  if(this.load_json) {
+    this.from_json()
+  } else {
+    this.update_cache();
+  }
+}
+
+HoloViewsWidget.prototype.populate_cache = function(idx){
+  this.cache[idx].html(this.frames[idx]);
+  if (this.embed) {
+    delete this.frames[idx];
+  }
+}
+
+HoloViewsWidget.prototype.process_error = function(msg){
+
+}
+
+HoloViewsWidget.prototype.from_json = function() {
+  var data_url = this.json_path + this.id + '.json';
+  $.getJSON(data_url, $.proxy(function(json_data) {
+    this.frames = json_data;
+    this.update_cache();
+    this.update(0);
+  }, this));
+}
+
+HoloViewsWidget.prototype.dynamic_update = function(current){
+  if (current === undefined) {
+    return
+  }
+  if(this.dynamic) {
+    current = JSON.stringify(current);
+  }
+  function callback(initialized, msg){
+    /* This callback receives data from Python as a string
+       in order to parse it correctly quotes are sliced off*/
+    if (msg.content.ename != undefined) {
+      this.process_error(msg);
+    }
+    if (msg.msg_type != "execute_result") {
+      console.log("Warning: HoloViews callback returned unexpected data for key: (", current, ") with the following content:", msg.content)
+    } else {
+      if (msg.content.data['text/plain'].includes('Complete')) {
+        if (this.queue.length > 0) {
+          this.time = Date.now();
+          this.dynamic_update(this.queue[this.queue.length-1]);
+          this.queue = [];
+        } else {
+          this.wait = false;
+        }
+        return
+      }
+    }
+  }
+  this.current = current;
+  if ((window.Jupyter !== undefined) && (Jupyter.notebook.kernel != null)) {
+    var kernel = Jupyter.notebook.kernel;
+    callbacks = {iopub: {output: $.proxy(callback, this, this.initialized)}};
+    var cmd = "holoviews.plotting.widgets.NdWidget.widgets['" + this.id + "'].update(" + current + ")";
+    kernel.execute("import holoviews;" + cmd, callbacks, {silent : false});
+  }
+}
+
+HoloViewsWidget.prototype.update_cache = function(force){
+  var frame_len = Object.keys(this.frames).length;
+  for (var i=0; i<frame_len; i++) {
+    if(!this.load_json || this.dynamic)  {
+      frame = Object.keys(this.frames)[i];
+    } else {
+      frame = i;
+    }
+    if(!(frame in this.cache) || force) {
+      if ((frame in this.cache) && force) { this.cache[frame].remove() }
+      this.cache[frame] = $('<div />').appendTo("#"+"_anim_img"+this.id).hide();
+      var cache_id = "_anim_img"+this.id+"_"+frame;
+      this.cache[frame].attr("id", cache_id);
+      this.populate_cache(frame);
+    }
+  }
+}
+
+HoloViewsWidget.prototype.update = function(current){
+  if(current in this.cache) {
+    $.each(this.cache, function(index, value) {
+      value.hide();
+    });
+    this.cache[current].show();
+    this.wait = false;
+  }
+}
+
+HoloViewsWidget.prototype.init_comms = function() {
+  if ((window.Jupyter !== undefined) && (Jupyter.notebook.kernel !== undefined)) {
+    var widget = this;
+    comm_manager = Jupyter.notebook.kernel.comm_manager;
+    comm_manager.register_target(this.id, function (comm) {
+      comm.on_msg(function (msg) { widget.process_msg(msg) });
+    });
+  }
+}
+
+HoloViewsWidget.prototype.process_msg = function(msg) {
+}
+
+function SelectionWidget(frames, id, slider_ids, keyMap, dim_vals, notFound, load_json, mode, cached, json_path, dynamic){
+  this.frames = frames;
+  this.id = id;
+  this.slider_ids = slider_ids;
+  this.keyMap = keyMap
+  this.current_frame = 0;
+  this.current_vals = dim_vals;
+  this.load_json = load_json;
+  this.mode = mode;
+  this.notFound = notFound;
+  this.cached = cached;
+  this.dynamic = dynamic;
+  this.cache = {};
+  this.json_path = json_path;
+  this.init_slider(this.current_vals[0]);
+  this.queue = [];
+  this.wait = false;
+  if (!this.cached || this.dynamic) {
+    this.init_comms()
+  }
+}
+
+SelectionWidget.prototype = new HoloViewsWidget;
+
+
+SelectionWidget.prototype.get_key = function(current_vals) {
+  var key = "(";
+  for (var i=0; i<this.slider_ids.length; i++)
+  {
+    val = this.current_vals[i];
+    if (!(typeof val === 'string')) {
+      if (val % 1 === 0) { val = val.toFixed(1); }
+      else { val = val.toFixed(10); val = val.slice(0, val.length-1);}
+    }
+    key += "'" + val + "'";
+    if(i != this.slider_ids.length-1) { key += ', ';}
+    else if(this.slider_ids.length == 1) { key += ',';}
+  }
+  key += ")";
+  return this.keyMap[key];
+}
+
+SelectionWidget.prototype.set_frame = function(dim_val, dim_idx){
+  this.current_vals[dim_idx] = dim_val;
+  var key = this.current_vals;
+  if (!this.dynamic) {
+    key = this.get_key(key)
+  }
+  if (this.dynamic || !this.cached) {
+    if ((this.time !== undefined) && ((this.wait) && ((this.time + 10000) > Date.now()))) {
+      this.queue.push(key);
+      return
+    }
+    this.queue = [];
+    this.time = Date.now();
+    this.current_frame = key;
+    this.wait = true;
+    this.dynamic_update(key)
+  } else if (key !== undefined) {
+    this.update(key)
+  }
+}
+
+
+/* Define the ScrubberWidget class */
+function ScrubberWidget(frames, num_frames, id, interval, load_json, mode, cached, json_path, dynamic){
+  this.slider_id = "_anim_slider" + id;
+  this.loop_select_id = "_anim_loop_select" + id;
+  this.id = id;
+  this.interval = interval;
+  this.current_frame = 0;
+  this.direction = 0;
+  this.dynamic = dynamic;
+  this.timer = null;
+  this.load_json = load_json;
+  this.mode = mode;
+  this.cached = cached;
+  this.frames = frames;
+  this.cache = {};
+  this.length = num_frames;
+  this.json_path = json_path;
+  document.getElementById(this.slider_id).max = this.length - 1;
+  this.init_slider(0);
+  this.wait = false;
+  this.queue = [];
+  if (!this.cached || this.dynamic) {
+    this.init_comms()
+  }
+}
+
+ScrubberWidget.prototype = new HoloViewsWidget;
+
+ScrubberWidget.prototype.set_frame = function(frame){
+  this.current_frame = frame;
+  widget = document.getElementById(this.slider_id);
+  if (widget === null) {
+    this.pause_animation();
+    return
+  }
+  widget.value = this.current_frame;
+  if(this.cached) {
+    this.update(frame)
+  } else {
+    this.dynamic_update(frame)
+  }
+}
+
+
+ScrubberWidget.prototype.get_loop_state = function(){
+  var button_group = document[this.loop_select_id].state;
+  for (var i = 0; i < button_group.length; i++) {
+    var button = button_group[i];
+    if (button.checked) {
+      return button.value;
+    }
+  }
+  return undefined;
+}
+
+
+ScrubberWidget.prototype.next_frame = function() {
+  this.set_frame(Math.min(this.length - 1, this.current_frame + 1));
+}
+
+ScrubberWidget.prototype.previous_frame = function() {
+  this.set_frame(Math.max(0, this.current_frame - 1));
+}
+
+ScrubberWidget.prototype.first_frame = function() {
+  this.set_frame(0);
+}
+
+ScrubberWidget.prototype.last_frame = function() {
+  this.set_frame(this.length - 1);
+}
+
+ScrubberWidget.prototype.slower = function() {
+  this.interval /= 0.7;
+  if(this.direction > 0){this.play_animation();}
+  else if(this.direction < 0){this.reverse_animation();}
+}
+
+ScrubberWidget.prototype.faster = function() {
+  this.interval *= 0.7;
+  if(this.direction > 0){this.play_animation();}
+  else if(this.direction < 0){this.reverse_animation();}
+}
+
+ScrubberWidget.prototype.anim_step_forward = function() {
+  if(this.current_frame < this.length - 1){
+    this.next_frame();
+  }else{
+    var loop_state = this.get_loop_state();
+    if(loop_state == "loop"){
+      this.first_frame();
+    }else if(loop_state == "reflect"){
+      this.last_frame();
+      this.reverse_animation();
+    }else{
+      this.pause_animation();
+      this.last_frame();
+    }
+  }
+}
+
+ScrubberWidget.prototype.anim_step_reverse = function() {
+  if(this.current_frame > 0){
+    this.previous_frame();
+  } else {
+    var loop_state = this.get_loop_state();
+    if(loop_state == "loop"){
+      this.last_frame();
+    }else if(loop_state == "reflect"){
+      this.first_frame();
+      this.play_animation();
+    }else{
+      this.pause_animation();
+      this.first_frame();
+    }
+  }
+}
+
+ScrubberWidget.prototype.pause_animation = function() {
+  this.direction = 0;
+  if (this.timer){
+    clearInterval(this.timer);
+    this.timer = null;
+  }
+}
+
+ScrubberWidget.prototype.play_animation = function() {
+  this.pause_animation();
+  this.direction = 1;
+  var t = this;
+  if (!this.timer) this.timer = setInterval(function(){t.anim_step_forward();}, this.interval);
+}
+
+ScrubberWidget.prototype.reverse_animation = function() {
+  this.pause_animation();
+  this.direction = -1;
+  var t = this;
+  if (!this.timer) this.timer = setInterval(function(){t.anim_step_reverse();}, this.interval);
+}
+
+function extend(destination, source) {
+  for (var k in source) {
+    if (source.hasOwnProperty(k)) {
+      destination[k] = source[k];
+    }
+  }
+  return destination;
+}
+
+function update_widget(widget, values) {
+  if (widget.hasClass("ui-slider")) {
+    widget.slider('option', {
+      min: 0,
+      max: values.length-1,
+      dim_vals: values,
+      value: 0,
+      dim_labels: values
+	})
+    widget.slider('option', 'slide').call(widget, event, {value: 0})
+  } else {
+    widget.empty();
+    for (var i=0; i<values.length; i++){
+      widget.append($("<option>", {
+        value: i,
+        text: values[i]
+      }))
+    };
+    widget.data('values', values);
+    widget.data('value', 0);
+    widget.trigger("change");
+  };
+}
+
+// Define Bokeh specific subclasses
+function BokehSelectionWidget() {
+	SelectionWidget.apply(this, arguments);
+}
+
+function BokehScrubberWidget() {
+	ScrubberWidget.apply(this, arguments);
+}
+
+// Let them inherit from the baseclasses
+BokehSelectionWidget.prototype = Object.create(SelectionWidget.prototype);
+BokehScrubberWidget.prototype = Object.create(ScrubberWidget.prototype);
+
+// Define methods to override on widgets
+var BokehMethods = {
+	update_cache : function(){
+		$.each(this.frames, $.proxy(function(index, frame) {
+			this.frames[index] = JSON.parse(frame);
+		}, this));
+	},
+	update : function(current){
+		if (current === undefined) {
+			var data = undefined;
+		} else {
+			var data = this.frames[current];
+		}
+		if (data !== undefined) {
+			var doc = Bokeh.index[data.root].model.document;
+			doc.apply_json_patch(data.content);
+		}
+	},
+	init_comms : function() {
+	}
+}
+
+// Extend Bokeh widgets with backend specific methods
+extend(BokehSelectionWidget.prototype, BokehMethods);
+extend(BokehScrubberWidget.prototype, BokehMethods);
+</script>
+
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-0.12.15.min.css">
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.15.min.css">
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-tables-0.12.15.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+<style>div.hololayout {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+div.holoframe {
+	width: 75%;
+}
+
+div.holowell {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+form.holoform {
+    background-color: #fafafa;
+    border-radius: 5px;
+    overflow: hidden;
+	padding-left: 0.8em;
+    padding-right: 0.8em;
+    padding-top: 0.4em;
+    padding-bottom: 0.4em;
+}
+
+div.holowidgets {
+    padding-right: 0;
+	width: 25%;
+}
+
+div.holoslider {
+    min-height: 0 !important;
+    height: 0.8em;
+    width: 60%;
+}
+
+div.holoformgroup {
+    padding-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+div.hologroup {
+    padding-left: 0;
+    padding-right: 0.8em;
+    width: 50%;
+}
+
+.holoselect {
+    width: 92%;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.holotext {
+    width: 100%;
+    padding-left:  0.5em;
+    padding-right: 0;
+}
+
+.holowidgets .ui-resizable-se {
+	visibility: hidden
+}
+
+.holoframe > .ui-resizable-se {
+	visibility: hidden
+}
+
+.holowidgets .ui-resizable-s {
+	visibility: hidden
+}
+
+div.bk-hbox {
+    display: flex;
+    justify-content: center;
+}
+
+div.bk-hbox div.bk-plot {
+    padding: 8px;
+}
+
+div.bk-hbox div.bk-data-table {
+    padding: 20px;
+}
+</style><div style='display: table; margin: 0 auto;'>
+
+<div class="bk-root">
+    <div class="bk-plotdiv" id="6c2f5fe0-3aba-4616-82d1-80554617dc3a"></div>
+</div>
+<script type="text/javascript">
+  (function(root) {
+  function embed_document(root) {
+    
+  var docs_json = {"1b96ebbb-a0e6-47ec-aa74-d6fa6b953074":{"roots":{"references":[{"attributes":{"bottom_units":"screen","fill_alpha":{"value":0.5},"fill_color":{"value":"lightgrey"},"left_units":"screen","level":"overlay","line_alpha":{"value":1.0},"line_color":{"value":"black"},"line_dash":[4,4],"line_width":{"value":2},"plot":null,"render_mode":"css","right_units":"screen","top_units":"screen"},"id":"003d2433-8042-482d-9df0-385f705f70bf","type":"BoxAnnotation"},{"attributes":{"plot":null,"text":"'mars' with 'radiate' on obverse from allData by emperor","text_color":{"value":"black"},"text_font_size":{"value":"12pt"}},"id":"77510399-8d64-4da0-81bf-d3b42b1ea38f","type":"Title"},{"attributes":{"data_source":{"id":"40351d72-0d95-4914-9580-f87526b4e42c","type":"ColumnDataSource"},"glyph":{"id":"3a0f82ef-b472-42bc-a29d-3e05c7bee04f","type":"VBar"},"hover_glyph":null,"muted_glyph":null,"nonselection_glyph":{"id":"32dc6823-40c6-4461-b95f-3373032357e8","type":"VBar"},"selection_glyph":null,"view":{"id":"bb610bf2-a44d-4309-9bb6-d8122738f28d","type":"CDSView"}},"id":"25f0f593-7a76-4430-bda5-a26a0d90627b","type":"GlyphRenderer"},{"attributes":{"dimensions":"width"},"id":"d11c0ad7-a387-4307-b547-f498f56dc3b3","type":"WheelZoomTool"},{"attributes":{},"id":"135aeecf-3e49-454e-a51d-cc238435d949","type":"PanTool"},{"attributes":{},"id":"80becaa3-7adc-4bc5-be09-45283a9801d0","type":"WheelZoomTool"},{"attributes":{},"id":"a7b438ba-e7b9-4926-8cd0-1f79ca7558e7","type":"CategoricalTickFormatter"},{"attributes":{"label":{"field":"caption"},"renderers":[{"id":"25f0f593-7a76-4430-bda5-a26a0d90627b","type":"GlyphRenderer"}]},"id":"0ba69a89-1018-4231-a9fb-2cb4e24d7da0","type":"LegendItem"},{"attributes":{"active_drag":"auto","active_inspect":"auto","active_scroll":"auto","active_tap":"auto","tools":[{"id":"fd401ad9-2068-49d3-a048-31c0627f2244","type":"HoverTool"},{"id":"a4ebd614-1074-4a77-a07e-16351e176262","type":"SaveTool"},{"id":"135aeecf-3e49-454e-a51d-cc238435d949","type":"PanTool"},{"id":"80becaa3-7adc-4bc5-be09-45283a9801d0","type":"WheelZoomTool"},{"id":"f197b130-0f8f-4059-9d8f-ab2215adaf98","type":"BoxZoomTool"},{"id":"9678d4fd-a629-4c4a-aea5-cf717b158415","type":"ResetTool"},{"id":"d11c0ad7-a387-4307-b547-f498f56dc3b3","type":"WheelZoomTool"}]},"id":"3c047351-cf20-4370-9d1b-5053694dac5c","type":"Toolbar"},{"attributes":{"overlay":{"id":"003d2433-8042-482d-9df0-385f705f70bf","type":"BoxAnnotation"}},"id":"f197b130-0f8f-4059-9d8f-ab2215adaf98","type":"BoxZoomTool"},{"attributes":{},"id":"f0771c6a-f687-4ee9-89ad-06938c914a0c","type":"BasicTicker"},{"attributes":{"grid_line_color":{"value":null},"plot":{"id":"ddabbb86-c37f-4503-b01e-103cc889e5f9","subtype":"Figure","type":"Plot"},"ticker":{"id":"12a303ba-0537-44ff-94f8-aeb5cde91266","type":"CategoricalTicker"}},"id":"743bb371-0f57-466a-8d5d-3f69f68a344a","type":"Grid"},{"attributes":{"callback":null,"end":244},"id":"a28227a0-987c-48e8-a13e-af74d457876f","type":"Range1d"},{"attributes":{},"id":"d4a8bad9-cf90-441d-8f6a-4396c47a2fbe","type":"CategoricalScale"},{"attributes":{"fill_alpha":{"value":0.1},"fill_color":{"field":"caption","transform":{"id":"40245503-5bd9-4c3d-89c4-c671a8b45d1b","type":"CategoricalColorMapper"}},"line_alpha":{"value":0.1},"line_color":{"value":"#000000"},"top":{"field":"count"},"width":{"value":0.5},"x":{"field":"xoffsets"}},"id":"32dc6823-40c6-4461-b95f-3373032357e8","type":"VBar"},{"attributes":{},"id":"12a303ba-0537-44ff-94f8-aeb5cde91266","type":"CategoricalTicker"},{"attributes":{"below":[{"id":"46c38998-73ab-4937-879b-936c0eac3ad0","type":"CategoricalAxis"}],"left":[{"id":"e9be0106-0bb5-4dd6-9ba6-7a6123a2c63d","type":"LinearAxis"}],"min_border_bottom":10,"min_border_left":10,"min_border_right":10,"min_border_top":10,"renderers":[{"id":"46c38998-73ab-4937-879b-936c0eac3ad0","type":"CategoricalAxis"},{"id":"743bb371-0f57-466a-8d5d-3f69f68a344a","type":"Grid"},{"id":"e9be0106-0bb5-4dd6-9ba6-7a6123a2c63d","type":"LinearAxis"},{"id":"a4f9bdf3-e065-42f4-9812-b6136b54f688","type":"Grid"},{"id":"003d2433-8042-482d-9df0-385f705f70bf","type":"BoxAnnotation"},{"id":"5a3f4c96-a32d-4aa4-8557-cff2257738bd","type":"Legend"},{"id":"25f0f593-7a76-4430-bda5-a26a0d90627b","type":"GlyphRenderer"}],"sizing_mode":"stretch_both","title":{"id":"77510399-8d64-4da0-81bf-d3b42b1ea38f","type":"Title"},"toolbar":{"id":"3c047351-cf20-4370-9d1b-5053694dac5c","type":"Toolbar"},"x_range":{"id":"32cdecb5-bb02-4faa-b349-200cf6ab0ffc","type":"FactorRange"},"x_scale":{"id":"d4a8bad9-cf90-441d-8f6a-4396c47a2fbe","type":"CategoricalScale"},"y_range":{"id":"a28227a0-987c-48e8-a13e-af74d457876f","type":"Range1d"},"y_scale":{"id":"957a576a-8536-4ec2-880c-1ebd35f90af7","type":"LinearScale"}},"id":"ddabbb86-c37f-4503-b01e-103cc889e5f9","subtype":"Figure","type":"Plot"},{"attributes":{"callback":null,"factors":[["Augustus","Count of coins with mars"],["Augustus","Count of coins with mars and radiate"],["Claudius","Count of coins with mars"],["Claudius","Count of coins with mars and radiate"],["Nero","Count of coins with mars"],["Nero","Count of coins with mars and radiate"],["Galba","Count of coins with mars"],["Galba","Count of coins with mars and radiate"],["Vitellius","Count of coins with mars"],["Vitellius","Count of coins with mars and radiate"],["Vespasian","Count of coins with mars"],["Vespasian","Count of coins with mars and radiate"],["Titus","Count of coins with mars"],["Titus","Count of coins with mars and radiate"],["Domitian","Count of coins with mars"],["Domitian","Count of coins with mars and radiate"],["Trajan","Count of coins with mars"],["Trajan","Count of coins with mars and radiate"],["Hadrian","Count of coins with mars"],["Hadrian","Count of coins with mars and radiate"],["Antoninus Pius","Count of coins with mars"],["Antoninus Pius","Count of coins with mars and radiate"],["Lucius Verus, Marcus Aurelius","Count of coins with mars"],["Lucius Verus, Marcus Aurelius","Count of coins with mars and radiate"],["Marcus Aurelius","Count of coins with mars"],["Marcus Aurelius","Count of coins with mars and radiate"],["Lucius Verus","Count of coins with mars"],["Lucius Verus","Count of coins with mars and radiate"],["Commodus, Marcus Aurelius","Count of coins with mars"],["Commodus, Marcus Aurelius","Count of coins with mars and radiate"],["Commodus","Count of coins with mars"],["Commodus","Count of coins with mars and radiate"],["Pescennius Niger","Count of coins with mars"],["Pescennius Niger","Count of coins with mars and radiate"],["Clodius Albinus","Count of coins with mars"],["Clodius Albinus","Count of coins with mars and radiate"],["Septimius Severus","Count of coins with mars"],["Septimius Severus","Count of coins with mars and radiate"],["Geta","Count of coins with mars"],["Geta","Count of coins with mars and radiate"],["Geta, Septimius Severus","Count of coins with mars"],["Geta, Septimius Severus","Count of coins with mars and radiate"],["Caracalla, Septimius Severus","Count of coins with mars"],["Caracalla, Septimius Severus","Count of coins with mars and radiate"],["Caracalla, Geta, Septimius Severus","Count of coins with mars"],["Caracalla, Geta, Septimius Severus","Count of coins with mars and radiate"],["Caracalla","Count of coins with mars"],["Caracalla","Count of coins with mars and radiate"],["Elagabalus","Count of coins with mars"],["Elagabalus","Count of coins with mars and radiate"],["Maximinus Thrax","Count of coins with mars"],["Maximinus Thrax","Count of coins with mars and radiate"],["Gordian III","Count of coins with mars"],["Gordian III","Count of coins with mars and radiate"],["Philip the Arab","Count of coins with mars"],["Philip the Arab","Count of coins with mars and radiate"],["Decius","Count of coins with mars"],["Decius","Count of coins with mars and radiate"],["Trajan Decius","Count of coins with mars"],["Trajan Decius","Count of coins with mars and radiate"],["Hostilian","Count of coins with mars"],["Hostilian","Count of coins with mars and radiate"],["Volusian","Count of coins with mars"],["Volusian","Count of coins with mars and radiate"],["Aemilian","Count of coins with mars"],["Aemilian","Count of coins with mars and radiate"],["Gallienus","Count of coins with mars"],["Gallienus","Count of coins with mars and radiate"],["Valerian","Count of coins with mars"],["Valerian","Count of coins with mars and radiate"],["Gallienus, Valerian","Count of coins with mars"],["Gallienus, Valerian","Count of coins with mars and radiate"],["Postumus","Count of coins with mars"],["Postumus","Count of coins with mars and radiate"],["Quietus","Count of coins with mars"],["Quietus","Count of coins with mars and radiate"],["Claudius Gothicus","Count of coins with mars"],["Claudius Gothicus","Count of coins with mars and radiate"],["Quintillus","Count of coins with mars"],["Quintillus","Count of coins with mars and radiate"],["Aurelian","Count of coins with mars"],["Aurelian","Count of coins with mars and radiate"],["Tacitus","Count of coins with mars"],["Tacitus","Count of coins with mars and radiate"],["Florian","Count of coins with mars"],["Florian","Count of coins with mars and radiate"],["Florianus","Count of coins with mars"],["Florianus","Count of coins with mars and radiate"],["Probus","Count of coins with mars"],["Probus","Count of coins with mars and radiate"],["Carus","Count of coins with mars"],["Carus","Count of coins with mars and radiate"],["Carinus, Numerian","Count of coins with mars"],["Carinus, Numerian","Count of coins with mars and radiate"],["Numerian","Count of coins with mars"],["Numerian","Count of coins with mars and radiate"],["Carausius","Count of coins with mars"],["Carausius","Count of coins with mars and radiate"],["Maximian","Count of coins with mars"],["Maximian","Count of coins with mars and radiate"],["Constantius I","Count of coins with mars"],["Constantius I","Count of coins with mars and radiate"],["Allectus","Count of coins with mars"],["Allectus","Count of coins with mars and radiate"],["Diocletian","Count of coins with mars"],["Diocletian","Count of coins with mars and radiate"],["Galerius","Count of coins with mars"],["Galerius","Count of coins with mars and radiate"],["Constantius Chlorus","Count of coins with mars"],["Constantius Chlorus","Count of coins with mars and radiate"],["Severus II","Count of coins with mars"],["Severus II","Count of coins with mars and radiate"],["Maxentius","Count of coins with mars"],["Maxentius","Count of coins with mars and radiate"],["Licinius","Count of coins with mars"],["Licinius","Count of coins with mars and radiate"],["Constantine I","Count of coins with mars"],["Constantine I","Count of coins with mars and radiate"]]},"id":"32cdecb5-bb02-4faa-b349-200cf6ab0ffc","type":"FactorRange"},{"attributes":{},"id":"a4ebd614-1074-4a77-a07e-16351e176262","type":"SaveTool"},{"attributes":{"dimension":1,"grid_line_color":{"value":null},"plot":{"id":"ddabbb86-c37f-4503-b01e-103cc889e5f9","subtype":"Figure","type":"Plot"},"ticker":{"id":"f0771c6a-f687-4ee9-89ad-06938c914a0c","type":"BasicTicker"}},"id":"a4f9bdf3-e065-42f4-9812-b6136b54f688","type":"Grid"},{"attributes":{"callback":null,"column_names":["xoffsets","count","emperor","caption"],"data":{"caption":["Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate","Count of coins with mars and radiate"],"count":[85,2,35,4,46,69,5,15,163,38,94,61,182,10,4,52,3,1,92,4,10,150,24,63,39,2,102,18,4,20,1,12,16,211,1,10,49,2,14,22,21,33,3,2,78,3,6,1,39,22,1,10,11,23,26,16,6,18,244,1,8,3,10,9,2,14,16,67,10,8,12,16,209,1,10,43,2,14,22,14,31,2,2,74,2,6,36,4,8,2],"emperor":["Augustus","Claudius","Nero","Galba","Vitellius","Vespasian","Titus","Domitian","Trajan","Hadrian","Antoninus Pius","Lucius Verus, Marcus Aurelius","Marcus Aurelius","Lucius Verus","Commodus, Marcus Aurelius","Commodus","Pescennius Niger","Clodius Albinus","Septimius Severus","Geta","Geta, Septimius Severus","Caracalla, Septimius Severus","Caracalla, Geta, Septimius Severus","Caracalla","Elagabalus","Maximinus Thrax","Gordian III","Philip the Arab","Decius","Trajan Decius","Hostilian","Volusian","Aemilian","Gallienus","Valerian","Gallienus, Valerian","Postumus","Quietus","Claudius Gothicus","Quintillus","Aurelian","Tacitus","Florian","Florianus","Probus","Carus","Carinus, Numerian","Numerian","Carausius","Maximian","Constantius I","Allectus","Diocletian","Galerius","Constantius Chlorus","Severus II","Maxentius","Licinius","Constantine I","Vespasian","Domitian","Antoninus Pius","Lucius Verus, Marcus Aurelius","Marcus Aurelius","Lucius Verus","Caracalla","Elagabalus","Gordian III","Philip the Arab","Trajan Decius","Volusian","Aemilian","Gallienus","Valerian","Gallienus, Valerian","Postumus","Quietus","Claudius Gothicus","Quintillus","Aurelian","Tacitus","Florian","Florianus","Probus","Carus","Carinus, Numerian","Carausius","Maximian","Allectus","Diocletian"],"xoffsets":[["Augustus","Count of coins with mars"],["Claudius","Count of coins with mars"],["Nero","Count of coins with mars"],["Galba","Count of coins with mars"],["Vitellius","Count of coins with mars"],["Vespasian","Count of coins with mars"],["Titus","Count of coins with mars"],["Domitian","Count of coins with mars"],["Trajan","Count of coins with mars"],["Hadrian","Count of coins with mars"],["Antoninus Pius","Count of coins with mars"],["Lucius Verus, Marcus Aurelius","Count of coins with mars"],["Marcus Aurelius","Count of coins with mars"],["Lucius Verus","Count of coins with mars"],["Commodus, Marcus Aurelius","Count of coins with mars"],["Commodus","Count of coins with mars"],["Pescennius Niger","Count of coins with mars"],["Clodius Albinus","Count of coins with mars"],["Septimius Severus","Count of coins with mars"],["Geta","Count of coins with mars"],["Geta, Septimius Severus","Count of coins with mars"],["Caracalla, Septimius Severus","Count of coins with mars"],["Caracalla, Geta, Septimius Severus","Count of coins with mars"],["Caracalla","Count of coins with mars"],["Elagabalus","Count of coins with mars"],["Maximinus Thrax","Count of coins with mars"],["Gordian III","Count of coins with mars"],["Philip the Arab","Count of coins with mars"],["Decius","Count of coins with mars"],["Trajan Decius","Count of coins with mars"],["Hostilian","Count of coins with mars"],["Volusian","Count of coins with mars"],["Aemilian","Count of coins with mars"],["Gallienus","Count of coins with mars"],["Valerian","Count of coins with mars"],["Gallienus, Valerian","Count of coins with mars"],["Postumus","Count of coins with mars"],["Quietus","Count of coins with mars"],["Claudius Gothicus","Count of coins with mars"],["Quintillus","Count of coins with mars"],["Aurelian","Count of coins with mars"],["Tacitus","Count of coins with mars"],["Florian","Count of coins with mars"],["Florianus","Count of coins with mars"],["Probus","Count of coins with mars"],["Carus","Count of coins with mars"],["Carinus, Numerian","Count of coins with mars"],["Numerian","Count of coins with mars"],["Carausius","Count of coins with mars"],["Maximian","Count of coins with mars"],["Constantius I","Count of coins with mars"],["Allectus","Count of coins with mars"],["Diocletian","Count of coins with mars"],["Galerius","Count of coins with mars"],["Constantius Chlorus","Count of coins with mars"],["Severus II","Count of coins with mars"],["Maxentius","Count of coins with mars"],["Licinius","Count of coins with mars"],["Constantine I","Count of coins with mars"],["Vespasian","Count of coins with mars and radiate"],["Domitian","Count of coins with mars and radiate"],["Antoninus Pius","Count of coins with mars and radiate"],["Lucius Verus, Marcus Aurelius","Count of coins with mars and radiate"],["Marcus Aurelius","Count of coins with mars and radiate"],["Lucius Verus","Count of coins with mars and radiate"],["Caracalla","Count of coins with mars and radiate"],["Elagabalus","Count of coins with mars and radiate"],["Gordian III","Count of coins with mars and radiate"],["Philip the Arab","Count of coins with mars and radiate"],["Trajan Decius","Count of coins with mars and radiate"],["Volusian","Count of coins with mars and radiate"],["Aemilian","Count of coins with mars and radiate"],["Gallienus","Count of coins with mars and radiate"],["Valerian","Count of coins with mars and radiate"],["Gallienus, Valerian","Count of coins with mars and radiate"],["Postumus","Count of coins with mars and radiate"],["Quietus","Count of coins with mars and radiate"],["Claudius Gothicus","Count of coins with mars and radiate"],["Quintillus","Count of coins with mars and radiate"],["Aurelian","Count of coins with mars and radiate"],["Tacitus","Count of coins with mars and radiate"],["Florian","Count of coins with mars and radiate"],["Florianus","Count of coins with mars and radiate"],["Probus","Count of coins with mars and radiate"],["Carus","Count of coins with mars and radiate"],["Carinus, Numerian","Count of coins with mars and radiate"],["Carausius","Count of coins with mars and radiate"],["Maximian","Count of coins with mars and radiate"],["Allectus","Count of coins with mars and radiate"],["Diocletian","Count of coins with mars and radiate"]]},"selected":null,"selection_policy":null},"id":"40351d72-0d95-4914-9580-f87526b4e42c","type":"ColumnDataSource"},{"attributes":{},"id":"957a576a-8536-4ec2-880c-1ebd35f90af7","type":"LinearScale"},{"attributes":{"axis_label":"Count","bounds":"auto","formatter":{"id":"2a1e32d5-230f-4480-8b2d-07a03e55b102","type":"BasicTickFormatter"},"major_label_orientation":"horizontal","plot":{"id":"ddabbb86-c37f-4503-b01e-103cc889e5f9","subtype":"Figure","type":"Plot"},"ticker":{"id":"f0771c6a-f687-4ee9-89ad-06938c914a0c","type":"BasicTicker"}},"id":"e9be0106-0bb5-4dd6-9ba6-7a6123a2c63d","type":"LinearAxis"},{"attributes":{"items":[{"id":"0ba69a89-1018-4231-a9fb-2cb4e24d7da0","type":"LegendItem"}],"location":"top_left","plot":{"id":"ddabbb86-c37f-4503-b01e-103cc889e5f9","subtype":"Figure","type":"Plot"}},"id":"5a3f4c96-a32d-4aa4-8557-cff2257738bd","type":"Legend"},{"attributes":{},"id":"2a1e32d5-230f-4480-8b2d-07a03e55b102","type":"BasicTickFormatter"},{"attributes":{"callback":null,"renderers":[{"id":"25f0f593-7a76-4430-bda5-a26a0d90627b","type":"GlyphRenderer"}],"tooltips":[["emperor","@{emperor}"],["caption","@{caption}"],["Count","@{count}"]]},"id":"fd401ad9-2068-49d3-a048-31c0627f2244","type":"HoverTool"},{"attributes":{"fill_color":{"field":"caption","transform":{"id":"40245503-5bd9-4c3d-89c4-c671a8b45d1b","type":"CategoricalColorMapper"}},"line_color":{"value":"#000000"},"top":{"field":"count"},"width":{"value":0.5},"x":{"field":"xoffsets"}},"id":"3a0f82ef-b472-42bc-a29d-3e05c7bee04f","type":"VBar"},{"attributes":{"axis_label":"emperor, caption","bounds":"auto","formatter":{"id":"a7b438ba-e7b9-4926-8cd0-1f79ca7558e7","type":"CategoricalTickFormatter"},"major_label_orientation":1.5707963267948966,"plot":{"id":"ddabbb86-c37f-4503-b01e-103cc889e5f9","subtype":"Figure","type":"Plot"},"ticker":{"id":"12a303ba-0537-44ff-94f8-aeb5cde91266","type":"CategoricalTicker"}},"id":"46c38998-73ab-4937-879b-936c0eac3ad0","type":"CategoricalAxis"},{"attributes":{"factors":["Count of coins with mars","Count of coins with mars and radiate"],"palette":["#30a2da","#fc4f30"]},"id":"40245503-5bd9-4c3d-89c4-c671a8b45d1b","type":"CategoricalColorMapper"},{"attributes":{},"id":"9678d4fd-a629-4c4a-aea5-cf717b158415","type":"ResetTool"},{"attributes":{"source":{"id":"40351d72-0d95-4914-9580-f87526b4e42c","type":"ColumnDataSource"}},"id":"bb610bf2-a44d-4309-9bb6-d8122738f28d","type":"CDSView"}],"root_ids":["ddabbb86-c37f-4503-b01e-103cc889e5f9"]},"title":"Bokeh Application","version":"0.12.15"}};
+  var render_items = [{"docid":"1b96ebbb-a0e6-47ec-aa74-d6fa6b953074","elementid":"6c2f5fe0-3aba-4616-82d1-80554617dc3a","modelid":"ddabbb86-c37f-4503-b01e-103cc889e5f9"}];
+  root.Bokeh.embed.embed_items_notebook(docs_json, render_items);
+
+  }
+  if (root.Bokeh !== undefined) {
+    embed_document(root);
+  } else {
+    var attempts = 0;
+    var timer = setInterval(function(root) {
+      if (root.Bokeh !== undefined) {
+        embed_document(root);
+        clearInterval(timer);
+      }
+      attempts++;
+      if (attempts > 100) {
+        console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing")
+        clearInterval(timer);
+      }
+    }, 10, root)
+  }
+})(window);
+</script>
+</div>

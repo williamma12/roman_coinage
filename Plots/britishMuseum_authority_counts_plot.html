@@ -1,0 +1,520 @@
+
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-0.12.15.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.15.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-tables-0.12.15.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-gl-0.12.15.min.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/ui/1.10.4/jquery-ui.min.js" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.20/require.min.js" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js" type="text/javascript"></script>
+<script type="text/javascript">function HoloViewsWidget(){
+}
+
+HoloViewsWidget.comms = {};
+HoloViewsWidget.comm_state = {};
+
+HoloViewsWidget.prototype.init_slider = function(init_val){
+  if(this.load_json) {
+    this.from_json()
+  } else {
+    this.update_cache();
+  }
+}
+
+HoloViewsWidget.prototype.populate_cache = function(idx){
+  this.cache[idx].html(this.frames[idx]);
+  if (this.embed) {
+    delete this.frames[idx];
+  }
+}
+
+HoloViewsWidget.prototype.process_error = function(msg){
+
+}
+
+HoloViewsWidget.prototype.from_json = function() {
+  var data_url = this.json_path + this.id + '.json';
+  $.getJSON(data_url, $.proxy(function(json_data) {
+    this.frames = json_data;
+    this.update_cache();
+    this.update(0);
+  }, this));
+}
+
+HoloViewsWidget.prototype.dynamic_update = function(current){
+  if (current === undefined) {
+    return
+  }
+  if(this.dynamic) {
+    current = JSON.stringify(current);
+  }
+  function callback(initialized, msg){
+    /* This callback receives data from Python as a string
+       in order to parse it correctly quotes are sliced off*/
+    if (msg.content.ename != undefined) {
+      this.process_error(msg);
+    }
+    if (msg.msg_type != "execute_result") {
+      console.log("Warning: HoloViews callback returned unexpected data for key: (", current, ") with the following content:", msg.content)
+    } else {
+      if (msg.content.data['text/plain'].includes('Complete')) {
+        if (this.queue.length > 0) {
+          this.time = Date.now();
+          this.dynamic_update(this.queue[this.queue.length-1]);
+          this.queue = [];
+        } else {
+          this.wait = false;
+        }
+        return
+      }
+    }
+  }
+  this.current = current;
+  if ((window.Jupyter !== undefined) && (Jupyter.notebook.kernel != null)) {
+    var kernel = Jupyter.notebook.kernel;
+    callbacks = {iopub: {output: $.proxy(callback, this, this.initialized)}};
+    var cmd = "holoviews.plotting.widgets.NdWidget.widgets['" + this.id + "'].update(" + current + ")";
+    kernel.execute("import holoviews;" + cmd, callbacks, {silent : false});
+  }
+}
+
+HoloViewsWidget.prototype.update_cache = function(force){
+  var frame_len = Object.keys(this.frames).length;
+  for (var i=0; i<frame_len; i++) {
+    if(!this.load_json || this.dynamic)  {
+      frame = Object.keys(this.frames)[i];
+    } else {
+      frame = i;
+    }
+    if(!(frame in this.cache) || force) {
+      if ((frame in this.cache) && force) { this.cache[frame].remove() }
+      this.cache[frame] = $('<div />').appendTo("#"+"_anim_img"+this.id).hide();
+      var cache_id = "_anim_img"+this.id+"_"+frame;
+      this.cache[frame].attr("id", cache_id);
+      this.populate_cache(frame);
+    }
+  }
+}
+
+HoloViewsWidget.prototype.update = function(current){
+  if(current in this.cache) {
+    $.each(this.cache, function(index, value) {
+      value.hide();
+    });
+    this.cache[current].show();
+    this.wait = false;
+  }
+}
+
+HoloViewsWidget.prototype.init_comms = function() {
+  if ((window.Jupyter !== undefined) && (Jupyter.notebook.kernel !== undefined)) {
+    var widget = this;
+    comm_manager = Jupyter.notebook.kernel.comm_manager;
+    comm_manager.register_target(this.id, function (comm) {
+      comm.on_msg(function (msg) { widget.process_msg(msg) });
+    });
+  }
+}
+
+HoloViewsWidget.prototype.process_msg = function(msg) {
+}
+
+function SelectionWidget(frames, id, slider_ids, keyMap, dim_vals, notFound, load_json, mode, cached, json_path, dynamic){
+  this.frames = frames;
+  this.id = id;
+  this.slider_ids = slider_ids;
+  this.keyMap = keyMap
+  this.current_frame = 0;
+  this.current_vals = dim_vals;
+  this.load_json = load_json;
+  this.mode = mode;
+  this.notFound = notFound;
+  this.cached = cached;
+  this.dynamic = dynamic;
+  this.cache = {};
+  this.json_path = json_path;
+  this.init_slider(this.current_vals[0]);
+  this.queue = [];
+  this.wait = false;
+  if (!this.cached || this.dynamic) {
+    this.init_comms()
+  }
+}
+
+SelectionWidget.prototype = new HoloViewsWidget;
+
+
+SelectionWidget.prototype.get_key = function(current_vals) {
+  var key = "(";
+  for (var i=0; i<this.slider_ids.length; i++)
+  {
+    val = this.current_vals[i];
+    if (!(typeof val === 'string')) {
+      if (val % 1 === 0) { val = val.toFixed(1); }
+      else { val = val.toFixed(10); val = val.slice(0, val.length-1);}
+    }
+    key += "'" + val + "'";
+    if(i != this.slider_ids.length-1) { key += ', ';}
+    else if(this.slider_ids.length == 1) { key += ',';}
+  }
+  key += ")";
+  return this.keyMap[key];
+}
+
+SelectionWidget.prototype.set_frame = function(dim_val, dim_idx){
+  this.current_vals[dim_idx] = dim_val;
+  var key = this.current_vals;
+  if (!this.dynamic) {
+    key = this.get_key(key)
+  }
+  if (this.dynamic || !this.cached) {
+    if ((this.time !== undefined) && ((this.wait) && ((this.time + 10000) > Date.now()))) {
+      this.queue.push(key);
+      return
+    }
+    this.queue = [];
+    this.time = Date.now();
+    this.current_frame = key;
+    this.wait = true;
+    this.dynamic_update(key)
+  } else if (key !== undefined) {
+    this.update(key)
+  }
+}
+
+
+/* Define the ScrubberWidget class */
+function ScrubberWidget(frames, num_frames, id, interval, load_json, mode, cached, json_path, dynamic){
+  this.slider_id = "_anim_slider" + id;
+  this.loop_select_id = "_anim_loop_select" + id;
+  this.id = id;
+  this.interval = interval;
+  this.current_frame = 0;
+  this.direction = 0;
+  this.dynamic = dynamic;
+  this.timer = null;
+  this.load_json = load_json;
+  this.mode = mode;
+  this.cached = cached;
+  this.frames = frames;
+  this.cache = {};
+  this.length = num_frames;
+  this.json_path = json_path;
+  document.getElementById(this.slider_id).max = this.length - 1;
+  this.init_slider(0);
+  this.wait = false;
+  this.queue = [];
+  if (!this.cached || this.dynamic) {
+    this.init_comms()
+  }
+}
+
+ScrubberWidget.prototype = new HoloViewsWidget;
+
+ScrubberWidget.prototype.set_frame = function(frame){
+  this.current_frame = frame;
+  widget = document.getElementById(this.slider_id);
+  if (widget === null) {
+    this.pause_animation();
+    return
+  }
+  widget.value = this.current_frame;
+  if(this.cached) {
+    this.update(frame)
+  } else {
+    this.dynamic_update(frame)
+  }
+}
+
+
+ScrubberWidget.prototype.get_loop_state = function(){
+  var button_group = document[this.loop_select_id].state;
+  for (var i = 0; i < button_group.length; i++) {
+    var button = button_group[i];
+    if (button.checked) {
+      return button.value;
+    }
+  }
+  return undefined;
+}
+
+
+ScrubberWidget.prototype.next_frame = function() {
+  this.set_frame(Math.min(this.length - 1, this.current_frame + 1));
+}
+
+ScrubberWidget.prototype.previous_frame = function() {
+  this.set_frame(Math.max(0, this.current_frame - 1));
+}
+
+ScrubberWidget.prototype.first_frame = function() {
+  this.set_frame(0);
+}
+
+ScrubberWidget.prototype.last_frame = function() {
+  this.set_frame(this.length - 1);
+}
+
+ScrubberWidget.prototype.slower = function() {
+  this.interval /= 0.7;
+  if(this.direction > 0){this.play_animation();}
+  else if(this.direction < 0){this.reverse_animation();}
+}
+
+ScrubberWidget.prototype.faster = function() {
+  this.interval *= 0.7;
+  if(this.direction > 0){this.play_animation();}
+  else if(this.direction < 0){this.reverse_animation();}
+}
+
+ScrubberWidget.prototype.anim_step_forward = function() {
+  if(this.current_frame < this.length - 1){
+    this.next_frame();
+  }else{
+    var loop_state = this.get_loop_state();
+    if(loop_state == "loop"){
+      this.first_frame();
+    }else if(loop_state == "reflect"){
+      this.last_frame();
+      this.reverse_animation();
+    }else{
+      this.pause_animation();
+      this.last_frame();
+    }
+  }
+}
+
+ScrubberWidget.prototype.anim_step_reverse = function() {
+  if(this.current_frame > 0){
+    this.previous_frame();
+  } else {
+    var loop_state = this.get_loop_state();
+    if(loop_state == "loop"){
+      this.last_frame();
+    }else if(loop_state == "reflect"){
+      this.first_frame();
+      this.play_animation();
+    }else{
+      this.pause_animation();
+      this.first_frame();
+    }
+  }
+}
+
+ScrubberWidget.prototype.pause_animation = function() {
+  this.direction = 0;
+  if (this.timer){
+    clearInterval(this.timer);
+    this.timer = null;
+  }
+}
+
+ScrubberWidget.prototype.play_animation = function() {
+  this.pause_animation();
+  this.direction = 1;
+  var t = this;
+  if (!this.timer) this.timer = setInterval(function(){t.anim_step_forward();}, this.interval);
+}
+
+ScrubberWidget.prototype.reverse_animation = function() {
+  this.pause_animation();
+  this.direction = -1;
+  var t = this;
+  if (!this.timer) this.timer = setInterval(function(){t.anim_step_reverse();}, this.interval);
+}
+
+function extend(destination, source) {
+  for (var k in source) {
+    if (source.hasOwnProperty(k)) {
+      destination[k] = source[k];
+    }
+  }
+  return destination;
+}
+
+function update_widget(widget, values) {
+  if (widget.hasClass("ui-slider")) {
+    widget.slider('option', {
+      min: 0,
+      max: values.length-1,
+      dim_vals: values,
+      value: 0,
+      dim_labels: values
+	})
+    widget.slider('option', 'slide').call(widget, event, {value: 0})
+  } else {
+    widget.empty();
+    for (var i=0; i<values.length; i++){
+      widget.append($("<option>", {
+        value: i,
+        text: values[i]
+      }))
+    };
+    widget.data('values', values);
+    widget.data('value', 0);
+    widget.trigger("change");
+  };
+}
+
+// Define Bokeh specific subclasses
+function BokehSelectionWidget() {
+	SelectionWidget.apply(this, arguments);
+}
+
+function BokehScrubberWidget() {
+	ScrubberWidget.apply(this, arguments);
+}
+
+// Let them inherit from the baseclasses
+BokehSelectionWidget.prototype = Object.create(SelectionWidget.prototype);
+BokehScrubberWidget.prototype = Object.create(ScrubberWidget.prototype);
+
+// Define methods to override on widgets
+var BokehMethods = {
+	update_cache : function(){
+		$.each(this.frames, $.proxy(function(index, frame) {
+			this.frames[index] = JSON.parse(frame);
+		}, this));
+	},
+	update : function(current){
+		if (current === undefined) {
+			var data = undefined;
+		} else {
+			var data = this.frames[current];
+		}
+		if (data !== undefined) {
+			var doc = Bokeh.index[data.root].model.document;
+			doc.apply_json_patch(data.content);
+		}
+	},
+	init_comms : function() {
+	}
+}
+
+// Extend Bokeh widgets with backend specific methods
+extend(BokehSelectionWidget.prototype, BokehMethods);
+extend(BokehScrubberWidget.prototype, BokehMethods);
+</script>
+
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-0.12.15.min.css">
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.15.min.css">
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-tables-0.12.15.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+<style>div.hololayout {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+div.holoframe {
+	width: 75%;
+}
+
+div.holowell {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+form.holoform {
+    background-color: #fafafa;
+    border-radius: 5px;
+    overflow: hidden;
+	padding-left: 0.8em;
+    padding-right: 0.8em;
+    padding-top: 0.4em;
+    padding-bottom: 0.4em;
+}
+
+div.holowidgets {
+    padding-right: 0;
+	width: 25%;
+}
+
+div.holoslider {
+    min-height: 0 !important;
+    height: 0.8em;
+    width: 60%;
+}
+
+div.holoformgroup {
+    padding-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+div.hologroup {
+    padding-left: 0;
+    padding-right: 0.8em;
+    width: 50%;
+}
+
+.holoselect {
+    width: 92%;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.holotext {
+    width: 100%;
+    padding-left:  0.5em;
+    padding-right: 0;
+}
+
+.holowidgets .ui-resizable-se {
+	visibility: hidden
+}
+
+.holoframe > .ui-resizable-se {
+	visibility: hidden
+}
+
+.holowidgets .ui-resizable-s {
+	visibility: hidden
+}
+
+div.bk-hbox {
+    display: flex;
+    justify-content: center;
+}
+
+div.bk-hbox div.bk-plot {
+    padding: 8px;
+}
+
+div.bk-hbox div.bk-data-table {
+    padding: 20px;
+}
+</style><div style='display: table; margin: 0 auto;'>
+
+<div class="bk-root">
+    <div class="bk-plotdiv" id="86cd352a-0e72-4c3f-8448-a43e9c3adf8e"></div>
+</div>
+<script type="text/javascript">
+  (function(root) {
+  function embed_document(root) {
+    
+  var docs_json = {"84179aaa-f67b-4b62-95f8-ece4ee79f08e":{"roots":{"references":[{"attributes":{"callback":null,"renderers":[{"id":"d594edfc-0ba2-4c46-8c74-ad7caf5013ed","type":"GlyphRenderer"}],"tooltips":[["authority","@{authority}"],["Material","@{material}"],["Counts of coin by material","@{counts}"]]},"id":"eeb36e92-7a0d-4ed8-8246-cc19666b7931","type":"HoverTool"},{"attributes":{},"id":"5893120d-78cd-48c4-9415-cf863c5f3cd5","type":"SaveTool"},{"attributes":{},"id":"07343ffc-4a65-4150-b574-d272022518d4","type":"BasicTicker"},{"attributes":{},"id":"abd4ebf5-8508-43e1-8e12-7521e8f88aaa","type":"PanTool"},{"attributes":{"data_source":{"id":"4f0a6e07-dc98-4193-b741-e19a1e705010","type":"ColumnDataSource"},"glyph":{"id":"c14ec0b9-062a-41d6-8bc7-272ce3350b7c","type":"VBar"},"hover_glyph":null,"muted_glyph":null,"nonselection_glyph":{"id":"322faa82-e4b7-4f9a-b5db-6defb9f7166c","type":"VBar"},"selection_glyph":null,"view":{"id":"39c9475f-af42-4d37-8d5e-41eac4b86435","type":"CDSView"}},"id":"d594edfc-0ba2-4c46-8c74-ad7caf5013ed","type":"GlyphRenderer"},{"attributes":{"overlay":{"id":"5f2aaaaa-7ec1-4757-9a17-918e3e1d33a5","type":"BoxAnnotation"}},"id":"b0b30378-9151-4a59-b8f5-b0790e6af304","type":"BoxZoomTool"},{"attributes":{"callback":null,"factors":["Augustus, L Pinarius Scarpus","Augustus","Augustus, L Bennius, Q Varius Hiberus","Augustus, Publius Carisius","Augustus, P Petronius Turpilianus","Augustus, L Aquillius Florus","Augustus, M Durmius","Augustus, Q Rustius","Augustus, L Aquillius Florus, P Petronius Turpilianus","Augustus, T Quinctius Crispinus Sulpicianus","Augustus, Q Aelius Lamia","Augustus, C Marcius Censorinus","Augustus, M Sanquinius","Augustus, P Licinius Stolo","Augustus, Ti Sempronius Graccus","Augustus, L Mescinius Rufus","Augustus, L Vincius","Augustus, C Asinius Gallus","Augustus, C Cassius Celer","Augustus, C Gallius Lupercus","Augustus, C Antistius Vetus","Augustus, C Plotius Rufus","Augustus, L Naevius Surdinus","Augustus, C Plotius Rufus, Cn Piso, L Naevius Surdinus","Augustus, C Marius C F Tro","Augustus, C Sulpicius Platorinus","Augustus, C Antistius Reginus","Augustus, L Caninius Gallus","Augustus, Cossus Cornelius Lentulus","Augustus, L Lentulus","Augustus, C Annius Pollio, L Aelius Lamia, P Silius","Augustus, Claudius Pulcher, Livineius Regulus, Statilius Taurus","Augustus, P Lurius Agrippa","Augustus, M Salvius Otho","Augustus, M Maecilius Tullus","Augustus, Cn Piso","A Licinius Nerva Silianus, Augustus","Augustus, Volusus Valerius Messalla","Augustus, Sextus Nonius Quinctilianus","Apronius, Augustus, C Sisenna, Galus, Messalla","Augustus, C Naevius Capella","Augustus, P Betilienus Bassus","Augustus, C Rubellius Blandus","Augustus, L Valerius Catullus","Antoninus Pius, Hadrian","Septimius Severus","Tiberius","Lucius Aelius Sejanus, Tiberius","Gaius","Gaius, Montanus, Scipio","Gaius, Montanus, Titullus","C Cadius Rufus, Claudius I","Claudius I","Nero","Galba","Vitellius","Otho","Titus, Vespasian","Vespasian","Titus","Domitian","Nerva","Trajan","Hadrian","Antoninus Pius","Marcus Aurelius","Lucius Verus","Lucius Verus, Marcus Aurelius","Commodus, Marcus Aurelius","Commodus","Didius Julianus","Pertinax","Pescennius Niger","Clodius Albinus, Septimius Severus","Caracalla, Geta, Septimius Severus","Clodius Albinus","Caracalla, Septimius Severus","Caracalla","Caracalla ), Geta","Caracalla, Geta )","Geta","Caracalla, Geta","Macrinus","Diadumenian","Elagabalus","Maximus","Balbinus, Pupienus","Gordian I Africanus, Gordian II","Gordian III","Abgar X, Gordian III","Gordian III, Philip I","Pacatian","Decius","Herennius Etruscus","Hostilian","Herennius Etruscus, Trebonianus Gallus","Volusian","Aemilian","Silbannacus","Valerian","Gallienus, St Valerian","Gallienus, Valerian","Gallienus, Salonina","Saloninus","Macrianus","Quietus","Regalian","Macrian","Gallienus","Postumus","Marius","Laelian","Victorinus","Tetricus I, Victorinus","Quintillus","Aurelian","Aurelian, Vabalathus","Tetricus I","Tetricus I, Tetricus II","Tacitus","Florian","Probus","Carus","Numerian","Carinus, Numerian","Carinus, Carus","Carinus","Diocletian, Maximian","Diocletian","Diocletian, Galerius, Maximian","Galerius, Maximian","Maximian","Carausius","Carausius, Maximian","Constantius I, Diocletian, Maximian","Allectus","Constantius I, Diocletian","Constantius I","Galerius","Galeria, Galerius","Constantius I, Galerius","Severus II","Maxentius","Domitius Alexander","Constantine II, Licinius II","Constantine II","Licinius II, Martinian","Constantius II","Constans","Theodora","Constans, Constantine II, Constantius II","Constans, Constantius II","Magnentius","Vetranio","Decentius, Magnentius","Constantius II, Julian","Julian","Jovian","Valentinian I","Valens, Valentinian I","Gratian, Valens, Valentinian I","Valens","Honorius, Valentinian I","Procopius","Gratian","Valentinian II","Theodosius I","Magnus Maximus","Flavius Victor","Arcadius","Eugenius","Honorius","Arcadius, Honorius","Constantine III","Theodosius II","Priscus Attalus","Jovinus","Jovinus, Sebastianus","Constantius III","Valentinian III","Theodosius II, Valentinian III","Marcian","Petronius Maximus","Avitus","Majorian","Leo I","Libius Severus","Anthemius","Olybrius","Glycerius","Leo II, Zeno","Zeno","Julius Nepos","Romulus Augustulus","Basiliscus","Romulus","Basiliscus, Marcus","Nepotian","Martinian","Basiliscus, Marcus, Zenonis","Basiliscus, Zenonis","Nerva, Trajan","Constantine the Great, Maximian","Jotapian","Justin II"]},"id":"573d6956-b01f-4478-a0a2-463d21ba8d3a","type":"FactorRange"},{"attributes":{},"id":"c30f4471-2945-4176-bc19-3ea194ec970b","type":"LinearScale"},{"attributes":{},"id":"f0c6a1ad-d186-44d8-b927-c60ab0feb915","type":"CategoricalTickFormatter"},{"attributes":{"bottom":{"field":"bottom"},"fill_color":{"field":"material","transform":{"id":"5151353d-ebaf-47f6-b838-e069a7f0b7c2","type":"CategoricalColorMapper"}},"line_color":{"value":"#000000"},"top":{"field":"top"},"width":{"value":0.5},"x":{"field":"authority"}},"id":"c14ec0b9-062a-41d6-8bc7-272ce3350b7c","type":"VBar"},{"attributes":{"grid_line_color":{"value":null},"plot":{"id":"058b39e8-0f21-4356-afb3-6ed38ebeceac","subtype":"Figure","type":"Plot"},"ticker":{"id":"2ba318c6-c5fc-4ffb-928b-1fe0360c1895","type":"CategoricalTicker"}},"id":"51f1c29a-0f08-4da5-b598-93d108513626","type":"Grid"},{"attributes":{"factors":["silver","lead/alloy","bronze","gold","other"],"palette":["#30a2da","#fc4f30","#e5ae38","#6d904f","#8b8b8b"]},"id":"5151353d-ebaf-47f6-b838-e069a7f0b7c2","type":"CategoricalColorMapper"},{"attributes":{"callback":null,"end":8350.0},"id":"201e6c3e-42cf-4f5c-8d1b-c6a577d06cf6","type":"Range1d"},{"attributes":{"plot":null,"text":"Count of Coins in britishMuseum Plot","text_color":{"value":"black"},"text_font_size":{"value":"12pt"}},"id":"0a763fdd-cbcc-4488-bc46-d284ae92c0db","type":"Title"},{"attributes":{"source":{"id":"4f0a6e07-dc98-4193-b741-e19a1e705010","type":"ColumnDataSource"}},"id":"39c9475f-af42-4d37-8d5e-41eac4b86435","type":"CDSView"},{"attributes":{"axis_label":"Counts of coin by material","bounds":"auto","formatter":{"id":"db46d416-74b5-4348-89b3-d87f043b8e58","type":"BasicTickFormatter"},"major_label_orientation":"horizontal","plot":{"id":"058b39e8-0f21-4356-afb3-6ed38ebeceac","subtype":"Figure","type":"Plot"},"ticker":{"id":"07343ffc-4a65-4150-b574-d272022518d4","type":"BasicTicker"}},"id":"b2652d1f-a55e-441b-b732-80e6f09c2579","type":"LinearAxis"},{"attributes":{},"id":"74aa4f95-a1fe-4501-9532-dcb09e9fe448","type":"WheelZoomTool"},{"attributes":{"active_drag":"auto","active_inspect":"auto","active_scroll":"auto","active_tap":"auto","tools":[{"id":"eeb36e92-7a0d-4ed8-8246-cc19666b7931","type":"HoverTool"},{"id":"5893120d-78cd-48c4-9415-cf863c5f3cd5","type":"SaveTool"},{"id":"abd4ebf5-8508-43e1-8e12-7521e8f88aaa","type":"PanTool"},{"id":"74aa4f95-a1fe-4501-9532-dcb09e9fe448","type":"WheelZoomTool"},{"id":"b0b30378-9151-4a59-b8f5-b0790e6af304","type":"BoxZoomTool"},{"id":"71c17e80-4023-4112-87d0-fb070d252642","type":"ResetTool"},{"id":"10d2055a-9ca9-4f22-8cb5-c169f9b16d8d","type":"WheelZoomTool"}]},"id":"3626df59-9cda-46ac-86ad-6a288e476de2","type":"Toolbar"},{"attributes":{"dimension":1,"grid_line_color":{"value":null},"plot":{"id":"058b39e8-0f21-4356-afb3-6ed38ebeceac","subtype":"Figure","type":"Plot"},"ticker":{"id":"07343ffc-4a65-4150-b574-d272022518d4","type":"BasicTicker"}},"id":"66b3c6c2-4dbd-46d9-8c08-ac45add1ff82","type":"Grid"},{"attributes":{"dimensions":"width"},"id":"10d2055a-9ca9-4f22-8cb5-c169f9b16d8d","type":"WheelZoomTool"},{"attributes":{"items":[{"id":"74683037-8d59-4858-b327-ff8a7188981f","type":"LegendItem"}],"location":"top_left","plot":{"id":"058b39e8-0f21-4356-afb3-6ed38ebeceac","subtype":"Figure","type":"Plot"}},"id":"c28e679c-c6d8-40e8-a3b8-137ec40c3197","type":"Legend"},{"attributes":{"axis_label":"authority, Material","bounds":"auto","formatter":{"id":"f0c6a1ad-d186-44d8-b927-c60ab0feb915","type":"CategoricalTickFormatter"},"major_label_orientation":1.5707963267948966,"plot":{"id":"058b39e8-0f21-4356-afb3-6ed38ebeceac","subtype":"Figure","type":"Plot"},"ticker":{"id":"2ba318c6-c5fc-4ffb-928b-1fe0360c1895","type":"CategoricalTicker"}},"id":"fedd399b-ce25-40b6-a1c3-d5e59fbb270c","type":"CategoricalAxis"},{"attributes":{"label":{"field":"material"},"renderers":[{"id":"d594edfc-0ba2-4c46-8c74-ad7caf5013ed","type":"GlyphRenderer"}]},"id":"74683037-8d59-4858-b327-ff8a7188981f","type":"LegendItem"},{"attributes":{},"id":"db46d416-74b5-4348-89b3-d87f043b8e58","type":"BasicTickFormatter"},{"attributes":{},"id":"2ba318c6-c5fc-4ffb-928b-1fe0360c1895","type":"CategoricalTicker"},{"attributes":{},"id":"97906039-9bdc-42bf-9a98-1ab9ecb3ad28","type":"CategoricalScale"},{"attributes":{"bottom_units":"screen","fill_alpha":{"value":0.5},"fill_color":{"value":"lightgrey"},"left_units":"screen","level":"overlay","line_alpha":{"value":1.0},"line_color":{"value":"black"},"line_dash":[4,4],"line_width":{"value":2},"plot":null,"render_mode":"css","right_units":"screen","top_units":"screen"},"id":"5f2aaaaa-7ec1-4757-9a17-918e3e1d33a5","type":"BoxAnnotation"},{"attributes":{"below":[{"id":"fedd399b-ce25-40b6-a1c3-d5e59fbb270c","type":"CategoricalAxis"}],"left":[{"id":"b2652d1f-a55e-441b-b732-80e6f09c2579","type":"LinearAxis"}],"min_border_bottom":10,"min_border_left":10,"min_border_right":10,"min_border_top":10,"renderers":[{"id":"fedd399b-ce25-40b6-a1c3-d5e59fbb270c","type":"CategoricalAxis"},{"id":"51f1c29a-0f08-4da5-b598-93d108513626","type":"Grid"},{"id":"b2652d1f-a55e-441b-b732-80e6f09c2579","type":"LinearAxis"},{"id":"66b3c6c2-4dbd-46d9-8c08-ac45add1ff82","type":"Grid"},{"id":"5f2aaaaa-7ec1-4757-9a17-918e3e1d33a5","type":"BoxAnnotation"},{"id":"c28e679c-c6d8-40e8-a3b8-137ec40c3197","type":"Legend"},{"id":"d594edfc-0ba2-4c46-8c74-ad7caf5013ed","type":"GlyphRenderer"}],"sizing_mode":"stretch_both","title":{"id":"0a763fdd-cbcc-4488-bc46-d284ae92c0db","type":"Title"},"toolbar":{"id":"3626df59-9cda-46ac-86ad-6a288e476de2","type":"Toolbar"},"x_range":{"id":"573d6956-b01f-4478-a0a2-463d21ba8d3a","type":"FactorRange"},"x_scale":{"id":"97906039-9bdc-42bf-9a98-1ab9ecb3ad28","type":"CategoricalScale"},"y_range":{"id":"201e6c3e-42cf-4f5c-8d1b-c6a577d06cf6","type":"Range1d"},"y_scale":{"id":"c30f4471-2945-4176-bc19-3ea194ec970b","type":"LinearScale"}},"id":"058b39e8-0f21-4356-afb3-6ed38ebeceac","subtype":"Figure","type":"Plot"},{"attributes":{},"id":"71c17e80-4023-4112-87d0-fb070d252642","type":"ResetTool"},{"attributes":{"bottom":{"field":"bottom"},"fill_alpha":{"value":0.1},"fill_color":{"field":"material","transform":{"id":"5151353d-ebaf-47f6-b838-e069a7f0b7c2","type":"CategoricalColorMapper"}},"line_alpha":{"value":0.1},"line_color":{"value":"#000000"},"top":{"field":"top"},"width":{"value":0.5},"x":{"field":"authority"}},"id":"322faa82-e4b7-4f9a-b5db-6defb9f7166c","type":"VBar"},{"attributes":{"callback":null,"column_names":["bottom","top","authority","material","counts"],"data":{"authority":["Augustus, L Pinarius Scarpus","Augustus","Augustus","Augustus, L Bennius, Q Varius Hiberus","Augustus, Publius Carisius","Augustus, Publius Carisius","Augustus, P Petronius Turpilianus","Augustus, L Aquillius Florus","Augustus, M Durmius","Augustus, Q Rustius","Augustus, P Petronius Turpilianus","Augustus, M Durmius","Augustus, L Aquillius Florus","Augustus, Q Rustius","Augustus, L Aquillius Florus, P Petronius Turpilianus","Augustus, T Quinctius Crispinus Sulpicianus","Augustus, Q Aelius Lamia","Augustus, C Marcius Censorinus","Augustus, M Sanquinius","Augustus, M Sanquinius","Augustus, P Licinius Stolo","Augustus, P Licinius Stolo","Augustus, Ti Sempronius Graccus","Augustus, M Sanquinius","Augustus, L Mescinius Rufus","Augustus, L Vincius","Augustus, C Asinius Gallus","Augustus, C Cassius Celer","Augustus, C Gallius Lupercus","Augustus, C Antistius Vetus","Augustus, C Antistius Vetus","Augustus, L Mescinius Rufus","Augustus, C Plotius Rufus","Augustus, L Naevius Surdinus","Augustus, C Plotius Rufus, Cn Piso, L Naevius Surdinus","Augustus","Augustus, C Marius C F Tro","Augustus, C Sulpicius Platorinus","Augustus, C Antistius Reginus","Augustus, C Sulpicius Platorinus","Augustus, C Antistius Reginus","Augustus, L Caninius Gallus","Augustus, Cossus Cornelius Lentulus","Augustus, L Lentulus","Augustus, L Caninius Gallus","Augustus, C Annius Pollio, L Aelius Lamia, P Silius","Augustus, Claudius Pulcher, Livineius Regulus, Statilius Taurus","Augustus, P Lurius Agrippa","Augustus, M Salvius Otho","Augustus, M Maecilius Tullus","Augustus, Cn Piso","A Licinius Nerva Silianus, Augustus","Augustus, Volusus Valerius Messalla","Augustus, Sextus Nonius Quinctilianus","Apronius, Augustus, C Sisenna, Galus, Messalla","Augustus, C Naevius Capella","Augustus, P Betilienus Bassus","Augustus, C Rubellius Blandus","Augustus, L Valerius Catullus","Augustus","Antoninus Pius, Hadrian","Septimius Severus","Tiberius","Tiberius","Tiberius","Lucius Aelius Sejanus, Tiberius","Gaius","Gaius, Montanus, Scipio","Gaius, Montanus, Titullus","Gaius","Gaius","C Cadius Rufus, Claudius I","Claudius I","Claudius I","Claudius I","Nero","Nero","Nero","Nero","Galba","Galba","Galba","Vitellius","Vitellius","Vitellius","Otho","Otho","Titus, Vespasian","Vespasian","Vespasian","Vespasian","Titus, Vespasian","Titus","Titus","Titus","Domitian","Domitian","Domitian","Nerva","Nerva","Nerva","Trajan","Trajan","Trajan","Hadrian","Hadrian","Hadrian","Hadrian","Antoninus Pius","Antoninus Pius","Antoninus Pius","Antoninus Pius","Marcus Aurelius","Lucius Verus","Lucius Verus, Marcus Aurelius","Lucius Verus","Lucius Verus, Marcus Aurelius","Marcus Aurelius","Marcus Aurelius","Commodus, Marcus Aurelius","Commodus, Marcus Aurelius","Commodus","Commodus","Commodus","Didius Julianus","Pertinax","Pertinax","Pertinax","Didius Julianus","Didius Julianus","Pescennius Niger","Clodius Albinus, Septimius Severus","Caracalla, Geta, Septimius Severus","Septimius Severus","Clodius Albinus, Septimius Severus","Clodius Albinus","Septimius Severus","Clodius Albinus","Septimius Severus","Clodius Albinus","Caracalla, Septimius Severus","Caracalla","Caracalla, Septimius Severus","Caracalla ), Geta","Caracalla, Geta )","Geta","Caracalla, Geta","Caracalla, Septimius Severus","Geta","Caracalla, Geta, Septimius Severus","Geta","Caracalla, Geta, Septimius Severus","Caracalla, Geta","Caracalla, Geta","Geta","Caracalla","Caracalla","Caracalla","Macrinus","Macrinus","Macrinus","Diadumenian","Elagabalus","Elagabalus","Elagabalus","Maximus","Balbinus, Pupienus","Balbinus, Pupienus","Gordian I Africanus, Gordian II","Gordian I Africanus, Gordian II","Gordian III","Gordian III","Gordian III","Abgar X, Gordian III","Gordian III, Philip I","Pacatian","Decius","Decius","Decius","Herennius Etruscus","Hostilian","Herennius Etruscus, Trebonianus Gallus","Herennius Etruscus","Hostilian","Volusian","Volusian","Aemilian","Aemilian","Volusian","Aemilian","Silbannacus","Valerian","Gallienus, St Valerian","Gallienus, Valerian","Gallienus, Valerian","Valerian","Gallienus, Salonina","Valerian","Saloninus","Saloninus","Saloninus","Macrianus","Quietus","Quietus","Regalian","Macrian","Macrianus","Gallienus","Postumus","Postumus","Gallienus","Gallienus","Marius","Laelian","Marius","Laelian","Victorinus","Victorinus","Victorinus","Tetricus I, Victorinus","Quintillus","Quintillus","Aurelian","Aurelian","Aurelian, Vabalathus","Aurelian","Aurelian, Vabalathus","Tetricus I","Tetricus I","Tetricus I, Tetricus II","Tetricus I","Tetricus I, Tetricus II","Tacitus","Florian","Florian","Probus","Probus","Probus","Carus","Carus","Numerian","Numerian","Carinus, Numerian","Numerian","Carinus, Carus","Carinus","Carinus","Carinus, Numerian","Diocletian, Maximian","Diocletian","Diocletian, Maximian","Diocletian, Galerius, Maximian","Galerius, Maximian","Maximian","Diocletian, Maximian","Carausius","Carausius","Carausius","Galerius, Maximian","Maximian","Carausius, Maximian","Constantius I, Diocletian, Maximian","Allectus","Constantius I, Diocletian","Allectus","Constantius I","Galerius","Galerius","Galeria, Galerius","Diocletian","Galerius","Diocletian","Constantius I","Diocletian","Constantius I, Galerius","Maximian","Galerius","Constantius I","Severus II","Severus II","Severus II","Maxentius","Maxentius","Maxentius","Domitius Alexander","Constantine II, Licinius II","Constantine II","Constantine II","Licinius II, Martinian","Constantius II","Constantius II","Constans","Constantius II","Constantine II","Theodora","Constans, Constantine II, Constantius II","Constans","Constans, Constantius II","Constans","Magnentius","Vetranio","Vetranio","Vetranio","Magnentius","Magnentius","Decentius, Magnentius","Magnentius","Magnentius","Constantius II, Julian","Constantius II","Julian","Julian","Julian","Jovian","Jovian","Jovian","Valentinian I","Valentinian I","Valentinian I","Valens, Valentinian I","Gratian, Valens, Valentinian I","Valens, Valentinian I","Valens","Honorius, Valentinian I","Procopius","Procopius","Procopius","Valens","Valens","Gratian, Valens, Valentinian I","Gratian","Gratian","Valentinian II","Gratian","Valentinian II","Theodosius I","Magnus Maximus","Flavius Victor","Magnus Maximus","Magnus Maximus","Flavius Victor","Arcadius","Valentinian II","Eugenius","Eugenius","Eugenius","Theodosius I","Honorius","Arcadius","Honorius","Arcadius, Honorius","Constantine III","Constantine III","Theodosius II","Priscus Attalus","Priscus Attalus","Theodosius II","Jovinus","Jovinus, Sebastianus","Constantius III","Valentinian III","Valentinian III","Valentinian III","Theodosius II, Valentinian III","Marcian","Marcian","Marcian","Petronius Maximus","Avitus","Avitus","Majorian","Majorian","Leo I","Leo I","Libius Severus","Libius Severus","Libius Severus","Anthemius","Anthemius","Anthemius","Olybrius","Glycerius","Glycerius","Leo II, Zeno","Leo II, Zeno","Zeno","Julius Nepos","Julius Nepos","Zeno","Romulus Augustulus","Basiliscus","Zeno","Domitian","Postumus","Tacitus","Theodosius I","Probus","Arcadius","Honorius","Leo I","Theodosius II","Valens","Flavius Victor","Romulus","Basiliscus","Arcadius, Honorius","Basiliscus, Marcus","Basiliscus, Marcus","Nepotian","Jovinus","Basiliscus","Martinian","Maximian","Basiliscus, Marcus, Zenonis","Basiliscus, Zenonis","Carausius","Decius","Decius","Diocletian","Galerius","Gallienus","Julian","Nerva, Trajan","Priscus Attalus","Constans","Constantine II","Constantine the Great, Maximian","Constantius I","Jotapian","Justin II","Tacitus","Tetricus I"],"bottom":{"__ndarray__":"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","dtype":"float64","shape":[432]},"counts":[4,359,1,1,42,9,3,2,2,1,34,24,19,4,1,11,4,3,8,6,4,4,2,1,12,12,10,7,7,5,1,1,10,10,1,149,12,6,3,2,1,6,5,3,1,4,5,17,14,12,7,7,5,4,22,2,2,1,1,105,16,2,161,142,55,1,19,5,2,17,105,1,106,70,43,1,54,382,84,175,122,29,70,38,25,19,10,1,193,523,464,8,142,196,38,4,344,259,98,72,16,492,184,680,1030,1018,247,3,1211,286,966,1,112,1,423,39,314,428,389,84,52,386,325,54,25,25,24,10,9,7,44,24,2,112,32,3,715,43,193,2,200,1,1,6,1,1,9,901,4,177,1,151,40,24,2,68,249,159,124,75,13,1,157,23,468,14,44,43,20,8,931,33,232,34,2,4,1235,133,15,1,3,2,1,7,263,48,71,29,9,1,1,518,198,150,149,26,1,16,3,6,45,33,1,40,2,1,1,44,8320,25,2256,341,44,7,2,1,3359,11,3,1,149,1,498,17,10,2,1,622,18,2,1,1,12,291,3,33,8,1,127,11,136,10,1,1,3,204,16,1,624,1,1,7,1,37,1,1764,49,5,1,672,2,6,5,1,581,29,27,2,1,35,717,640,489,54,33,59,28,23,6,100,1,10,169,8,7,3,853,22,1,2,1358,48,125,19,14,1,31,4,565,230,18,3,1,9,7,2,1,1,1,527,1080,158,36,65,39,9,381,372,73,38,23,7,1,1,16,9,1,1821,420,12,69,1704,801,416,122,955,1347,186,44,25,2,219,421,589,14,8,66,2557,2516,384,1,24,13,71,4,3,14,7,1,2,112,38,12,1,89,26,3,2,4,2,18,11,46,3,15,11,5,29,4,2,3,4,1,3,1,38,14,2,1,3,1,28,49,5,1243,592,581,489,280,148,135,90,25,22,14,8,6,5,5,4,3,3,3,2,2,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,1],"material":["silver","silver","lead/alloy","bronze","silver","bronze","gold","gold","gold","gold","silver","silver","silver","silver","silver","bronze","bronze","bronze","bronze","silver","bronze","silver","bronze","gold","silver","silver","bronze","bronze","bronze","silver","gold","gold","bronze","bronze","bronze","bronze","silver","silver","silver","gold","gold","silver","silver","silver","gold","bronze","bronze","bronze","bronze","bronze","bronze","bronze","bronze","bronze","bronze","bronze","bronze","bronze","bronze","gold","silver","lead/alloy","bronze","silver","gold","bronze","gold","bronze","bronze","silver","bronze","bronze","bronze","gold","silver","lead/alloy","silver","bronze","gold","bronze","silver","gold","silver","bronze","gold","silver","gold","bronze","gold","bronze","silver","silver","silver","bronze","gold","lead/alloy","bronze","silver","bronze","silver","gold","bronze","gold","silver","bronze","silver","gold","lead/alloy","bronze","gold","silver","lead/alloy","gold","silver","bronze","gold","silver","bronze","silver","bronze","silver","bronze","silver","gold","bronze","bronze","silver","gold","silver","gold","silver","silver","lead/alloy","gold","bronze","gold","silver","silver","bronze","bronze","bronze","lead/alloy","gold","lead/alloy","lead/alloy","lead/alloy","lead/alloy","silver","silver","silver","bronze","bronze","silver","bronze","gold","gold","silver","bronze","silver","bronze","gold","silver","bronze","gold","silver","bronze","silver","bronze","bronze","silver","silver","gold","bronze","bronze","silver","silver","silver","bronze","gold","silver","gold","silver","gold","bronze","silver","bronze","silver","bronze","gold","gold","silver","silver","silver","silver","bronze","bronze","gold","gold","bronze","gold","silver","bronze","gold","bronze","bronze","bronze","gold","gold","bronze","gold","bronze","silver","bronze","bronze","gold","gold","bronze","gold","silver","bronze","bronze","gold","bronze","gold","bronze","silver","other","bronze","gold","gold","silver","bronze","gold","bronze","gold","gold","silver","lead/alloy","bronze","gold","bronze","gold","gold","silver","bronze","bronze","gold","bronze","bronze","other","lead/alloy","bronze","bronze","silver","gold","bronze","silver","gold","silver","bronze","gold","bronze","gold","bronze","bronze","silver","silver","other","bronze","silver","bronze","bronze","bronze","gold","bronze","gold","gold","gold","gold","bronze","silver","gold","bronze","silver","bronze","bronze","bronze","gold","bronze","other","bronze","gold","gold","silver","bronze","bronze","silver","bronze","bronze","bronze","bronze","silver","gold","gold","silver","bronze","lead/alloy","other","bronze","silver","silver","bronze","gold","silver","bronze","gold","bronze","silver","gold","silver","bronze","bronze","other","bronze","bronze","silver","gold","silver","bronze","silver","gold","silver","silver","bronze","gold","silver","silver","silver","bronze","gold","gold","gold","bronze","silver","gold","bronze","gold","silver","silver","gold","silver","silver","gold","gold","bronze","gold","silver","silver","silver","gold","bronze","gold","silver","bronze","bronze","gold","silver","gold","gold","bronze","bronze","gold","gold","silver","gold","bronze","silver","gold","bronze","silver","gold","gold","lead/alloy","gold","bronze","gold","gold","silver","silver","gold","silver","bronze","gold","silver","bronze","bronze","bronze","bronze","bronze","bronze","bronze","gold","bronze","bronze","gold","bronze","gold","bronze","bronze","gold","bronze","bronze","lead/alloy","bronze","bronze","lead/alloy","lead/alloy","other","lead/alloy","lead/alloy","lead/alloy","lead/alloy","silver","silver","lead/alloy","lead/alloy","lead/alloy","lead/alloy","silver","bronze","lead/alloy","lead/alloy"],"top":{"__ndarray__":"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","dtype":"float64","shape":[432]}},"selected":null,"selection_policy":null},"id":"4f0a6e07-dc98-4193-b741-e19a1e705010","type":"ColumnDataSource"}],"root_ids":["058b39e8-0f21-4356-afb3-6ed38ebeceac"]},"title":"Bokeh Application","version":"0.12.15"}};
+  var render_items = [{"docid":"84179aaa-f67b-4b62-95f8-ece4ee79f08e","elementid":"86cd352a-0e72-4c3f-8448-a43e9c3adf8e","modelid":"058b39e8-0f21-4356-afb3-6ed38ebeceac"}];
+  root.Bokeh.embed.embed_items_notebook(docs_json, render_items);
+
+  }
+  if (root.Bokeh !== undefined) {
+    embed_document(root);
+  } else {
+    var attempts = 0;
+    var timer = setInterval(function(root) {
+      if (root.Bokeh !== undefined) {
+        embed_document(root);
+        clearInterval(timer);
+      }
+      attempts++;
+      if (attempts > 100) {
+        console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing")
+        clearInterval(timer);
+      }
+    }, 10, root)
+  }
+})(window);
+</script>
+</div>
