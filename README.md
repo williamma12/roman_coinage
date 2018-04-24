@@ -262,10 +262,10 @@
 
 # Constantine
 ## Word Counts Plots
-* [allData](Plots/allData_constanine_Word_Count_plot.html)
-* [americanNumismaticSociety](Plots/americanNumismaticSociety_constanine_Word_Count_plot.html)
-* [britishMuseum](Plots/britishMuseum_constanine_Word_Count_plot.html)
-* [OCRE](Plots/OCRE_constanine_Word_Count_plot.html)
+* [allData](Plots/allData_constantine_Word_Count_plot.html)
+* [americanNumismaticSociety](Plots/americanNumismaticSociety_constantine_Word_Count_plot.html)
+* [britishMuseum](Plots/britishMuseum_constantine_Word_Count_plot.html)
+* [OCRE](Plots/OCRE_constantine_Word_Count_plot.html)
 
 
 # Augustan

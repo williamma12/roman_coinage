@@ -14,12 +14,17 @@ DEFAULT_README1 = '''
 plots = os.listdir('Plots/')
 plots.sort()
 
-plot_files = ["\n[{}](Plots/{})\n".format(f, f) for f in plots if (f != '.DS_Store')]
+plot_files = list()
+
+for plot in plots:
+    if plot != '.DS_Store' and open('README.md', 'r').read().find(plot) < 0:
+        plot_files.append("\n[{}](Plots/{})\n".format(plot, plot))
+
 plot_files_str = "\n".join(plot_files)
 
 readme = DEFAULT_README1 + plot_files_str
 
-f = open('basic_README.md', 'w')
+f = open('diff_README.md', 'w')
 f.write(readme)
 f.close()
 
