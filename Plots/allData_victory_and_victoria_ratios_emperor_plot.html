@@ -1,0 +1,520 @@
+
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-0.12.15.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.15.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-tables-0.12.15.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-gl-0.12.15.min.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/ui/1.10.4/jquery-ui.min.js" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.20/require.min.js" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js" type="text/javascript"></script>
+<script type="text/javascript">function HoloViewsWidget(){
+}
+
+HoloViewsWidget.comms = {};
+HoloViewsWidget.comm_state = {};
+
+HoloViewsWidget.prototype.init_slider = function(init_val){
+  if(this.load_json) {
+    this.from_json()
+  } else {
+    this.update_cache();
+  }
+}
+
+HoloViewsWidget.prototype.populate_cache = function(idx){
+  this.cache[idx].html(this.frames[idx]);
+  if (this.embed) {
+    delete this.frames[idx];
+  }
+}
+
+HoloViewsWidget.prototype.process_error = function(msg){
+
+}
+
+HoloViewsWidget.prototype.from_json = function() {
+  var data_url = this.json_path + this.id + '.json';
+  $.getJSON(data_url, $.proxy(function(json_data) {
+    this.frames = json_data;
+    this.update_cache();
+    this.update(0);
+  }, this));
+}
+
+HoloViewsWidget.prototype.dynamic_update = function(current){
+  if (current === undefined) {
+    return
+  }
+  if(this.dynamic) {
+    current = JSON.stringify(current);
+  }
+  function callback(initialized, msg){
+    /* This callback receives data from Python as a string
+       in order to parse it correctly quotes are sliced off*/
+    if (msg.content.ename != undefined) {
+      this.process_error(msg);
+    }
+    if (msg.msg_type != "execute_result") {
+      console.log("Warning: HoloViews callback returned unexpected data for key: (", current, ") with the following content:", msg.content)
+    } else {
+      if (msg.content.data['text/plain'].includes('Complete')) {
+        if (this.queue.length > 0) {
+          this.time = Date.now();
+          this.dynamic_update(this.queue[this.queue.length-1]);
+          this.queue = [];
+        } else {
+          this.wait = false;
+        }
+        return
+      }
+    }
+  }
+  this.current = current;
+  if ((window.Jupyter !== undefined) && (Jupyter.notebook.kernel != null)) {
+    var kernel = Jupyter.notebook.kernel;
+    callbacks = {iopub: {output: $.proxy(callback, this, this.initialized)}};
+    var cmd = "holoviews.plotting.widgets.NdWidget.widgets['" + this.id + "'].update(" + current + ")";
+    kernel.execute("import holoviews;" + cmd, callbacks, {silent : false});
+  }
+}
+
+HoloViewsWidget.prototype.update_cache = function(force){
+  var frame_len = Object.keys(this.frames).length;
+  for (var i=0; i<frame_len; i++) {
+    if(!this.load_json || this.dynamic)  {
+      frame = Object.keys(this.frames)[i];
+    } else {
+      frame = i;
+    }
+    if(!(frame in this.cache) || force) {
+      if ((frame in this.cache) && force) { this.cache[frame].remove() }
+      this.cache[frame] = $('<div />').appendTo("#"+"_anim_img"+this.id).hide();
+      var cache_id = "_anim_img"+this.id+"_"+frame;
+      this.cache[frame].attr("id", cache_id);
+      this.populate_cache(frame);
+    }
+  }
+}
+
+HoloViewsWidget.prototype.update = function(current){
+  if(current in this.cache) {
+    $.each(this.cache, function(index, value) {
+      value.hide();
+    });
+    this.cache[current].show();
+    this.wait = false;
+  }
+}
+
+HoloViewsWidget.prototype.init_comms = function() {
+  if ((window.Jupyter !== undefined) && (Jupyter.notebook.kernel !== undefined)) {
+    var widget = this;
+    comm_manager = Jupyter.notebook.kernel.comm_manager;
+    comm_manager.register_target(this.id, function (comm) {
+      comm.on_msg(function (msg) { widget.process_msg(msg) });
+    });
+  }
+}
+
+HoloViewsWidget.prototype.process_msg = function(msg) {
+}
+
+function SelectionWidget(frames, id, slider_ids, keyMap, dim_vals, notFound, load_json, mode, cached, json_path, dynamic){
+  this.frames = frames;
+  this.id = id;
+  this.slider_ids = slider_ids;
+  this.keyMap = keyMap
+  this.current_frame = 0;
+  this.current_vals = dim_vals;
+  this.load_json = load_json;
+  this.mode = mode;
+  this.notFound = notFound;
+  this.cached = cached;
+  this.dynamic = dynamic;
+  this.cache = {};
+  this.json_path = json_path;
+  this.init_slider(this.current_vals[0]);
+  this.queue = [];
+  this.wait = false;
+  if (!this.cached || this.dynamic) {
+    this.init_comms()
+  }
+}
+
+SelectionWidget.prototype = new HoloViewsWidget;
+
+
+SelectionWidget.prototype.get_key = function(current_vals) {
+  var key = "(";
+  for (var i=0; i<this.slider_ids.length; i++)
+  {
+    val = this.current_vals[i];
+    if (!(typeof val === 'string')) {
+      if (val % 1 === 0) { val = val.toFixed(1); }
+      else { val = val.toFixed(10); val = val.slice(0, val.length-1);}
+    }
+    key += "'" + val + "'";
+    if(i != this.slider_ids.length-1) { key += ', ';}
+    else if(this.slider_ids.length == 1) { key += ',';}
+  }
+  key += ")";
+  return this.keyMap[key];
+}
+
+SelectionWidget.prototype.set_frame = function(dim_val, dim_idx){
+  this.current_vals[dim_idx] = dim_val;
+  var key = this.current_vals;
+  if (!this.dynamic) {
+    key = this.get_key(key)
+  }
+  if (this.dynamic || !this.cached) {
+    if ((this.time !== undefined) && ((this.wait) && ((this.time + 10000) > Date.now()))) {
+      this.queue.push(key);
+      return
+    }
+    this.queue = [];
+    this.time = Date.now();
+    this.current_frame = key;
+    this.wait = true;
+    this.dynamic_update(key)
+  } else if (key !== undefined) {
+    this.update(key)
+  }
+}
+
+
+/* Define the ScrubberWidget class */
+function ScrubberWidget(frames, num_frames, id, interval, load_json, mode, cached, json_path, dynamic){
+  this.slider_id = "_anim_slider" + id;
+  this.loop_select_id = "_anim_loop_select" + id;
+  this.id = id;
+  this.interval = interval;
+  this.current_frame = 0;
+  this.direction = 0;
+  this.dynamic = dynamic;
+  this.timer = null;
+  this.load_json = load_json;
+  this.mode = mode;
+  this.cached = cached;
+  this.frames = frames;
+  this.cache = {};
+  this.length = num_frames;
+  this.json_path = json_path;
+  document.getElementById(this.slider_id).max = this.length - 1;
+  this.init_slider(0);
+  this.wait = false;
+  this.queue = [];
+  if (!this.cached || this.dynamic) {
+    this.init_comms()
+  }
+}
+
+ScrubberWidget.prototype = new HoloViewsWidget;
+
+ScrubberWidget.prototype.set_frame = function(frame){
+  this.current_frame = frame;
+  widget = document.getElementById(this.slider_id);
+  if (widget === null) {
+    this.pause_animation();
+    return
+  }
+  widget.value = this.current_frame;
+  if(this.cached) {
+    this.update(frame)
+  } else {
+    this.dynamic_update(frame)
+  }
+}
+
+
+ScrubberWidget.prototype.get_loop_state = function(){
+  var button_group = document[this.loop_select_id].state;
+  for (var i = 0; i < button_group.length; i++) {
+    var button = button_group[i];
+    if (button.checked) {
+      return button.value;
+    }
+  }
+  return undefined;
+}
+
+
+ScrubberWidget.prototype.next_frame = function() {
+  this.set_frame(Math.min(this.length - 1, this.current_frame + 1));
+}
+
+ScrubberWidget.prototype.previous_frame = function() {
+  this.set_frame(Math.max(0, this.current_frame - 1));
+}
+
+ScrubberWidget.prototype.first_frame = function() {
+  this.set_frame(0);
+}
+
+ScrubberWidget.prototype.last_frame = function() {
+  this.set_frame(this.length - 1);
+}
+
+ScrubberWidget.prototype.slower = function() {
+  this.interval /= 0.7;
+  if(this.direction > 0){this.play_animation();}
+  else if(this.direction < 0){this.reverse_animation();}
+}
+
+ScrubberWidget.prototype.faster = function() {
+  this.interval *= 0.7;
+  if(this.direction > 0){this.play_animation();}
+  else if(this.direction < 0){this.reverse_animation();}
+}
+
+ScrubberWidget.prototype.anim_step_forward = function() {
+  if(this.current_frame < this.length - 1){
+    this.next_frame();
+  }else{
+    var loop_state = this.get_loop_state();
+    if(loop_state == "loop"){
+      this.first_frame();
+    }else if(loop_state == "reflect"){
+      this.last_frame();
+      this.reverse_animation();
+    }else{
+      this.pause_animation();
+      this.last_frame();
+    }
+  }
+}
+
+ScrubberWidget.prototype.anim_step_reverse = function() {
+  if(this.current_frame > 0){
+    this.previous_frame();
+  } else {
+    var loop_state = this.get_loop_state();
+    if(loop_state == "loop"){
+      this.last_frame();
+    }else if(loop_state == "reflect"){
+      this.first_frame();
+      this.play_animation();
+    }else{
+      this.pause_animation();
+      this.first_frame();
+    }
+  }
+}
+
+ScrubberWidget.prototype.pause_animation = function() {
+  this.direction = 0;
+  if (this.timer){
+    clearInterval(this.timer);
+    this.timer = null;
+  }
+}
+
+ScrubberWidget.prototype.play_animation = function() {
+  this.pause_animation();
+  this.direction = 1;
+  var t = this;
+  if (!this.timer) this.timer = setInterval(function(){t.anim_step_forward();}, this.interval);
+}
+
+ScrubberWidget.prototype.reverse_animation = function() {
+  this.pause_animation();
+  this.direction = -1;
+  var t = this;
+  if (!this.timer) this.timer = setInterval(function(){t.anim_step_reverse();}, this.interval);
+}
+
+function extend(destination, source) {
+  for (var k in source) {
+    if (source.hasOwnProperty(k)) {
+      destination[k] = source[k];
+    }
+  }
+  return destination;
+}
+
+function update_widget(widget, values) {
+  if (widget.hasClass("ui-slider")) {
+    widget.slider('option', {
+      min: 0,
+      max: values.length-1,
+      dim_vals: values,
+      value: 0,
+      dim_labels: values
+	})
+    widget.slider('option', 'slide').call(widget, event, {value: 0})
+  } else {
+    widget.empty();
+    for (var i=0; i<values.length; i++){
+      widget.append($("<option>", {
+        value: i,
+        text: values[i]
+      }))
+    };
+    widget.data('values', values);
+    widget.data('value', 0);
+    widget.trigger("change");
+  };
+}
+
+// Define Bokeh specific subclasses
+function BokehSelectionWidget() {
+	SelectionWidget.apply(this, arguments);
+}
+
+function BokehScrubberWidget() {
+	ScrubberWidget.apply(this, arguments);
+}
+
+// Let them inherit from the baseclasses
+BokehSelectionWidget.prototype = Object.create(SelectionWidget.prototype);
+BokehScrubberWidget.prototype = Object.create(ScrubberWidget.prototype);
+
+// Define methods to override on widgets
+var BokehMethods = {
+	update_cache : function(){
+		$.each(this.frames, $.proxy(function(index, frame) {
+			this.frames[index] = JSON.parse(frame);
+		}, this));
+	},
+	update : function(current){
+		if (current === undefined) {
+			var data = undefined;
+		} else {
+			var data = this.frames[current];
+		}
+		if (data !== undefined) {
+			var doc = Bokeh.index[data.root].model.document;
+			doc.apply_json_patch(data.content);
+		}
+	},
+	init_comms : function() {
+	}
+}
+
+// Extend Bokeh widgets with backend specific methods
+extend(BokehSelectionWidget.prototype, BokehMethods);
+extend(BokehScrubberWidget.prototype, BokehMethods);
+</script>
+
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-0.12.15.min.css">
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.15.min.css">
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-tables-0.12.15.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+<style>div.bk-hbox {
+    display: flex;
+    justify-content: center;
+}
+
+div.bk-hbox div.bk-plot {
+    padding: 8px;
+}
+
+div.bk-hbox div.bk-data-table {
+    padding: 20px;
+}
+
+div.hololayout {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+div.holoframe {
+	width: 75%;
+}
+
+div.holowell {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+form.holoform {
+    background-color: #fafafa;
+    border-radius: 5px;
+    overflow: hidden;
+	padding-left: 0.8em;
+    padding-right: 0.8em;
+    padding-top: 0.4em;
+    padding-bottom: 0.4em;
+}
+
+div.holowidgets {
+    padding-right: 0;
+	width: 25%;
+}
+
+div.holoslider {
+    min-height: 0 !important;
+    height: 0.8em;
+    width: 60%;
+}
+
+div.holoformgroup {
+    padding-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+div.hologroup {
+    padding-left: 0;
+    padding-right: 0.8em;
+    width: 50%;
+}
+
+.holoselect {
+    width: 92%;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.holotext {
+    width: 100%;
+    padding-left:  0.5em;
+    padding-right: 0;
+}
+
+.holowidgets .ui-resizable-se {
+	visibility: hidden
+}
+
+.holoframe > .ui-resizable-se {
+	visibility: hidden
+}
+
+.holowidgets .ui-resizable-s {
+	visibility: hidden
+}
+</style><div style='display: table; margin: 0 auto;'>
+
+<div class="bk-root">
+    <div class="bk-plotdiv" id="ccbf57c6-880b-4626-972e-a4467f3841f8"></div>
+</div>
+<script type="text/javascript">
+  (function(root) {
+  function embed_document(root) {
+    
+  var docs_json = {"6654d53e-dd73-4a42-b898-0fef2f8de1d8":{"roots":{"references":[{"attributes":{"axis_label":"Percentage of Coins by emperor","bounds":"auto","formatter":{"id":"f130e428-a0ec-47c6-9d67-c2a6daec888e","type":"BasicTickFormatter"},"major_label_orientation":"horizontal","plot":{"id":"7f733d50-8977-4db3-8175-bf3d9864097f","subtype":"Figure","type":"Plot"},"ticker":{"id":"a5fade20-fbbc-43cc-97c0-7bf23089aa55","type":"BasicTicker"}},"id":"cca335c6-532c-4363-b5e6-7d06281a8145","type":"LinearAxis"},{"attributes":{"source":{"id":"5368f679-e14c-4809-af96-3ab8827c0d5f","type":"ColumnDataSource"}},"id":"cff4b471-2e65-4411-9cb9-1178fbaa8984","type":"CDSView"},{"attributes":{"items":[],"plot":{"id":"7f733d50-8977-4db3-8175-bf3d9864097f","subtype":"Figure","type":"Plot"}},"id":"f1244041-5527-48d5-a900-4cb5e19c0bb0","type":"Legend"},{"attributes":{},"id":"303ecf06-5586-480f-a245-590231e97931","type":"PanTool"},{"attributes":{},"id":"ea44d37b-1096-435e-8b7d-8b321d15fb88","type":"CategoricalScale"},{"attributes":{"fill_color":{"value":"#30a2da"},"line_color":{"value":"#000000"},"top":{"field":"keywordRatio"},"width":{"value":0.5},"x":{"field":"emperor"}},"id":"f41256e9-0d76-47db-ad2f-25617cfc6122","type":"VBar"},{"attributes":{"callback":null,"column_names":["emperor","keywordRatio"],"data":{"emperor":["Augustus","Antoninus Pius, Hadrian","Tiberius","Gaius","Claudius","Nero","Galba","Otho","Vitellius","Vespasian","Titus","Domitian","Nerva","Trajan","Hadrian","Antoninus Pius","Lucius Verus, Marcus Aurelius","Marcus Aurelius","Lucius Verus","Commodus, Marcus Aurelius","Commodus","Pertinax","Pescennius Niger","Clodius Albinus","Caracalla, Septimius Severus","Geta, Septimius Severus","Septimius Severus","Caracalla","Caracalla, Geta, Septimius Severus","Caracalla, Geta","Geta","Macrinus","Elagabalus","Maximinus Thrax","Gordian I","Gordian II","Pupienus","Gordian III","Philip the Arab","Decius","Trajan Decius","Hostilian","Volusian","Aemilian","Silbannacus","Gallienus, Valerian","Valerian","Macrianus","Macrianus Minor","Quietus","Gallienus","Postumus","Claudius Gothicus","Claudius II","Laelian","Laelianus","Marius","Victorinus","Quintillus","Aurelian","Tetricus I","Tacitus","Florian","Florianus","Probus","Carus","Carinus, Numerian","Carinus","Numerian","Constantius I","Diocletian, Maximian","Diocletian","Carausius","Maximian","Allectus","Constantius Chlorus","Maximinus Daia","Severus II","Galerius","Maxentius","Constantine the Great","Licinius","Valerius Valens","Constantine II","Constantine I","Constantius II","Constans","Magnentius","Alexander III","Julian","Jovian","Jovianus","Valens","Valentinian I","Valens, Valentinian I","Honorius, Valentinian I","Gratian, Valens, Valentinian I","Valentinian II","Gratian","Flavius Victor","Magnus Maximus","Theodosius I, Valentinian II","Eugenius","Theodosius I","Arcadius","Honorius","Constantine III","Theodosius II","Jovinus","Jovinus, Sebastianus","Priscus Attalus","Constantius III","Joannes","Valentinian III","Marcian","Petronius Maximus","Avitus","Majorian","Libius Severus","Leo I","Glycerius","Leo II, Zeno","Zeno","Basiliscus","Romulus Augustulus","Julius Nepos","Arcadius, Honorius","Hadrian","Geta, Septimius Severus","Jotapianus","Arcadius","Honorius"],"keywordRatio":{"__ndarray__":"ZM4To5nuEUAAAAAAAMAyQLGj3uP8UQRAdoMp8lk3AEAEpdl049/rPwNb9ZMqsC1AKz8hzspPMkBSGZVRGZUhQLobaRG5pTNAzr+sIo6+JEAo7Al7wp4eQIcVogBBvCBAXTAizc7Y9D84kbcLr6MjQB7onFSx1xBAa571kXFNA0CCFFTyx7MqQBGhXK+jWiVApe7LYyuCDkA8PDw8PLw5QOm9P/+36CdATSaTyWQy6T+tG0yRz7otQAAAAAAAABlA/0jBZA4CK0Df9KY3vekXQGF/UB8ZPjFAfGJ6T0zvJUAIH3zwwQc3QK9evXr16hVA0FGBL65+EECxEzuxEzsNQAAAAAAAACRA168UqPUrMUBCGqRBGqQpQAAAAAAAAEJA+oK+oC/oG0AJH5/gWjYfQBdddNFFFx1AZgKZCWQm8D9DoCkEmkIQQNu2bdu2bSVA3ZfHVgQNB0DEbC4darAjQAAAAAAAAFlA0mzm3Sc1LEC3bdu2bdvWP4iHh4eHhwdAL7rooosuIkCRy4qBEt4gQLCW8fUe2QpA4IuAN0kN4z9yHMdxHMcRQJze9KY3vRVAAAAAAAAAKUAAAAAAAABZQLrooosuujZANdhKFDcD6z/I2zPHYrgAQCVJkiRJUhFANuIeODZpIkDQUYEvrn7wP5U/6pQ/6tQ/T+zETuzELkAWspCFLGQhQCz3NMJyTz1AIRlQz1SuTEBGrjMBg8fyPxKCN2mdegxAx3Ecx3Ec9z+Ziuea1WHEP1IY/zdXSzJAjwp8cfWD/j/DEjvut+wXQHZiJ3ZiJ/Y/JgHhRLwkEEBfX19fX18PQHkN5TWU1xBA0Zw+ePXl8D9UuUjIDSkkQIXnMiORj/o/t23btm2lSkAAAAAAAABZQNBu3irGRglAqrDNC8lTHUDVpja1qU0FQMjL+7ZBqyJAq6qqqqqqIEAlSZIkSZIsQCt1EtcMEMQ/wB/wB/wBH0AT2ktoL6ENQCj8mJ1/gkxAjnVLlma7Q0CrqqqqqqpQQAAAAAAAAFlAJUmSJEmSQkCQwfkYnI9GQEeG4l0EGEhA1ha5zgQM7j9IHnnkkUcCQAAAAAAAAE5Av9+0Z3YqV0Arz1FTncdFQBPmvY8De1FAJVlG0864UkCXlpaWlpZEQMhWBA0ndTFADeU1lNdQSkAAAAAAAABZQLETO7ETO0NAq6qqqqqqQEAAAAAAAABZQAAAAAAAwDxAUJbApv1kJ0AAAAAAAABJQFVVVVVV1URA8lk3mCKfNUAXXXTRRRcdQH5fv+D95BNAL7rooosuMkAlSZIkSZIsQI9vXxwk6DRAm7KmrClrSEAAAAAAAABEQAAAAAAAAClAL7rooosuUkDsdEZ0zJylP5ze9KY3vQVAAAAAAAAAWUB1KJQw732sP7/rx8Ktr54/","dtype":"float64","shape":[132]}},"selected":null,"selection_policy":null},"id":"5368f679-e14c-4809-af96-3ab8827c0d5f","type":"ColumnDataSource"},{"attributes":{},"id":"a5fade20-fbbc-43cc-97c0-7bf23089aa55","type":"BasicTicker"},{"attributes":{"dimensions":"width"},"id":"82c33b1c-cc41-40ef-b4d3-f41e1fb8bad0","type":"WheelZoomTool"},{"attributes":{"axis_label":"emperor","bounds":"auto","formatter":{"id":"9f50c367-1f10-4378-811e-7f5eaeb65b3a","type":"CategoricalTickFormatter"},"major_label_orientation":1.5707963267948966,"plot":{"id":"7f733d50-8977-4db3-8175-bf3d9864097f","subtype":"Figure","type":"Plot"},"ticker":{"id":"43cbe741-f170-41e9-a5ed-2757924f7a39","type":"CategoricalTicker"}},"id":"0b5fe279-4389-4c55-8572-dd0db5696478","type":"CategoricalAxis"},{"attributes":{},"id":"f130e428-a0ec-47c6-9d67-c2a6daec888e","type":"BasicTickFormatter"},{"attributes":{"dimension":1,"grid_line_color":{"value":null},"plot":{"id":"7f733d50-8977-4db3-8175-bf3d9864097f","subtype":"Figure","type":"Plot"},"ticker":{"id":"a5fade20-fbbc-43cc-97c0-7bf23089aa55","type":"BasicTicker"}},"id":"57f75524-3720-494d-9011-edf9849c0312","type":"Grid"},{"attributes":{"data_source":{"id":"5368f679-e14c-4809-af96-3ab8827c0d5f","type":"ColumnDataSource"},"glyph":{"id":"f41256e9-0d76-47db-ad2f-25617cfc6122","type":"VBar"},"hover_glyph":null,"muted_glyph":null,"nonselection_glyph":{"id":"08cb8b03-fe38-46dd-beaf-c04bb32c6542","type":"VBar"},"selection_glyph":null,"view":{"id":"cff4b471-2e65-4411-9cb9-1178fbaa8984","type":"CDSView"}},"id":"b4dcd2a0-dc76-4b69-bc01-93a5f04c1572","type":"GlyphRenderer"},{"attributes":{"grid_line_color":{"value":null},"plot":{"id":"7f733d50-8977-4db3-8175-bf3d9864097f","subtype":"Figure","type":"Plot"},"ticker":{"id":"43cbe741-f170-41e9-a5ed-2757924f7a39","type":"CategoricalTicker"}},"id":"8e8f6d4b-87fa-45de-8da4-16e3097df41a","type":"Grid"},{"attributes":{},"id":"ab805a99-b013-4f0a-a4ce-0900e923e163","type":"WheelZoomTool"},{"attributes":{},"id":"9f50c367-1f10-4378-811e-7f5eaeb65b3a","type":"CategoricalTickFormatter"},{"attributes":{},"id":"b66f07e8-57ea-49b8-984b-b309b334ff0f","type":"SaveTool"},{"attributes":{"plot":null,"text":"Ratio of 'victory and victoria' per emperor in allData plot","text_color":{"value":"black"},"text_font_size":{"value":"12pt"}},"id":"fe287bf1-be78-4329-a11b-c6937fe92b87","type":"Title"},{"attributes":{"fill_alpha":{"value":0.1},"fill_color":{"value":"#30a2da"},"line_alpha":{"value":0.1},"line_color":{"value":"#000000"},"top":{"field":"keywordRatio"},"width":{"value":0.5},"x":{"field":"emperor"}},"id":"08cb8b03-fe38-46dd-beaf-c04bb32c6542","type":"VBar"},{"attributes":{"callback":null,"renderers":[{"id":"b4dcd2a0-dc76-4b69-bc01-93a5f04c1572","type":"GlyphRenderer"}],"tooltips":[["emperor","@{emperor}"],["Percentage of Coins by emperor","@{keywordRatio}"]]},"id":"241278e0-04ed-425e-a558-9f809c5e1bd3","type":"HoverTool"},{"attributes":{},"id":"75daba5d-e577-4686-a6e5-454e346239ca","type":"LinearScale"},{"attributes":{},"id":"b1d26165-e28b-4bfa-bf5e-5b73507b733e","type":"ResetTool"},{"attributes":{},"id":"43cbe741-f170-41e9-a5ed-2757924f7a39","type":"CategoricalTicker"},{"attributes":{"callback":null,"end":100.0},"id":"efcc48ba-b3ce-4d36-ab53-2b6d7f76c09f","type":"Range1d"},{"attributes":{"bottom_units":"screen","fill_alpha":{"value":0.5},"fill_color":{"value":"lightgrey"},"left_units":"screen","level":"overlay","line_alpha":{"value":1.0},"line_color":{"value":"black"},"line_dash":[4,4],"line_width":{"value":2},"plot":null,"render_mode":"css","right_units":"screen","top_units":"screen"},"id":"c46d1d14-a2d6-4438-b9f8-58fa4343ce9e","type":"BoxAnnotation"},{"attributes":{"below":[{"id":"0b5fe279-4389-4c55-8572-dd0db5696478","type":"CategoricalAxis"}],"left":[{"id":"cca335c6-532c-4363-b5e6-7d06281a8145","type":"LinearAxis"}],"min_border_bottom":10,"min_border_left":10,"min_border_right":10,"min_border_top":10,"renderers":[{"id":"0b5fe279-4389-4c55-8572-dd0db5696478","type":"CategoricalAxis"},{"id":"8e8f6d4b-87fa-45de-8da4-16e3097df41a","type":"Grid"},{"id":"cca335c6-532c-4363-b5e6-7d06281a8145","type":"LinearAxis"},{"id":"57f75524-3720-494d-9011-edf9849c0312","type":"Grid"},{"id":"c46d1d14-a2d6-4438-b9f8-58fa4343ce9e","type":"BoxAnnotation"},{"id":"f1244041-5527-48d5-a900-4cb5e19c0bb0","type":"Legend"},{"id":"b4dcd2a0-dc76-4b69-bc01-93a5f04c1572","type":"GlyphRenderer"}],"sizing_mode":"stretch_both","title":{"id":"fe287bf1-be78-4329-a11b-c6937fe92b87","type":"Title"},"toolbar":{"id":"20cd021c-dd2d-492f-a73c-21824e5fe284","type":"Toolbar"},"x_range":{"id":"b76e0df3-9058-4c46-b002-6e6ca5fdd85d","type":"FactorRange"},"x_scale":{"id":"ea44d37b-1096-435e-8b7d-8b321d15fb88","type":"CategoricalScale"},"y_range":{"id":"efcc48ba-b3ce-4d36-ab53-2b6d7f76c09f","type":"Range1d"},"y_scale":{"id":"75daba5d-e577-4686-a6e5-454e346239ca","type":"LinearScale"}},"id":"7f733d50-8977-4db3-8175-bf3d9864097f","subtype":"Figure","type":"Plot"},{"attributes":{"overlay":{"id":"c46d1d14-a2d6-4438-b9f8-58fa4343ce9e","type":"BoxAnnotation"}},"id":"c4c47c3f-f2df-4a2c-9cfe-65904e1c60a5","type":"BoxZoomTool"},{"attributes":{"active_drag":"auto","active_inspect":"auto","active_scroll":"auto","active_tap":"auto","tools":[{"id":"241278e0-04ed-425e-a558-9f809c5e1bd3","type":"HoverTool"},{"id":"b66f07e8-57ea-49b8-984b-b309b334ff0f","type":"SaveTool"},{"id":"303ecf06-5586-480f-a245-590231e97931","type":"PanTool"},{"id":"ab805a99-b013-4f0a-a4ce-0900e923e163","type":"WheelZoomTool"},{"id":"c4c47c3f-f2df-4a2c-9cfe-65904e1c60a5","type":"BoxZoomTool"},{"id":"b1d26165-e28b-4bfa-bf5e-5b73507b733e","type":"ResetTool"},{"id":"82c33b1c-cc41-40ef-b4d3-f41e1fb8bad0","type":"WheelZoomTool"}]},"id":"20cd021c-dd2d-492f-a73c-21824e5fe284","type":"Toolbar"},{"attributes":{"callback":null,"factors":["Augustus","Antoninus Pius, Hadrian","Tiberius","Gaius","Claudius","Nero","Galba","Otho","Vitellius","Vespasian","Titus","Domitian","Nerva","Trajan","Hadrian","Antoninus Pius","Lucius Verus, Marcus Aurelius","Marcus Aurelius","Lucius Verus","Commodus, Marcus Aurelius","Commodus","Pertinax","Pescennius Niger","Clodius Albinus","Caracalla, Septimius Severus","Geta, Septimius Severus","Septimius Severus","Caracalla","Caracalla, Geta, Septimius Severus","Caracalla, Geta","Geta","Macrinus","Elagabalus","Maximinus Thrax","Gordian I","Gordian II","Pupienus","Gordian III","Philip the Arab","Decius","Trajan Decius","Hostilian","Volusian","Aemilian","Silbannacus","Gallienus, Valerian","Valerian","Macrianus","Macrianus Minor","Quietus","Gallienus","Postumus","Claudius Gothicus","Claudius II","Laelian","Laelianus","Marius","Victorinus","Quintillus","Aurelian","Tetricus I","Tacitus","Florian","Florianus","Probus","Carus","Carinus, Numerian","Carinus","Numerian","Constantius I","Diocletian, Maximian","Diocletian","Carausius","Maximian","Allectus","Constantius Chlorus","Maximinus Daia","Severus II","Galerius","Maxentius","Constantine the Great","Licinius","Valerius Valens","Constantine II","Constantine I","Constantius II","Constans","Magnentius","Alexander III","Julian","Jovian","Jovianus","Valens","Valentinian I","Valens, Valentinian I","Honorius, Valentinian I","Gratian, Valens, Valentinian I","Valentinian II","Gratian","Flavius Victor","Magnus Maximus","Theodosius I, Valentinian II","Eugenius","Theodosius I","Arcadius","Honorius","Constantine III","Theodosius II","Jovinus","Jovinus, Sebastianus","Priscus Attalus","Constantius III","Joannes","Valentinian III","Marcian","Petronius Maximus","Avitus","Majorian","Libius Severus","Leo I","Glycerius","Leo II, Zeno","Zeno","Basiliscus","Romulus Augustulus","Julius Nepos","Arcadius, Honorius","Jotapianus"]},"id":"b76e0df3-9058-4c46-b002-6e6ca5fdd85d","type":"FactorRange"}],"root_ids":["7f733d50-8977-4db3-8175-bf3d9864097f"]},"title":"Bokeh Application","version":"0.12.15"}};
+  var render_items = [{"docid":"6654d53e-dd73-4a42-b898-0fef2f8de1d8","elementid":"ccbf57c6-880b-4626-972e-a4467f3841f8","modelid":"7f733d50-8977-4db3-8175-bf3d9864097f"}];
+  root.Bokeh.embed.embed_items_notebook(docs_json, render_items);
+
+  }
+  if (root.Bokeh !== undefined) {
+    embed_document(root);
+  } else {
+    var attempts = 0;
+    var timer = setInterval(function(root) {
+      if (root.Bokeh !== undefined) {
+        embed_document(root);
+        clearInterval(timer);
+      }
+      attempts++;
+      if (attempts > 100) {
+        console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing")
+        clearInterval(timer);
+      }
+    }, 10, root)
+  }
+})(window);
+</script>
+</div>
