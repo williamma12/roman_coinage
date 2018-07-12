@@ -107,6 +107,12 @@
 * [britishMuseum](Plots/britishMuseum_radiate_apollo_Count_plot.html)
 * [OCRE](Plots/OCRE_radiate_apollo_Count_plot.html)
 
+## Divus
+* [allData](Plots/allData_radiate_divus_Count_plot.html)
+* [americanNumismaticSociety](Plots/americanNumismaticSociety_radiate_divus_Count_plot.html)
+* [britishMuseum](Plots/britishMuseum_radiate_divus_Count_plot.html)
+* [OCRE](Plots/OCRE_radiate_divus_Count_plot.html)
+
 
 # Counts of Individual Words Plots
 ## By Authority
@@ -146,6 +152,12 @@
 * [britishMuseum](Plots/britishMuseum_authority_apollo_counts_plot.html)
 * [OCRE](Plots/OCRE_authority_apollo_counts_plot.html)
 
+### Divus
+* [allData](Plots/allData_authority_divus_counts_plot.html)
+* [americanNumismaticSociety](Plots/americanNumismaticSociety_authority_divus_counts_plot.html)
+* [britishMuseum](Plots/britishMuseum_authority_divus_counts_plot.html)
+* [OCRE](Plots/OCRE_authority_divus_counts_plot.html)
+
 ## By Emperor
 ### Jupiter
 * [allData](Plots/allData_emperor_jupiter_counts_plot.html)
@@ -182,6 +194,12 @@
 * [americanNumismaticSociety](Plots/americanNumismaticSociety_emperor_apollo_counts_plot.html)
 * [britishMuseum](Plots/britishMuseum_emperor_apollo_counts_plot.html)
 * [OCRE](Plots/OCRE_emperor_apollo_counts_plot.html)
+
+### Divus
+* [allData](Plots/allData_emperor_divus_counts_plot.html)
+* [americanNumismaticSociety](Plots/americanNumismaticSociety_emperor_divus_counts_plot.html)
+* [britishMuseum](Plots/britishMuseum_emperor_divus_counts_plot.html)
+* [OCRE](Plots/OCRE_emperor_divus_counts_plot.html)
 
 
 # Ratios of Individual Words Plots
@@ -222,6 +240,12 @@
 * [britishMuseum](Plots/britishMuseum_apollo_ratios_authority_plot.html)
 * [OCRE](Plots/OCRE_apollo_ratios_authority_plot.html)
 
+### Divus 
+* [allData](Plots/allData_divus_ratios_authority_plot.html)
+* [americanNumismaticSociety](Plots/americanNumismaticSociety_divus_ratios_authority_plot.html)
+* [britishMuseum](Plots/britishMuseum_divus_ratios_authority_plot.html)
+* [OCRE](Plots/OCRE_divus_ratios_authority_plot.html)
+
 ## By Emperor
 ### Jupiter
 * [allData](Plots/allData_jupiter_ratios_emperor_plot.html)
@@ -258,6 +282,12 @@
 * [americanNumismaticSociety](Plots/americanNumismaticSociety_apollo_ratios_emperor_plot.html)
 * [britishMuseum](Plots/britishMuseum_apollo_ratios_emperor_plot.html)
 * [OCRE](Plots/OCRE_apollo_ratios_emperor_plot.html)
+
+### Divus
+* [allData](Plots/allData_divus_ratios_emperor_plot.html)
+* [americanNumismaticSociety](Plots/americanNumismaticSociety_divus_ratios_emperor_plot.html)
+* [britishMuseum](Plots/britishMuseum_divus_ratios_emperor_plot.html)
+* [OCRE](Plots/OCRE_divus_ratios_emperor_plot.html)
 
 
 # Constantine
