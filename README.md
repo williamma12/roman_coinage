@@ -14,7 +14,7 @@ These stacked bar plots show the number of coins from [SOURCE] with each bar rep
 by each emperor ordered chronologically. Each bar is stacked by the number of coins made of each material.
 * [allData.html](Plots/allData_emperor_counts_plot.html)
 * [americanNumismaticSociety](Plots/americanNumismaticSociety_emperor_counts_plot.html)
-* [britishMuseum](Plots/britishMuseum.html)
+* [britishMuseum](Plots/britishMuseum_emperor_counts_plot.html)
 * [OCRE](Plots/OCRE_emperor_counts_plot.html)
 
 
