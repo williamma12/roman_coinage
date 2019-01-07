@@ -286,9 +286,15 @@ def cleanProductionPlace(string):
     >>> cleanProductionPlace('Minted in: Gaul (Cisalpine) ')
     'Gaul (Cisalpine)'
     '''
+    # Dict for mapping one name to another.
+    replacements = {
+            'Lyon': 'Lugdunum',
+            'Londinium': 'London'
+            }
+
     place = string.split('Minted in: ')[-1].strip()
-    if place == 'Lyon': 
-        place = 'Lugdunum'
+    if place in replacements:
+        place = replacements[place]
     place = ''.join(x for x in place if x.isalpha())
     return place
 
