@@ -1,17 +1,130 @@
 
-<script src="https://cdn.pydata.org/bokeh/release/bokeh-0.12.15.min.js" type="text/javascript"></script>
-<script src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.15.min.js" type="text/javascript"></script>
-<script src="https://cdn.pydata.org/bokeh/release/bokeh-tables-0.12.15.min.js" type="text/javascript"></script>
-<script src="https://cdn.pydata.org/bokeh/release/bokeh-gl-0.12.15.min.js" type="text/javascript"></script>
+<html>
+  <head>
+    
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-1.0.3.min.css">
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.0.3.min.css">
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-tables-1.0.3.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+<style>div.bk-hbox {
+    display: flex;
+    justify-content: center;
+}
+
+div.bk-hbox div.bk-plot {
+    padding: 8px;
+}
+
+div.bk-hbox div.bk-data-table {
+    padding: 20px;
+}
+
+div.hololayout {
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+div.holoframe {
+  width: 75%;
+}
+
+div.holowell {
+  display: flex;
+  align-items: center;
+}
+
+form.holoform {
+  background-color: #fafafa;
+  border-radius: 5px;
+  overflow: hidden;
+  padding-left: 0.8em;
+  padding-right: 0.8em;
+  padding-top: 0.4em;
+  padding-bottom: 0.4em;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+  border: 1px solid #e3e3e3;
+}
+
+div.holowidgets {
+  padding-right: 0;
+  width: 25%;
+}
+
+div.holoslider {
+  min-height: 0 !important;
+  height: 0.8em;
+  width: 100%;
+}
+
+div.holoformgroup {
+  padding-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+div.hologroup {
+  padding-left: 0;
+  padding-right: 0.8em;
+  width: 100%;
+}
+
+.holoselect {
+  width: 92%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.holotext {
+  padding-left:  0.5em;
+  padding-right: 0;
+  width: 100%;
+}
+
+.holowidgets .ui-resizable-se {
+  visibility: hidden
+}
+
+.holoframe > .ui-resizable-se {
+  visibility: hidden
+}
+
+.holowidgets .ui-resizable-s {
+  visibility: hidden
+}
+
+
+/* CSS rules for noUISlider based slider used by JupyterLab extension  */
+
+.noUi-handle {
+  width: 20px !important;
+  height: 20px !important;
+  left: -5px !important;
+  top: -5px !important;
+}
+
+.noUi-handle:before, .noUi-handle:after {
+  visibility: hidden;
+  height: 0px;
+}
+
+.noUi-target {
+  margin-left: 0.5em;
+  margin-right: 0.5em;
+}
+</style>
+    
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-1.0.3.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.0.3.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-tables-1.0.3.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-gl-1.0.3.min.js" type="text/javascript"></script>
 <script src="https://code.jquery.com/jquery-2.1.4.min.js" type="text/javascript"></script>
 <script src="https://code.jquery.com/ui/1.10.4/jquery-ui.min.js" type="text/javascript"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.20/require.min.js" type="text/javascript"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js" type="text/javascript"></script>
-<script type="text/javascript">function HoloViewsWidget(){
+<script type="text/javascript">function HoloViewsWidget() {
 }
-
-HoloViewsWidget.comms = {};
-HoloViewsWidget.comm_state = {};
 
 HoloViewsWidget.prototype.init_slider = function(init_val){
   if(this.load_json) {
@@ -22,14 +135,13 @@ HoloViewsWidget.prototype.init_slider = function(init_val){
 }
 
 HoloViewsWidget.prototype.populate_cache = function(idx){
-  this.cache[idx].html(this.frames[idx]);
+  this.cache[idx].innerHTML = this.frames[idx];
   if (this.embed) {
     delete this.frames[idx];
   }
 }
 
 HoloViewsWidget.prototype.process_error = function(msg){
-
 }
 
 HoloViewsWidget.prototype.from_json = function() {
@@ -45,36 +157,10 @@ HoloViewsWidget.prototype.dynamic_update = function(current){
   if (current === undefined) {
     return
   }
-  if(this.dynamic) {
-    current = JSON.stringify(current);
-  }
-  function callback(initialized, msg){
-    /* This callback receives data from Python as a string
-       in order to parse it correctly quotes are sliced off*/
-    if (msg.content.ename != undefined) {
-      this.process_error(msg);
-    }
-    if (msg.msg_type != "execute_result") {
-      console.log("Warning: HoloViews callback returned unexpected data for key: (", current, ") with the following content:", msg.content)
-    } else {
-      if (msg.content.data['text/plain'].includes('Complete')) {
-        if (this.queue.length > 0) {
-          this.time = Date.now();
-          this.dynamic_update(this.queue[this.queue.length-1]);
-          this.queue = [];
-        } else {
-          this.wait = false;
-        }
-        return
-      }
-    }
-  }
   this.current = current;
-  if ((window.Jupyter !== undefined) && (Jupyter.notebook.kernel != null)) {
-    var kernel = Jupyter.notebook.kernel;
-    callbacks = {iopub: {output: $.proxy(callback, this, this.initialized)}};
-    var cmd = "holoviews.plotting.widgets.NdWidget.widgets['" + this.id + "'].update(" + current + ")";
-    kernel.execute("import holoviews;" + cmd, callbacks, {silent : false});
+  if (this.comm) {
+    var msg = {comm_id: this.id+'_client', content: current}
+    this.comm.send(msg);
   }
 }
 
@@ -82,15 +168,18 @@ HoloViewsWidget.prototype.update_cache = function(force){
   var frame_len = Object.keys(this.frames).length;
   for (var i=0; i<frame_len; i++) {
     if(!this.load_json || this.dynamic)  {
-      frame = Object.keys(this.frames)[i];
+      var frame = Object.keys(this.frames)[i];
     } else {
-      frame = i;
+      var frame = i;
     }
     if(!(frame in this.cache) || force) {
       if ((frame in this.cache) && force) { this.cache[frame].remove() }
-      this.cache[frame] = $('<div />').appendTo("#"+"_anim_img"+this.id).hide();
+      var div = document.createElement("div");
+      var parent = document.getElementById("_anim_img"+this.id);
+      div.style.display = "none";
+      parent.appendChild(div)
+      this.cache[frame] = div;
       var cache_id = "_anim_img"+this.id+"_"+frame;
-      this.cache[frame].attr("id", cache_id);
       this.populate_cache(frame);
     }
   }
@@ -98,30 +187,61 @@ HoloViewsWidget.prototype.update_cache = function(force){
 
 HoloViewsWidget.prototype.update = function(current){
   if(current in this.cache) {
-    $.each(this.cache, function(index, value) {
-      value.hide();
-    });
-    this.cache[current].show();
+    for (var index in this.cache) {
+      this.cache[index].style.display = "none";
+    }
+    this.cache[current].style.display = "";
     this.wait = false;
   }
 }
 
 HoloViewsWidget.prototype.init_comms = function() {
-  if ((window.Jupyter !== undefined) && (Jupyter.notebook.kernel !== undefined)) {
-    var widget = this;
-    comm_manager = Jupyter.notebook.kernel.comm_manager;
-    comm_manager.register_target(this.id, function (comm) {
-      comm.on_msg(function (msg) { widget.process_msg(msg) });
-    });
+  var that = this
+  HoloViews.comm_manager.register_target(this.plot_id, this.id, function (msg) { that.msg_handler(msg) })
+  if (!this.cached || this.dynamic) {
+    function ack_callback(msg) {
+      var msg = msg.metadata;
+      var comm_id = msg.comm_id;
+      var comm_status = HoloViews.comm_status[comm_id];
+      if (that.queue.length > 0) {
+        that.time = Date.now();
+        that.dynamic_update(that.queue[that.queue.length-1]);
+        that.queue = [];
+      } else {
+        that.wait = false;
+      }
+      if ((msg.msg_type == "Ready") && msg.content) {
+        console.log("Python callback returned following output:", msg.content);
+      } else if (msg.msg_type == "Error") {
+        console.log("Python failed with the following traceback:", msg.traceback)
+      }
+    }
+    var comm = HoloViews.comm_manager.get_client_comm(this.plot_id, this.id+'_client', ack_callback);
+    return comm
   }
+}
+
+HoloViewsWidget.prototype.msg_handler = function(msg) {
+  var metadata = msg.metadata;
+  if ((metadata.msg_type == "Ready")) {
+    if (metadata.content) {
+      console.log("Python callback returned following output:", metadata.content);
+    }
+	return;
+  } else if (metadata.msg_type == "Error") {
+    console.log("Python failed with the following traceback:", metadata.traceback)
+    return
+  }
+  this.process_msg(msg)
 }
 
 HoloViewsWidget.prototype.process_msg = function(msg) {
 }
 
-function SelectionWidget(frames, id, slider_ids, keyMap, dim_vals, notFound, load_json, mode, cached, json_path, dynamic){
+function SelectionWidget(frames, id, slider_ids, keyMap, dim_vals, notFound, load_json, mode, cached, json_path, dynamic, plot_id){
   this.frames = frames;
   this.id = id;
+  this.plot_id = plot_id;
   this.slider_ids = slider_ids;
   this.keyMap = keyMap
   this.current_frame = 0;
@@ -137,7 +257,7 @@ function SelectionWidget(frames, id, slider_ids, keyMap, dim_vals, notFound, loa
   this.queue = [];
   this.wait = false;
   if (!this.cached || this.dynamic) {
-    this.init_comms()
+    this.comm = this.init_comms();
   }
 }
 
@@ -148,7 +268,7 @@ SelectionWidget.prototype.get_key = function(current_vals) {
   var key = "(";
   for (var i=0; i<this.slider_ids.length; i++)
   {
-    val = this.current_vals[i];
+    var val = this.current_vals[i];
     if (!(typeof val === 'string')) {
       if (val % 1 === 0) { val = val.toFixed(1); }
       else { val = val.toFixed(10); val = val.slice(0, val.length-1);}
@@ -184,10 +304,11 @@ SelectionWidget.prototype.set_frame = function(dim_val, dim_idx){
 
 
 /* Define the ScrubberWidget class */
-function ScrubberWidget(frames, num_frames, id, interval, load_json, mode, cached, json_path, dynamic){
+function ScrubberWidget(frames, num_frames, id, interval, load_json, mode, cached, json_path, dynamic, plot_id){
   this.slider_id = "_anim_slider" + id;
   this.loop_select_id = "_anim_loop_select" + id;
   this.id = id;
+  this.plot_id = plot_id;
   this.interval = interval;
   this.current_frame = 0;
   this.direction = 0;
@@ -205,7 +326,7 @@ function ScrubberWidget(frames, num_frames, id, interval, load_json, mode, cache
   this.wait = false;
   this.queue = [];
   if (!this.cached || this.dynamic) {
-    this.init_comms()
+    this.comm = this.init_comms()
   }
 }
 
@@ -213,19 +334,25 @@ ScrubberWidget.prototype = new HoloViewsWidget;
 
 ScrubberWidget.prototype.set_frame = function(frame){
   this.current_frame = frame;
-  widget = document.getElementById(this.slider_id);
+  var widget = document.getElementById(this.slider_id);
   if (widget === null) {
     this.pause_animation();
     return
   }
   widget.value = this.current_frame;
-  if(this.cached) {
-    this.update(frame)
-  } else {
+  if (this.dynamic || !this.cached) {
+    if ((this.time !== undefined) && ((this.wait) && ((this.time + 10000) > Date.now()))) {
+      this.queue.push(frame);
+      return
+    }
+    this.queue = [];
+    this.time = Date.now();
+    this.wait = true;
     this.dynamic_update(frame)
+  } else {
+    this.update(frame)
   }
 }
-
 
 ScrubberWidget.prototype.get_loop_state = function(){
   var button_group = document[this.loop_select_id].state;
@@ -340,7 +467,7 @@ function update_widget(widget, values) {
       dim_vals: values,
       value: 0,
       dim_labels: values
-	})
+    })
     widget.slider('option', 'slide').call(widget, event, {value: 0})
   } else {
     widget.empty();
@@ -356,13 +483,221 @@ function update_widget(widget, values) {
   };
 }
 
+function init_slider(id, plot_id, dim, values, next_vals, labels, dynamic, step, value, next_dim,
+                     dim_idx, delay, jQueryUI_CDN, UNDERSCORE_CDN) {
+  // Slider JS Block START
+  function loadcssfile(filename){
+    var fileref=document.createElement("link")
+    fileref.setAttribute("rel", "stylesheet")
+    fileref.setAttribute("type", "text/css")
+    fileref.setAttribute("href", filename)
+    document.getElementsByTagName("head")[0].appendChild(fileref)
+  }
+  loadcssfile("https://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css");
+  /* Check if jQuery and jQueryUI have been loaded
+     otherwise load with require.js */
+  var jQuery = window.jQuery,
+    // check for old versions of jQuery
+    oldjQuery = jQuery && !!jQuery.fn.jquery.match(/^1\.[0-4](\.|$)/),
+    jquery_path = '',
+    paths = {},
+    noConflict;
+  var jQueryUI = jQuery.ui;
+  // check for jQuery
+  if (!jQuery || oldjQuery) {
+    // load if it's not available or doesn't meet min standards
+    paths.jQuery = jQuery;
+    noConflict = !!oldjQuery;
+  } else {
+    // register the current jQuery
+    define('jquery', [], function() { return jQuery; });
+  }
+  if (!jQueryUI) {
+    paths.jQueryUI = jQueryUI_CDN.slice(null, -3);
+  } else {
+    define('jQueryUI', [], function() { return jQuery.ui; });
+  }
+  paths.underscore = UNDERSCORE_CDN.slice(null, -3);
+  var jquery_require = {
+    paths: paths,
+    shim: {
+      "jQueryUI": {
+        exports:"$",
+        deps: ['jquery']
+      },
+      "underscore": {
+        exports: '_'
+      }
+    }
+  }
+  require.config(jquery_require);
+  require(["jQueryUI", "underscore"], function(jUI, _){
+    if (noConflict) $.noConflict(true);
+    var vals = values;
+    if (dynamic && vals.constructor === Array) {
+      var default_value = parseFloat(value);
+      var min = parseFloat(vals[0]);
+      var max = parseFloat(vals[vals.length-1]);
+      var wstep = step;
+      var wlabels = [default_value];
+      var init_label = default_value;
+    } else {
+      var min = 0;
+      if (dynamic) {
+        var max = Object.keys(vals).length - 1;
+        var init_label = labels[value];
+        var default_value = values[value];
+      } else {
+        var max = vals.length - 1;
+        var init_label = labels[value];
+        var default_value = value;
+      }
+      var wstep = 1;
+      var wlabels = labels;
+    }
+    function adjustFontSize(text) {
+      var width_ratio = (text.parent().width()/8)/text.val().length;
+      var size = Math.min(0.9, Math.max(0.6, width_ratio))+'em';
+      text.css('font-size', size);
+    }
+    var slider = $('#_anim_widget'+id+'_'+dim);
+    slider.slider({
+      animate: "fast",
+      min: min,
+      max: max,
+      step: wstep,
+      value: default_value,
+      dim_vals: vals,
+      dim_labels: wlabels,
+      next_vals: next_vals,
+      slide: function(event, ui) {
+        var vals = slider.slider("option", "dim_vals");
+        var next_vals = slider.slider("option", "next_vals");
+        var dlabels = slider.slider("option", "dim_labels");
+        if (dynamic) {
+          var dim_val = ui.value;
+          if (vals.constructor === Array) {
+            var label = ui.value;
+          } else {
+            var label = dlabels[ui.value];
+          }
+        } else {
+          var dim_val = vals[ui.value];
+          var label = dlabels[ui.value];
+        }
+        var text = $('#textInput'+id+'_'+dim);
+        text.val(label);
+        adjustFontSize(text);
+        HoloViews.index[plot_id].set_frame(dim_val, dim_idx);
+        if (Object.keys(next_vals).length > 0) {
+          var new_vals = next_vals[dim_val];
+          var next_widget = $('#_anim_widget'+id+'_'+next_dim);
+          update_widget(next_widget, new_vals);
+        }
+      }
+    });
+    slider.keypress(function(event) {
+      if (event.which == 80 || event.which == 112) {
+        var start = slider.slider("option", "value");
+        var stop =  slider.slider("option", "max");
+        for (var i=start; i<=stop; i++) {
+          var delay = i*delay;
+          $.proxy(function doSetTimeout(i) { setTimeout($.proxy(function() {
+            var val = {value:i};
+            slider.slider('value',i);
+            slider.slider("option", "slide")(null, val);
+          }, slider), delay);}, slider)(i);
+        }
+      }
+      if (event.which == 82 || event.which == 114) {
+        var start = slider.slider("option", "value");
+        var stop =  slider.slider("option", "min");
+        var count = 0;
+        for (var i=start; i>=stop; i--) {
+          var delay = count*delay;
+          count = count + 1;
+          $.proxy(function doSetTimeout(i) { setTimeout($.proxy(function() {
+            var val = {value:i};
+            slider.slider('value',i);
+            slider.slider("option", "slide")(null, val);
+          }, slider), delay);}, slider)(i);
+        }
+      }
+    });
+    var textInput = $('#textInput'+id+'_'+dim)
+    textInput.val(init_label);
+    adjustFontSize(textInput);
+  });
+}
+
+function init_dropdown(id, plot_id, dim, vals, value, next_vals, labels, next_dim, dim_idx, dynamic) {
+  var widget = $("#_anim_widget"+id+'_'+dim);
+  widget.data('values', vals)
+  for (var i=0; i<vals.length; i++){
+    if (dynamic) {
+      var val = vals[i];
+    } else {
+      var val = i;
+    }
+    widget.append($("<option>", {
+      value: val,
+      text: labels[i]
+    }));
+  };
+  widget.data("next_vals", next_vals);
+  widget.val(value);
+  widget.on('change', function(event, ui) {
+    if (dynamic) {
+      var dim_val = parseInt(this.value);
+    } else {
+      var dim_val = $.data(this, 'values')[this.value];
+    }
+    var next_vals = $.data(this, "next_vals");
+    if (Object.keys(next_vals).length > 0) {
+      var new_vals = next_vals[dim_val];
+      var next_widget = $('#_anim_widget'+id+'_'+next_dim);
+      update_widget(next_widget, new_vals);
+    }
+    var widgets = HoloViews.index[plot_id]
+    if (widgets) {
+      widgets.set_frame(dim_val, dim_idx);
+    }
+  });
+}
+
+
+if (window.HoloViews === undefined) {
+  window.HoloViews = {}
+  window.PyViz = window.HoloViews
+} else if (window.PyViz === undefined) {
+  window.PyViz = window.HoloViews
+}
+
+
+var _namespace = {
+  init_slider: init_slider,
+  init_dropdown: init_dropdown,
+  comms: {},
+  comm_status: {},
+  index: {},
+  plot_index: {},
+  kernels: {},
+  receivers: {}
+}
+
+for (var k in _namespace) {
+  if (!(k in window.HoloViews)) {
+    window.HoloViews[k] = _namespace[k];
+  }
+}
+
 // Define Bokeh specific subclasses
 function BokehSelectionWidget() {
-	SelectionWidget.apply(this, arguments);
+  SelectionWidget.apply(this, arguments);
 }
 
 function BokehScrubberWidget() {
-	ScrubberWidget.apply(this, arguments);
+  ScrubberWidget.apply(this, arguments);
 }
 
 // Let them inherit from the baseclasses
@@ -371,131 +706,187 @@ BokehScrubberWidget.prototype = Object.create(ScrubberWidget.prototype);
 
 // Define methods to override on widgets
 var BokehMethods = {
-	update_cache : function(){
-		$.each(this.frames, $.proxy(function(index, frame) {
-			this.frames[index] = JSON.parse(frame);
-		}, this));
-	},
-	update : function(current){
-		if (current === undefined) {
-			var data = undefined;
-		} else {
-			var data = this.frames[current];
-		}
-		if (data !== undefined) {
-			var doc = Bokeh.index[data.root].model.document;
-			doc.apply_json_patch(data.content);
-		}
-	},
-	init_comms : function() {
-	}
+  update_cache : function(){
+    for (var index in this.frames) {
+      this.frames[index] = JSON.parse(this.frames[index]);
+    }
+  },
+  update : function(current){
+    if (current === undefined) {
+      return;
+    }
+    var data = this.frames[current];
+    if (data !== undefined) {
+      if (data.root in HoloViews.plot_index) {
+        var doc = HoloViews.plot_index[data.root].model.document;
+      } else {
+        var doc = Bokeh.index[data.root].model.document;
+      }
+      doc.apply_json_patch(data.content);
+    }
+  },
+  init_comms: function() {
+    if (Bokeh.protocol !== undefined) {
+      this.receiver = new Bokeh.protocol.Receiver()
+    } else {
+      this.receiver = null;
+    }
+    return HoloViewsWidget.prototype.init_comms.call(this);
+  },
+  process_msg : function(msg) {
+    if (this.plot_id in HoloViews.plot_index) {
+      var doc = HoloViews.plot_index[this.plot_id].model.document;
+    } else {
+      var doc = Bokeh.index[this.plot_id].model.document;
+    }
+    if (this.receiver === null) { return }
+    var receiver = this.receiver;
+    if (msg.buffers.length > 0) {
+      receiver.consume(msg.buffers[0].buffer)
+    } else {
+      receiver.consume(msg.content.data)
+    }
+    const comm_msg = receiver.message;
+    if ((comm_msg != null) && (doc != null)) {
+      doc.apply_json_patch(comm_msg.content, comm_msg.buffers)
+    }
+  }
 }
 
 // Extend Bokeh widgets with backend specific methods
 extend(BokehSelectionWidget.prototype, BokehMethods);
 extend(BokehScrubberWidget.prototype, BokehMethods);
+
+window.HoloViews.BokehSelectionWidget = BokehSelectionWidget
+window.HoloViews.BokehScrubberWidget = BokehScrubberWidget
 </script>
-
-<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-0.12.15.min.css">
-<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.15.min.css">
-<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-tables-0.12.15.min.css">
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
-<style>div.bk-hbox {
-    display: flex;
-    justify-content: center;
-}
-
-div.bk-hbox div.bk-plot {
-    padding: 8px;
-}
-
-div.bk-hbox div.bk-data-table {
-    padding: 20px;
-}
-
-div.hololayout {
-    display: flex;
-    align-items: center;
-    margin: 0;
-}
-
-div.holoframe {
-	width: 75%;
-}
-
-div.holowell {
-    display: flex;
-    align-items: center;
-    margin: 0;
-}
-
-form.holoform {
-    background-color: #fafafa;
-    border-radius: 5px;
-    overflow: hidden;
-	padding-left: 0.8em;
-    padding-right: 0.8em;
-    padding-top: 0.4em;
-    padding-bottom: 0.4em;
-}
-
-div.holowidgets {
-    padding-right: 0;
-	width: 25%;
-}
-
-div.holoslider {
-    min-height: 0 !important;
-    height: 0.8em;
-    width: 60%;
-}
-
-div.holoformgroup {
-    padding-top: 0.5em;
-    margin-bottom: 0.5em;
-}
-
-div.hologroup {
-    padding-left: 0;
-    padding-right: 0.8em;
-    width: 50%;
-}
-
-.holoselect {
-    width: 92%;
-    margin-left: 0;
-    margin-right: 0;
-}
-
-.holotext {
-    width: 100%;
-    padding-left:  0.5em;
-    padding-right: 0;
-}
-
-.holowidgets .ui-resizable-se {
-	visibility: hidden
-}
-
-.holoframe > .ui-resizable-se {
-	visibility: hidden
-}
-
-.holowidgets .ui-resizable-s {
-	visibility: hidden
-}
-</style><div style='display: table; margin: 0 auto;'>
-
-<div class="bk-root">
-    <div class="bk-plotdiv" id="19561d02-7d82-4294-b369-aea507404180"></div>
-</div>
 <script type="text/javascript">
-  (function(root) {
+    function JupyterCommManager() {
+    }
+
+    JupyterCommManager.prototype.register_target = function(plot_id, comm_id, msg_handler) {
+      if (window.comm_manager || ((window.Jupyter !== undefined) && (Jupyter.notebook.kernel != null))) {
+        var comm_manager = window.comm_manager || Jupyter.notebook.kernel.comm_manager;
+        comm_manager.register_target(comm_id, function(comm) {
+          comm.on_msg(msg_handler);
+        });
+      } else if ((plot_id in window.PyViz.kernels) && (window.PyViz.kernels[plot_id])) {
+        window.PyViz.kernels[plot_id].registerCommTarget(comm_id, function(comm) {
+          comm.onMsg = msg_handler;
+        });
+      }
+    }
+
+    JupyterCommManager.prototype.get_client_comm = function(plot_id, comm_id, msg_handler) {
+      if (comm_id in window.PyViz.comms) {
+        return window.PyViz.comms[comm_id];
+      } else if (window.comm_manager || ((window.Jupyter !== undefined) && (Jupyter.notebook.kernel != null))) {
+        var comm_manager = window.comm_manager || Jupyter.notebook.kernel.comm_manager;
+        var comm = comm_manager.new_comm(comm_id, {}, {}, {}, comm_id);
+        if (msg_handler) {
+          comm.on_msg(msg_handler);
+        }
+      } else if ((plot_id in window.PyViz.kernels) && (window.PyViz.kernels[plot_id])) {
+        var comm = window.PyViz.kernels[plot_id].connectToComm(comm_id);
+        comm.open();
+        if (msg_handler) {
+          comm.onMsg = msg_handler;
+        }
+      }
+
+      window.PyViz.comms[comm_id] = comm;
+      return comm;
+    }
+
+    window.PyViz.comm_manager = new JupyterCommManager();
+    </script>
+  </head>
+  <body>
+    <div class="hololayout row row-fluid">
+  <div class="holoframe" id="display_areaee56d491a60f4638b161cb2a8bb445de">
+    <div id="_anim_imgee56d491a60f4638b161cb2a8bb445de">
+      
+      <div id='1923' style='display: table; margin: 0 auto;'>
+
+
+
+
+
+  <div class="bk-root" id="21d28cd6-31c1-48ae-a294-bfe822ba6cf1" data-root-id="1923"></div>
+</div>
+      
+    </div>
+  </div>
+  <div class="holowidgets" id="widget_areaee56d491a60f4638b161cb2a8bb445de">
+    <form class="holoform well" id="formee56d491a60f4638b161cb2a8bb445de">
+      
+      
+        <div class="form-group control-group holoformgroup" style=''>
+          <label for="textInputee56d491a60f4638b161cb2a8bb445de_Material"><strong>Material:</strong></label>
+          <select class="holoselect form-control" id="_anim_widgetee56d491a60f4638b161cb2a8bb445de_Material" >
+          </select>
+        </div>
+        
+        
+        </form>
+    </div>
+</div>
+<script type="text/javascript">/* Instantiate the BokehSelectionWidget class. */
+/* The IDs given should match those used in the template above. */
+var widget_ids = new Array(1);
+
+
+widget_ids[0] = "_anim_widgetee56d491a60f4638b161cb2a8bb445de_Material";
+
+
+function create_widget() {
+  var frame_data = {"0": "{\"content\":{\"events\":[{\"attr\":\"factors\",\"kind\":\"ModelChanged\",\"model\":{\"id\":\"1919\",\"type\":\"FactorRange\"},\"new\":[\"Augustus\",\"Septimius Severus\",\"Nero\",\"Domitian\",\"Hadrian\",\"Antoninus Pius\",\"Caracalla, Geta, Septimius Severus\",\"Caracalla\",\"Geta\",\"Caracalla, Geta\",\"Probus\",\"Diocletian, Maximian\",\"Constantine I\",\"Magnentius\",\"Glycerius\",\"Maximian\",\"Carausius\",\"Decius\",\"Diocletian\",\"Galerius\",\"Gallienus\",\"Julian\",\"Constans\",\"Constantine I, Maximian\",\"Constantine II\",\"Constantius I\",\"Tacitus\",\"Tetricus I\"]},{\"cols\":[\"emperor\",\"counts\"],\"column_source\":{\"id\":\"1954\",\"type\":\"ColumnDataSource\"},\"kind\":\"ColumnDataChanged\",\"new\":{\"counts\":[1,2,1,4,3,1,2,2,7,9,1,1,1,1,1,3,2,2,2,2,2,2,1,1,1,1,1,1],\"emperor\":[\"Augustus\",\"Septimius Severus\",\"Nero\",\"Domitian\",\"Hadrian\",\"Antoninus Pius\",\"Caracalla, Geta, Septimius Severus\",\"Caracalla\",\"Geta\",\"Caracalla, Geta\",\"Probus\",\"Diocletian, Maximian\",\"Constantine I\",\"Magnentius\",\"Glycerius\",\"Maximian\",\"Carausius\",\"Decius\",\"Diocletian\",\"Galerius\",\"Gallienus\",\"Julian\",\"Constans\",\"Constantine I, Maximian\",\"Constantine II\",\"Constantius I\",\"Tacitus\",\"Tetricus I\"]}},{\"cols\":[\"emperor\",\"counts\"],\"column_source\":{\"id\":\"1954\",\"type\":\"ColumnDataSource\"},\"kind\":\"ColumnDataChanged\",\"new\":{\"counts\":[1,2,1,4,3,1,2,2,7,9,1,1,1,1,1,3,2,2,2,2,2,2,1,1,1,1,1,1],\"emperor\":[\"Augustus\",\"Septimius Severus\",\"Nero\",\"Domitian\",\"Hadrian\",\"Antoninus Pius\",\"Caracalla, Geta, Septimius Severus\",\"Caracalla\",\"Geta\",\"Caracalla, Geta\",\"Probus\",\"Diocletian, Maximian\",\"Constantine I\",\"Magnentius\",\"Glycerius\",\"Maximian\",\"Carausius\",\"Decius\",\"Diocletian\",\"Galerius\",\"Gallienus\",\"Julian\",\"Constans\",\"Constantine I, Maximian\",\"Constantine II\",\"Constantius I\",\"Tacitus\",\"Tetricus I\"]}}],\"references\":[]},\"root\":\"1923\"}", "1": "{\"content\":{\"events\":[{\"attr\":\"factors\",\"kind\":\"ModelChanged\",\"model\":{\"id\":\"1919\",\"type\":\"FactorRange\"},\"new\":[\"Augustus\",\"Antoninus Pius, Hadrian\",\"Tiberius\",\"Gaius\",\"Claudius I\",\"Nero\",\"Galba\",\"Vitellius\",\"Otho\",\"Vespasian\",\"Titus, Vespasian\",\"Titus\",\"Domitian\",\"Nerva\",\"Trajan\",\"Hadrian\",\"Antoninus Pius\",\"Lucius Verus\",\"Lucius Verus, Marcus Aurelius\",\"Marcus Aurelius\",\"Commodus, Marcus Aurelius\",\"Commodus\",\"Pertinax\",\"Didius Julianus\",\"Pescennius Niger\",\"Clodius Albinus, Septimius Severus\",\"Septimius Severus\",\"Clodius Albinus\",\"Caracalla, Septimius Severus\",\"Geta\",\"Caracalla, Geta, Septimius Severus\",\"Caracalla, Geta\",\"Caracalla\",\"Macrinus\",\"Diadumenian\",\"Elagabalus\",\"Pupienus\",\"Gordian II\",\"Gordian III\",\"Pacatian\",\"Decius\",\"Herennius Etruscus\",\"Volusian\",\"Aemilian\",\"Silbannacus\",\"Valerian\",\"Gallienus, Valerian\",\"Saloninus\",\"Gallienus\",\"Postumus\",\"Victorinus\",\"Aurelian\",\"Tetricus I\",\"Probus\",\"Numerian\",\"Maximian\",\"Carausius\",\"Galerius, Maximian\",\"Constantius I\",\"Galerius\",\"Diocletian\",\"Severus II\",\"Constantine I\",\"Maxentius\",\"Constantine II\",\"Constans\",\"Vetranio\",\"Magnentius\",\"Constantius II\",\"Julian\",\"Jovian\",\"Valentinian I\",\"Valens, Valentinian I\",\"Procopius\",\"Valens\",\"Gratian, Valens, Valentinian I\",\"Gratian\",\"Valentinian II\",\"Theodosius I\",\"Magnus Maximus\",\"Flavius Victor\",\"Eugenius\",\"Honorius\",\"Arcadius\",\"Arcadius, Honorius\",\"Constantine III\",\"Theodosius II\",\"Jovinus\",\"Jovinus, Sebastianus\",\"Valentinian III\",\"Marcian\",\"Leo I\",\"Libius Severus\",\"Anthemius\",\"Julius Nepos\",\"Zeno\",\"Basiliscus\",\"Nerva, Trajan\",\"Priscus Attalus\",\"Jotapian\"]},{\"cols\":[\"emperor\",\"counts\"],\"column_source\":{\"id\":\"1954\",\"type\":\"ColumnDataSource\"},\"kind\":\"ColumnDataChanged\",\"new\":{\"counts\":[561,16,142,17,43,54,122,70,19,464,8,142,259,72,680,1018,966,1,314,389,52,325,24,9,44,24,715,43,901,4,177,40,249,124,1,468,44,8,933,4,1235,3,263,71,1,518,150,45,539,5,3,2,1,8,1,37,49,1,29,27,35,1,17,8,19,31,3,7,527,1080,65,372,38,9,1821,12,1704,801,955,1347,186,589,2557,2516,1,24,14,7,1,12,3,3,5,2,2,1,1,2,2,1],\"emperor\":[\"Augustus\",\"Antoninus Pius, Hadrian\",\"Tiberius\",\"Gaius\",\"Claudius I\",\"Nero\",\"Galba\",\"Vitellius\",\"Otho\",\"Vespasian\",\"Titus, Vespasian\",\"Titus\",\"Domitian\",\"Nerva\",\"Trajan\",\"Hadrian\",\"Antoninus Pius\",\"Lucius Verus\",\"Lucius Verus, Marcus Aurelius\",\"Marcus Aurelius\",\"Commodus, Marcus Aurelius\",\"Commodus\",\"Pertinax\",\"Didius Julianus\",\"Pescennius Niger\",\"Clodius Albinus, Septimius Severus\",\"Septimius Severus\",\"Clodius Albinus\",\"Caracalla, Septimius Severus\",\"Geta\",\"Caracalla, Geta, Septimius Severus\",\"Caracalla, Geta\",\"Caracalla\",\"Macrinus\",\"Diadumenian\",\"Elagabalus\",\"Pupienus\",\"Gordian II\",\"Gordian III\",\"Pacatian\",\"Decius\",\"Herennius Etruscus\",\"Volusian\",\"Aemilian\",\"Silbannacus\",\"Valerian\",\"Gallienus, Valerian\",\"Saloninus\",\"Gallienus\",\"Postumus\",\"Victorinus\",\"Aurelian\",\"Tetricus I\",\"Probus\",\"Numerian\",\"Maximian\",\"Carausius\",\"Galerius, Maximian\",\"Constantius I\",\"Galerius\",\"Diocletian\",\"Severus II\",\"Constantine I\",\"Maxentius\",\"Constantine II\",\"Constans\",\"Vetranio\",\"Magnentius\",\"Constantius II\",\"Julian\",\"Jovian\",\"Valentinian I\",\"Valens, Valentinian I\",\"Procopius\",\"Valens\",\"Gratian, Valens, Valentinian I\",\"Gratian\",\"Valentinian II\",\"Theodosius I\",\"Magnus Maximus\",\"Flavius Victor\",\"Eugenius\",\"Honorius\",\"Arcadius\",\"Arcadius, Honorius\",\"Constantine III\",\"Theodosius II\",\"Jovinus\",\"Jovinus, Sebastianus\",\"Valentinian III\",\"Marcian\",\"Leo I\",\"Libius Severus\",\"Anthemius\",\"Julius Nepos\",\"Zeno\",\"Basiliscus\",\"Nerva, Trajan\",\"Priscus Attalus\",\"Jotapian\"]}}],\"references\":[]},\"root\":\"1923\"}", "2": "{\"content\":{\"events\":[{\"attr\":\"factors\",\"kind\":\"ModelChanged\",\"model\":{\"id\":\"1919\",\"type\":\"FactorRange\"},\"new\":[\"Augustus\",\"Tiberius\",\"Gaius\",\"Claudius I\",\"Nero\",\"Galba\",\"Vitellius\",\"Titus, Vespasian\",\"Vespasian\",\"Titus\",\"Domitian\",\"Nerva\",\"Trajan\",\"Hadrian\",\"Antoninus Pius\",\"Lucius Verus, Marcus Aurelius\",\"Marcus Aurelius\",\"Commodus, Marcus Aurelius\",\"Commodus\",\"Didius Julianus\",\"Pertinax\",\"Clodius Albinus, Septimius Severus\",\"Septimius Severus\",\"Clodius Albinus\",\"Caracalla, Septimius Severus\",\"Geta\",\"Caracalla, Geta, Septimius Severus\",\"Caracalla, Geta\",\"Caracalla\",\"Macrinus\",\"Elagabalus\",\"Maximus\",\"Pupienus\",\"Gordian II\",\"Gordian III\",\"Decius\",\"Hostilian\",\"Volusian\",\"Aemilian\",\"Gallienus, Valerian\",\"Valerian\",\"Saloninus\",\"Macrianus\",\"Quietus\",\"Regalian\",\"Macrian\",\"Postumus\",\"Gallienus\",\"Marius\",\"Laelian\",\"Victorinus\",\"Tetricus I, Victorinus\",\"Quintillus\",\"Aurelian\",\"Tetricus I\",\"Florian\",\"Carus\",\"Numerian\",\"Carinus, Carus\",\"Carinus\",\"Carinus, Numerian\",\"Diocletian, Maximian\",\"Diocletian, Galerius, Maximian\",\"Galerius, Maximian\",\"Carausius\",\"Maximian\",\"Constantius I, Diocletian, Maximian\",\"Constantius I, Diocletian\",\"Allectus\",\"Galerius\",\"Diocletian\",\"Constantius I\",\"Constantius I, Galerius\",\"Severus II\",\"Maxentius\",\"Domitius Alexander\",\"Constantine II\",\"Constantius II\",\"Constantine I\",\"Theodora\",\"Constans, Constantine II, Constantius II\",\"Constans, Constantius II\",\"Constans\",\"Magnentius\",\"Vetranio\",\"Constantius II, Julian\",\"Julian\",\"Jovian\",\"Valentinian I\",\"Gratian, Valens, Valentinian I\",\"Valens, Valentinian I\",\"Honorius, Valentinian I\",\"Procopius\",\"Valens\",\"Gratian\",\"Magnus Maximus\",\"Valentinian II\",\"Eugenius\",\"Priscus Attalus\",\"Valentinian III\",\"Theodosius II, Valentinian III\",\"Marcian\",\"Avitus\",\"Majorian\",\"Libius Severus\",\"Anthemius\",\"Leo II, Zeno\",\"Zeno\",\"Tacitus\",\"Theodosius I\",\"Probus\",\"Arcadius\",\"Honorius\",\"Leo I\",\"Theodosius II\",\"Flavius Victor\",\"Romulus\",\"Arcadius, Honorius\",\"Basiliscus, Marcus\",\"Basiliscus\",\"Nepotian\",\"Martinian\",\"Justin II\"]},{\"cols\":[\"emperor\",\"counts\"],\"column_source\":{\"id\":\"1954\",\"type\":\"ColumnDataSource\"},\"kind\":\"ColumnDataChanged\",\"new\":{\"counts\":[339,162,112,107,382,175,38,1,523,196,344,98,492,1030,1211,423,428,84,386,25,25,32,193,2,200,1,151,24,159,75,157,14,43,20,266,133,7,48,29,149,26,3,33,40,2,1,8320,2256,44,7,3359,1,149,508,623,291,127,136,3,204,1,624,7,1,1764,672,6,1,581,718,640,489,33,100,169,7,856,1358,2650,14,1,4,565,232,18,1,158,39,381,23,7,1,16,420,416,44,421,8,4,112,1,89,2,18,11,4,1,28,1243,592,581,489,280,148,135,25,22,8,7,5,5,4,1],\"emperor\":[\"Augustus\",\"Tiberius\",\"Gaius\",\"Claudius I\",\"Nero\",\"Galba\",\"Vitellius\",\"Titus, Vespasian\",\"Vespasian\",\"Titus\",\"Domitian\",\"Nerva\",\"Trajan\",\"Hadrian\",\"Antoninus Pius\",\"Lucius Verus, Marcus Aurelius\",\"Marcus Aurelius\",\"Commodus, Marcus Aurelius\",\"Commodus\",\"Didius Julianus\",\"Pertinax\",\"Clodius Albinus, Septimius Severus\",\"Septimius Severus\",\"Clodius Albinus\",\"Caracalla, Septimius Severus\",\"Geta\",\"Caracalla, Geta, Septimius Severus\",\"Caracalla, Geta\",\"Caracalla\",\"Macrinus\",\"Elagabalus\",\"Maximus\",\"Pupienus\",\"Gordian II\",\"Gordian III\",\"Decius\",\"Hostilian\",\"Volusian\",\"Aemilian\",\"Gallienus, Valerian\",\"Valerian\",\"Saloninus\",\"Macrianus\",\"Quietus\",\"Regalian\",\"Macrian\",\"Postumus\",\"Gallienus\",\"Marius\",\"Laelian\",\"Victorinus\",\"Tetricus I, Victorinus\",\"Quintillus\",\"Aurelian\",\"Tetricus I\",\"Florian\",\"Carus\",\"Numerian\",\"Carinus, Carus\",\"Carinus\",\"Carinus, Numerian\",\"Diocletian, Maximian\",\"Diocletian, Galerius, Maximian\",\"Galerius, Maximian\",\"Carausius\",\"Maximian\",\"Constantius I, Diocletian, Maximian\",\"Constantius I, Diocletian\",\"Allectus\",\"Galerius\",\"Diocletian\",\"Constantius I\",\"Constantius I, Galerius\",\"Severus II\",\"Maxentius\",\"Domitius Alexander\",\"Constantine II\",\"Constantius II\",\"Constantine I\",\"Theodora\",\"Constans, Constantine II, Constantius II\",\"Constans, Constantius II\",\"Constans\",\"Magnentius\",\"Vetranio\",\"Constantius II, Julian\",\"Julian\",\"Jovian\",\"Valentinian I\",\"Gratian, Valens, Valentinian I\",\"Valens, Valentinian I\",\"Honorius, Valentinian I\",\"Procopius\",\"Valens\",\"Gratian\",\"Magnus Maximus\",\"Valentinian II\",\"Eugenius\",\"Priscus Attalus\",\"Valentinian III\",\"Theodosius II, Valentinian III\",\"Marcian\",\"Avitus\",\"Majorian\",\"Libius Severus\",\"Anthemius\",\"Leo II, Zeno\",\"Zeno\",\"Tacitus\",\"Theodosius I\",\"Probus\",\"Arcadius\",\"Honorius\",\"Leo I\",\"Theodosius II\",\"Flavius Victor\",\"Romulus\",\"Arcadius, Honorius\",\"Basiliscus, Marcus\",\"Basiliscus\",\"Nepotian\",\"Martinian\",\"Justin II\"]}}],\"references\":[]},\"root\":\"1923\"}", "3": "{\"content\":{\"events\":[{\"attr\":\"factors\",\"kind\":\"ModelChanged\",\"model\":{\"id\":\"1919\",\"type\":\"FactorRange\"},\"new\":[\"Augustus\",\"Tiberius\",\"Gaius\",\"Claudius I\",\"Nero\",\"Galba\",\"Vitellius\",\"Otho\",\"Vespasian\",\"Titus\",\"Nerva\",\"Trajan\",\"Hadrian\",\"Antoninus Pius\",\"Marcus Aurelius\",\"Lucius Verus\",\"Commodus\",\"Pertinax\",\"Didius Julianus\",\"Septimius Severus\",\"Clodius Albinus\",\"Caracalla, Septimius Severus\",\"Geta\",\"Caracalla\",\"Macrinus\",\"Elagabalus\",\"Gordian III\",\"Decius\",\"Hostilian\",\"Herennius Etruscus\",\"Volusian\",\"Aemilian\",\"Valerian\",\"Saloninus\",\"Quietus\",\"Macrianus\",\"Gallienus\",\"Postumus\",\"Marius\",\"Laelian\",\"Victorinus\",\"Quintillus\",\"Aurelian\",\"Tetricus I\",\"Tacitus\",\"Florian\",\"Probus\",\"Carus\",\"Numerian\",\"Carinus, Numerian\",\"Carinus\",\"Diocletian, Maximian\",\"Carausius\",\"Carausius, Maximian\",\"Allectus\",\"Diocletian\",\"Maximian\",\"Galerius\",\"Constantius I\",\"Severus II\",\"Maxentius\",\"Constantine I\",\"Constantine II\",\"Constans\",\"Constantius II\",\"Vetranio\",\"Magnentius\",\"Julian\",\"Jovian\",\"Valentinian I\",\"Procopius\",\"Gratian\",\"Valentinian II\",\"Magnus Maximus\",\"Flavius Victor\",\"Arcadius\",\"Eugenius\",\"Theodosius I\",\"Honorius\",\"Constantine III\",\"Theodosius II\",\"Priscus Attalus\",\"Constantius III\",\"Valentinian III\",\"Marcian\",\"Petronius Maximus\",\"Avitus\",\"Majorian\",\"Leo I\",\"Libius Severus\",\"Anthemius\",\"Olybrius\",\"Glycerius\",\"Leo II, Zeno\",\"Zeno\",\"Julius Nepos\",\"Romulus Augustulus\",\"Domitian\",\"Valens\",\"Basiliscus\",\"Basiliscus, Marcus\",\"Jovinus\"]},{\"cols\":[\"emperor\",\"counts\"],\"column_source\":{\"id\":\"1954\",\"type\":\"ColumnDataSource\"},\"kind\":\"ColumnDataChanged\",\"new\":{\"counts\":[120,55,19,70,84,29,25,10,193,38,16,184,247,286,112,39,54,10,7,112,3,1,2,68,13,23,33,15,3,1,9,1,16,6,1,1,45,25,2,1,11,1,17,20,12,3,33,11,10,1,16,1,5,2,5,54,59,28,23,6,10,102,22,48,125,1,9,36,9,73,1,69,122,25,2,219,14,66,384,13,71,3,2,38,26,2,4,11,46,15,29,3,4,3,38,14,3,49,90,14,6,4],\"emperor\":[\"Augustus\",\"Tiberius\",\"Gaius\",\"Claudius I\",\"Nero\",\"Galba\",\"Vitellius\",\"Otho\",\"Vespasian\",\"Titus\",\"Nerva\",\"Trajan\",\"Hadrian\",\"Antoninus Pius\",\"Marcus Aurelius\",\"Lucius Verus\",\"Commodus\",\"Pertinax\",\"Didius Julianus\",\"Septimius Severus\",\"Clodius Albinus\",\"Caracalla, Septimius Severus\",\"Geta\",\"Caracalla\",\"Macrinus\",\"Elagabalus\",\"Gordian III\",\"Decius\",\"Hostilian\",\"Herennius Etruscus\",\"Volusian\",\"Aemilian\",\"Valerian\",\"Saloninus\",\"Quietus\",\"Macrianus\",\"Gallienus\",\"Postumus\",\"Marius\",\"Laelian\",\"Victorinus\",\"Quintillus\",\"Aurelian\",\"Tetricus I\",\"Tacitus\",\"Florian\",\"Probus\",\"Carus\",\"Numerian\",\"Carinus, Numerian\",\"Carinus\",\"Diocletian, Maximian\",\"Carausius\",\"Carausius, Maximian\",\"Allectus\",\"Diocletian\",\"Maximian\",\"Galerius\",\"Constantius I\",\"Severus II\",\"Maxentius\",\"Constantine I\",\"Constantine II\",\"Constans\",\"Constantius II\",\"Vetranio\",\"Magnentius\",\"Julian\",\"Jovian\",\"Valentinian I\",\"Procopius\",\"Gratian\",\"Valentinian II\",\"Magnus Maximus\",\"Flavius Victor\",\"Arcadius\",\"Eugenius\",\"Theodosius I\",\"Honorius\",\"Constantine III\",\"Theodosius II\",\"Priscus Attalus\",\"Constantius III\",\"Valentinian III\",\"Marcian\",\"Petronius Maximus\",\"Avitus\",\"Majorian\",\"Leo I\",\"Libius Severus\",\"Anthemius\",\"Olybrius\",\"Glycerius\",\"Leo II, Zeno\",\"Zeno\",\"Julius Nepos\",\"Romulus Augustulus\",\"Domitian\",\"Valens\",\"Basiliscus\",\"Basiliscus, Marcus\",\"Jovinus\"]}}],\"references\":[]},\"root\":\"1923\"}", "4": "{\"content\":{\"events\":[{\"attr\":\"factors\",\"kind\":\"ModelChanged\",\"model\":{\"id\":\"1919\",\"type\":\"FactorRange\"},\"new\":[\"Aurelian\",\"Diocletian\",\"Galerius\",\"Constantine I\",\"Constantius II\",\"Magnentius\",\"Valens\",\"Decius\"]},{\"cols\":[\"emperor\",\"counts\"],\"column_source\":{\"id\":\"1954\",\"type\":\"ColumnDataSource\"},\"kind\":\"ColumnDataChanged\",\"new\":{\"counts\":[1,1,2,1,2,1,1,2],\"emperor\":[\"Aurelian\",\"Diocletian\",\"Galerius\",\"Constantine I\",\"Constantius II\",\"Magnentius\",\"Valens\",\"Decius\"]}}],\"references\":[]},\"root\":\"1923\"}", "5": "{\"content\":{\"events\":[{\"attr\":\"factors\",\"kind\":\"ModelChanged\",\"model\":{\"id\":\"1919\",\"type\":\"FactorRange\"},\"new\":[\"Augustus\",\"Antoninus Pius, Hadrian\",\"Septimius Severus\",\"Tiberius\",\"Gaius\",\"Claudius I\",\"Nero\",\"Galba\",\"Vitellius\",\"Otho\",\"Titus, Vespasian\",\"Vespasian\",\"Titus\",\"Domitian\",\"Nerva\",\"Trajan\",\"Hadrian\",\"Antoninus Pius\",\"Marcus Aurelius\",\"Lucius Verus\",\"Lucius Verus, Marcus Aurelius\",\"Commodus, Marcus Aurelius\",\"Commodus\",\"Didius Julianus\",\"Pertinax\",\"Pescennius Niger\",\"Clodius Albinus, Septimius Severus\",\"Caracalla, Geta, Septimius Severus\",\"Clodius Albinus\",\"Caracalla, Septimius Severus\",\"Caracalla\",\"Geta\",\"Caracalla, Geta\",\"Macrinus\",\"Diadumenian\",\"Elagabalus\",\"Maximus\",\"Pupienus\",\"Gordian II\",\"Gordian III\",\"Pacatian\",\"Decius\",\"Herennius Etruscus\",\"Hostilian\",\"Volusian\",\"Aemilian\",\"Silbannacus\",\"Valerian\",\"Gallienus, Valerian\",\"Saloninus\",\"Macrianus\",\"Quietus\",\"Regalian\",\"Macrian\",\"Gallienus\",\"Postumus\",\"Marius\",\"Laelian\",\"Victorinus\",\"Tetricus I, Victorinus\",\"Quintillus\",\"Aurelian\",\"Tetricus I\",\"Tacitus\",\"Florian\",\"Probus\",\"Carus\",\"Numerian\",\"Carinus, Numerian\",\"Carinus, Carus\",\"Carinus\",\"Diocletian, Maximian\",\"Diocletian\",\"Diocletian, Galerius, Maximian\",\"Galerius, Maximian\",\"Maximian\",\"Carausius\",\"Carausius, Maximian\",\"Constantius I, Diocletian, Maximian\",\"Allectus\",\"Constantius I, Diocletian\",\"Constantius I\",\"Galerius\",\"Constantius I, Galerius\",\"Severus II\",\"Maxentius\",\"Constantine I\",\"Domitius Alexander\",\"Constantine II\",\"Constantius II\",\"Constans\",\"Theodora\",\"Constans, Constantine II, Constantius II\",\"Constans, Constantius II\",\"Magnentius\",\"Vetranio\",\"Constantius II, Julian\",\"Julian\",\"Jovian\",\"Valentinian I\",\"Valens, Valentinian I\",\"Gratian, Valens, Valentinian I\",\"Valens\",\"Honorius, Valentinian I\",\"Procopius\",\"Gratian\",\"Valentinian II\",\"Theodosius I\",\"Magnus Maximus\",\"Flavius Victor\",\"Arcadius\",\"Eugenius\",\"Honorius\",\"Arcadius, Honorius\",\"Constantine III\",\"Theodosius II\",\"Priscus Attalus\",\"Jovinus\",\"Jovinus, Sebastianus\",\"Constantius III\",\"Valentinian III\",\"Theodosius II, Valentinian III\",\"Marcian\",\"Petronius Maximus\",\"Avitus\",\"Majorian\",\"Leo I\",\"Libius Severus\",\"Anthemius\",\"Olybrius\",\"Glycerius\",\"Leo II, Zeno\",\"Zeno\",\"Julius Nepos\",\"Romulus Augustulus\",\"Basiliscus\",\"Romulus\",\"Basiliscus, Marcus\",\"Nepotian\",\"Martinian\",\"Nerva, Trajan\",\"Constantine I, Maximian\",\"Jotapian\",\"Justin II\"]},{\"cols\":[\"emperor\",\"counts\"],\"column_source\":{\"id\":\"1954\",\"type\":\"ColumnDataSource\"},\"kind\":\"ColumnDataChanged\",\"new\":{\"counts\":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],\"emperor\":[\"Augustus\",\"Antoninus Pius, Hadrian\",\"Septimius Severus\",\"Tiberius\",\"Gaius\",\"Claudius I\",\"Nero\",\"Galba\",\"Vitellius\",\"Otho\",\"Titus, Vespasian\",\"Vespasian\",\"Titus\",\"Domitian\",\"Nerva\",\"Trajan\",\"Hadrian\",\"Antoninus Pius\",\"Marcus Aurelius\",\"Lucius Verus\",\"Lucius Verus, Marcus Aurelius\",\"Commodus, Marcus Aurelius\",\"Commodus\",\"Didius Julianus\",\"Pertinax\",\"Pescennius Niger\",\"Clodius Albinus, Septimius Severus\",\"Caracalla, Geta, Septimius Severus\",\"Clodius Albinus\",\"Caracalla, Septimius Severus\",\"Caracalla\",\"Geta\",\"Caracalla, Geta\",\"Macrinus\",\"Diadumenian\",\"Elagabalus\",\"Maximus\",\"Pupienus\",\"Gordian II\",\"Gordian III\",\"Pacatian\",\"Decius\",\"Herennius Etruscus\",\"Hostilian\",\"Volusian\",\"Aemilian\",\"Silbannacus\",\"Valerian\",\"Gallienus, Valerian\",\"Saloninus\",\"Macrianus\",\"Quietus\",\"Regalian\",\"Macrian\",\"Gallienus\",\"Postumus\",\"Marius\",\"Laelian\",\"Victorinus\",\"Tetricus I, Victorinus\",\"Quintillus\",\"Aurelian\",\"Tetricus I\",\"Tacitus\",\"Florian\",\"Probus\",\"Carus\",\"Numerian\",\"Carinus, Numerian\",\"Carinus, Carus\",\"Carinus\",\"Diocletian, Maximian\",\"Diocletian\",\"Diocletian, Galerius, Maximian\",\"Galerius, Maximian\",\"Maximian\",\"Carausius\",\"Carausius, Maximian\",\"Constantius I, Diocletian, Maximian\",\"Allectus\",\"Constantius I, Diocletian\",\"Constantius I\",\"Galerius\",\"Constantius I, Galerius\",\"Severus II\",\"Maxentius\",\"Constantine I\",\"Domitius Alexander\",\"Constantine II\",\"Constantius II\",\"Constans\",\"Theodora\",\"Constans, Constantine II, Constantius II\",\"Constans, Constantius II\",\"Magnentius\",\"Vetranio\",\"Constantius II, Julian\",\"Julian\",\"Jovian\",\"Valentinian I\",\"Valens, Valentinian I\",\"Gratian, Valens, Valentinian I\",\"Valens\",\"Honorius, Valentinian I\",\"Procopius\",\"Gratian\",\"Valentinian II\",\"Theodosius I\",\"Magnus Maximus\",\"Flavius Victor\",\"Arcadius\",\"Eugenius\",\"Honorius\",\"Arcadius, Honorius\",\"Constantine III\",\"Theodosius II\",\"Priscus Attalus\",\"Jovinus\",\"Jovinus, Sebastianus\",\"Constantius III\",\"Valentinian III\",\"Theodosius II, Valentinian III\",\"Marcian\",\"Petronius Maximus\",\"Avitus\",\"Majorian\",\"Leo I\",\"Libius Severus\",\"Anthemius\",\"Olybrius\",\"Glycerius\",\"Leo II, Zeno\",\"Zeno\",\"Julius Nepos\",\"Romulus Augustulus\",\"Basiliscus\",\"Romulus\",\"Basiliscus, Marcus\",\"Nepotian\",\"Martinian\",\"Nerva, Trajan\",\"Constantine I, Maximian\",\"Jotapian\",\"Justin II\"]}}],\"references\":[]},\"root\":\"1923\"}"};
+  var dim_vals = ['lead/alloy'];
+  var keyMap = {"('lead/alloy',)": 0, "('silver',)": 1, "('bronze',)": 2, "('gold',)": 3, "('other',)": 4, "('Total',)": 5};
+  var notFound = "<h2 style='vertical-align: middle>No frame at selected dimension value.<h2>";
+
+  var anim = new HoloViews.BokehSelectionWidget(frame_data, "ee56d491a60f4638b161cb2a8bb445de", widget_ids,
+  keyMap, dim_vals, notFound, false, "default",
+  true, "", false, "1923");
+
+  HoloViews.index['1923'] = anim;
+}
+
+
+
+
+HoloViews.init_dropdown('ee56d491a60f4638b161cb2a8bb445de', '1923', 'Material', ['lead/alloy', 'silver', 'bronze', 'gold', 'other', 'Total'], 0, {}, ['lead/alloy', 'silver', 'bronze', 'gold', 'other', 'Total'], 'None', 0, false)
+
+
+
+
+create_widget();
+
+// Ugly hack - see HoloViews #2574 for more information
+if (!(document.getElementById('1923')) && !(document.getElementById('_anim_imgNone'))) {
+  console.log("Creating DOM nodes dynamically for assumed nbconvert export. To generate clean HTML output set HV_DOC_HTML as an environment variable.")
+  var htmlObject = document.createElement('div');
+  htmlObject.innerHTML = `<div id='1923' style='display: table; margin: 0 auto;'>
+
+
+
+
+
+  <div class="bk-root" id="21d28cd6-31c1-48ae-a294-bfe822ba6cf1" data-root-id="1923"></div>
+</div>`;
+  var scriptTags = document.getElementsByTagName('script');
+  var parentTag = scriptTags[scriptTags.length-1].parentNode;
+  if (parentTag.attributes.length && (parentTag.attributes[0].name == 'data-shell-mode')) {
+    alert('Displaying PyViz objects in JupyterLab requires the jupyterlab_pyviz extension to be installed, install it with:\n\n\tjupyter labextension install @pyviz/jupyterlab_pyviz');
+  } else {
+    parentTag.append(htmlObject)
+  }
+}
+(function(root) {
   function embed_document(root) {
     
-  var docs_json = {"c1261335-6edf-46cb-8be6-c71459b7c045":{"roots":{"references":[{"attributes":{"callback":null,"column_names":["bottom","top","emperor","material","counts"],"data":{"bottom":{"__ndarray__":"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","dtype":"float64","shape":[361]},"counts":[1,561,339,120,16,2,162,142,55,19,17,112,107,70,43,1,54,382,84,175,122,29,70,38,25,19,10,1,193,523,464,8,142,196,38,4,344,259,98,72,16,492,184,680,1030,1018,247,3,1211,286,966,1,112,1,423,39,314,428,389,84,52,386,325,54,25,25,24,10,9,7,44,24,2,112,32,3,715,43,193,2,200,2,1,7,9,901,4,177,1,151,40,24,2,68,249,159,124,75,13,1,157,23,468,14,44,43,20,8,933,33,266,4,1235,133,15,3,3,1,7,263,48,71,29,9,1,1,518,150,149,26,16,3,6,45,33,1,40,2,1,1,45,8320,25,2256,539,5,44,7,2,1,3359,11,3,1,149,1,508,17,2,1,623,20,1,12,291,3,33,8,1,127,11,136,10,1,1,3,204,16,1,624,1,1,7,1,37,1,1764,49,5,1,672,2,6,5,1,581,29,27,2,35,718,640,489,54,33,59,28,23,6,100,1,10,169,1,17,8,7,102,856,22,1,2,1358,2650,48,125,19,14,1,31,4,565,232,18,3,1,9,7,1,1,1,527,1080,158,36,65,39,9,381,372,73,38,23,7,1,1,16,9,1,1821,420,12,69,1704,801,416,122,955,1347,186,44,25,2,219,421,589,14,8,66,2557,2516,384,1,24,13,71,4,3,14,7,1,2,112,38,12,1,89,26,3,2,4,2,18,11,46,3,15,11,5,29,4,2,3,4,1,3,1,38,14,2,1,3,1,28,49,1243,592,581,489,280,148,135,90,25,22,14,8,7,6,5,5,4,4,3,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,1],"emperor":["Augustus","Augustus","Augustus","Augustus","Antoninus Pius, Hadrian","Septimius Severus","Tiberius","Tiberius","Tiberius","Gaius","Gaius","Gaius","Claudius I","Claudius I","Claudius I","Nero","Nero","Nero","Nero","Galba","Galba","Galba","Vitellius","Vitellius","Vitellius","Otho","Otho","Titus, Vespasian","Vespasian","Vespasian","Vespasian","Titus, Vespasian","Titus","Titus","Titus","Domitian","Domitian","Domitian","Nerva","Nerva","Nerva","Trajan","Trajan","Trajan","Hadrian","Hadrian","Hadrian","Hadrian","Antoninus Pius","Antoninus Pius","Antoninus Pius","Antoninus Pius","Marcus Aurelius","Lucius Verus","Lucius Verus, Marcus Aurelius","Lucius Verus","Lucius Verus, Marcus Aurelius","Marcus Aurelius","Marcus Aurelius","Commodus, Marcus Aurelius","Commodus, Marcus Aurelius","Commodus","Commodus","Commodus","Didius Julianus","Pertinax","Pertinax","Pertinax","Didius Julianus","Didius Julianus","Pescennius Niger","Clodius Albinus, Septimius Severus","Caracalla, Geta, Septimius Severus","Septimius Severus","Clodius Albinus, Septimius Severus","Clodius Albinus","Septimius Severus","Clodius Albinus","Septimius Severus","Clodius Albinus","Caracalla, Septimius Severus","Caracalla","Caracalla, Septimius Severus","Geta","Caracalla, Geta","Caracalla, Septimius Severus","Geta","Caracalla, Geta, Septimius Severus","Geta","Caracalla, Geta, Septimius Severus","Caracalla, Geta","Caracalla, Geta","Geta","Caracalla","Caracalla","Caracalla","Macrinus","Macrinus","Macrinus","Diadumenian","Elagabalus","Elagabalus","Elagabalus","Maximus","Pupienus","Pupienus","Gordian II","Gordian II","Gordian III","Gordian III","Gordian III","Pacatian","Decius","Decius","Decius","Herennius Etruscus","Hostilian","Herennius Etruscus","Hostilian","Volusian","Volusian","Aemilian","Aemilian","Volusian","Aemilian","Silbannacus","Valerian","Gallienus, Valerian","Gallienus, Valerian","Valerian","Valerian","Saloninus","Saloninus","Saloninus","Macrianus","Quietus","Quietus","Regalian","Macrian","Macrianus","Gallienus","Postumus","Postumus","Gallienus","Gallienus","Postumus","Marius","Laelian","Marius","Laelian","Victorinus","Victorinus","Victorinus","Tetricus I, Victorinus","Quintillus","Quintillus","Aurelian","Aurelian","Aurelian","Aurelian","Tetricus I","Tetricus I","Tetricus I","Tacitus","Florian","Florian","Probus","Probus","Probus","Carus","Carus","Numerian","Numerian","Carinus, Numerian","Numerian","Carinus, Carus","Carinus","Carinus","Carinus, Numerian","Diocletian, Maximian","Diocletian","Diocletian, Maximian","Diocletian, Galerius, Maximian","Galerius, Maximian","Maximian","Diocletian, Maximian","Carausius","Carausius","Carausius","Galerius, Maximian","Maximian","Carausius, Maximian","Constantius I, Diocletian, Maximian","Allectus","Constantius I, Diocletian","Allectus","Constantius I","Galerius","Galerius","Diocletian","Galerius","Diocletian","Constantius I","Diocletian","Constantius I, Galerius","Maximian","Galerius","Constantius I","Severus II","Severus II","Severus II","Maxentius","Maxentius","Constantine I","Constantine I","Maxentius","Domitius Alexander","Constantine I","Constantine II","Constantine II","Constantine I","Constantius II","Constantius II","Constantine I","Constans","Constantius II","Constantine II","Theodora","Constans, Constantine II, Constantius II","Constans","Constans, Constantius II","Constans","Magnentius","Vetranio","Vetranio","Vetranio","Magnentius","Magnentius","Magnentius","Magnentius","Constantius II, Julian","Constantius II","Julian","Julian","Julian","Jovian","Jovian","Jovian","Valentinian I","Valentinian I","Valentinian I","Valens, Valentinian I","Gratian, Valens, Valentinian I","Valens, Valentinian I","Valens","Honorius, Valentinian I","Procopius","Procopius","Procopius","Valens","Valens","Gratian, Valens, Valentinian I","Gratian","Gratian","Valentinian II","Gratian","Valentinian II","Theodosius I","Magnus Maximus","Flavius Victor","Magnus Maximus","Magnus Maximus","Flavius Victor","Arcadius","Valentinian II","Eugenius","Eugenius","Eugenius","Theodosius I","Honorius","Arcadius","Honorius","Arcadius, Honorius","Constantine III","Constantine III","Theodosius II","Priscus Attalus","Priscus Attalus","Theodosius II","Jovinus","Jovinus, Sebastianus","Constantius III","Valentinian III","Valentinian III","Valentinian III","Theodosius II, Valentinian III","Marcian","Marcian","Marcian","Petronius Maximus","Avitus","Avitus","Majorian","Majorian","Leo I","Leo I","Libius Severus","Libius Severus","Libius Severus","Anthemius","Anthemius","Anthemius","Olybrius","Glycerius","Glycerius","Leo II, Zeno","Leo II, Zeno","Zeno","Julius Nepos","Julius Nepos","Zeno","Romulus Augustulus","Basiliscus","Zeno","Domitian","Tacitus","Theodosius I","Probus","Arcadius","Honorius","Leo I","Theodosius II","Valens","Flavius Victor","Romulus","Basiliscus","Arcadius, Honorius","Basiliscus, Marcus","Basiliscus, Marcus","Basiliscus","Nepotian","Jovinus","Martinian","Maximian","Carausius","Decius","Decius","Diocletian","Galerius","Gallienus","Julian","Nerva, Trajan","Priscus Attalus","Constans","Constantine I, Maximian","Constantine II","Constantius I","Jotapian","Justin II","Tacitus","Tetricus I"],"material":["lead/alloy","silver","bronze","gold","silver","lead/alloy","bronze","silver","gold","gold","silver","bronze","bronze","gold","silver","lead/alloy","silver","bronze","gold","bronze","silver","gold","silver","bronze","gold","silver","gold","bronze","gold","bronze","silver","silver","silver","bronze","gold","lead/alloy","bronze","silver","bronze","silver","gold","bronze","gold","silver","bronze","silver","gold","lead/alloy","bronze","gold","silver","lead/alloy","gold","silver","bronze","gold","silver","bronze","silver","bronze","silver","bronze","silver","gold","bronze","bronze","silver","gold","silver","gold","silver","silver","lead/alloy","gold","bronze","gold","silver","silver","bronze","bronze","bronze","lead/alloy","gold","lead/alloy","lead/alloy","silver","silver","silver","bronze","bronze","silver","bronze","gold","gold","silver","bronze","silver","bronze","gold","silver","bronze","gold","silver","bronze","silver","bronze","bronze","silver","silver","gold","bronze","silver","silver","bronze","gold","silver","gold","gold","bronze","silver","bronze","silver","bronze","gold","gold","silver","silver","silver","bronze","bronze","gold","bronze","gold","silver","bronze","gold","bronze","bronze","bronze","gold","gold","bronze","gold","bronze","silver","silver","bronze","bronze","gold","gold","bronze","gold","silver","bronze","bronze","gold","bronze","gold","silver","other","bronze","gold","silver","gold","bronze","gold","gold","silver","lead/alloy","bronze","gold","bronze","gold","gold","silver","bronze","bronze","gold","bronze","bronze","other","lead/alloy","bronze","bronze","silver","gold","bronze","silver","gold","silver","bronze","gold","bronze","gold","bronze","bronze","silver","silver","other","silver","bronze","bronze","bronze","gold","bronze","gold","gold","gold","gold","bronze","silver","gold","bronze","other","silver","silver","bronze","gold","bronze","gold","lead/alloy","other","bronze","bronze","gold","gold","silver","bronze","bronze","silver","bronze","bronze","bronze","bronze","silver","gold","gold","silver","lead/alloy","other","bronze","silver","silver","bronze","gold","silver","bronze","gold","bronze","silver","gold","silver","bronze","bronze","other","bronze","bronze","silver","gold","silver","bronze","silver","gold","silver","silver","bronze","gold","silver","silver","silver","bronze","gold","gold","gold","bronze","silver","gold","bronze","gold","silver","silver","gold","silver","silver","gold","gold","bronze","gold","silver","silver","silver","gold","bronze","gold","silver","bronze","bronze","gold","silver","gold","gold","bronze","bronze","gold","gold","silver","gold","bronze","silver","gold","bronze","silver","gold","gold","lead/alloy","gold","bronze","gold","gold","silver","silver","gold","silver","bronze","gold","bronze","bronze","bronze","bronze","bronze","bronze","bronze","gold","bronze","bronze","gold","bronze","bronze","gold","bronze","bronze","gold","bronze","lead/alloy","lead/alloy","lead/alloy","other","lead/alloy","lead/alloy","lead/alloy","lead/alloy","silver","silver","lead/alloy","lead/alloy","lead/alloy","lead/alloy","silver","bronze","lead/alloy","lead/alloy"],"top":{"__ndarray__":"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","dtype":"float64","shape":[361]}},"selected":null,"selection_policy":null},"id":"693be947-0ebc-42d0-907d-fe2425738f38","type":"ColumnDataSource"},{"attributes":{"factors":["lead/alloy","silver","bronze","gold","other"],"palette":["#30a2da","#fc4f30","#e5ae38","#6d904f","#8b8b8b"]},"id":"39c498c2-eefe-43d9-95af-ff1cb1f51c7b","type":"CategoricalColorMapper"},{"attributes":{},"id":"dd79c32c-4777-4f7b-a5a7-5fbd3cf10b9b","type":"BasicTicker"},{"attributes":{"callback":null,"factors":["Augustus","Antoninus Pius, Hadrian","Septimius Severus","Tiberius","Gaius","Claudius I","Nero","Galba","Vitellius","Otho","Titus, Vespasian","Vespasian","Titus","Domitian","Nerva","Trajan","Hadrian","Antoninus Pius","Marcus Aurelius","Lucius Verus","Lucius Verus, Marcus Aurelius","Commodus, Marcus Aurelius","Commodus","Didius Julianus","Pertinax","Pescennius Niger","Clodius Albinus, Septimius Severus","Caracalla, Geta, Septimius Severus","Clodius Albinus","Caracalla, Septimius Severus","Caracalla","Geta","Caracalla, Geta","Macrinus","Diadumenian","Elagabalus","Maximus","Pupienus","Gordian II","Gordian III","Pacatian","Decius","Herennius Etruscus","Hostilian","Volusian","Aemilian","Silbannacus","Valerian","Gallienus, Valerian","Saloninus","Macrianus","Quietus","Regalian","Macrian","Gallienus","Postumus","Marius","Laelian","Victorinus","Tetricus I, Victorinus","Quintillus","Aurelian","Tetricus I","Tacitus","Florian","Probus","Carus","Numerian","Carinus, Numerian","Carinus, Carus","Carinus","Diocletian, Maximian","Diocletian","Diocletian, Galerius, Maximian","Galerius, Maximian","Maximian","Carausius","Carausius, Maximian","Constantius I, Diocletian, Maximian","Allectus","Constantius I, Diocletian","Constantius I","Galerius","Constantius I, Galerius","Severus II","Maxentius","Constantine I","Domitius Alexander","Constantine II","Constantius II","Constans","Theodora","Constans, Constantine II, Constantius II","Constans, Constantius II","Magnentius","Vetranio","Constantius II, Julian","Julian","Jovian","Valentinian I","Valens, Valentinian I","Gratian, Valens, Valentinian I","Valens","Honorius, Valentinian I","Procopius","Gratian","Valentinian II","Theodosius I","Magnus Maximus","Flavius Victor","Arcadius","Eugenius","Honorius","Arcadius, Honorius","Constantine III","Theodosius II","Priscus Attalus","Jovinus","Jovinus, Sebastianus","Constantius III","Valentinian III","Theodosius II, Valentinian III","Marcian","Petronius Maximus","Avitus","Majorian","Leo I","Libius Severus","Anthemius","Olybrius","Glycerius","Leo II, Zeno","Zeno","Julius Nepos","Romulus Augustulus","Basiliscus","Romulus","Basiliscus, Marcus","Nepotian","Martinian","Nerva, Trajan","Constantine I, Maximian","Jotapian","Justin II"]},"id":"eaa561aa-d5e5-4793-9cc7-c93f3005d7f1","type":"FactorRange"},{"attributes":{"dimension":1,"grid_line_color":{"value":null},"plot":{"id":"bc3f2ba7-c7a8-45ef-bff1-814dad4973c8","subtype":"Figure","type":"Plot"},"ticker":{"id":"dd79c32c-4777-4f7b-a5a7-5fbd3cf10b9b","type":"BasicTicker"}},"id":"fa074a30-c66b-486f-820f-57b0bfcf8b8f","type":"Grid"},{"attributes":{"bottom_units":"screen","fill_alpha":{"value":0.5},"fill_color":{"value":"lightgrey"},"left_units":"screen","level":"overlay","line_alpha":{"value":1.0},"line_color":{"value":"black"},"line_dash":[4,4],"line_width":{"value":2},"plot":null,"render_mode":"css","right_units":"screen","top_units":"screen"},"id":"c64aefa3-9c71-492d-bb4d-390d1a33a04a","type":"BoxAnnotation"},{"attributes":{},"id":"94b6ea73-cac3-43b7-8185-8411b5eaa53c","type":"SaveTool"},{"attributes":{"callback":null,"end":8350.0},"id":"5ece6463-875e-477c-85f4-4de62425e34c","type":"Range1d"},{"attributes":{},"id":"a52b6e05-89ce-4ce0-a266-18cca853e5ac","type":"PanTool"},{"attributes":{"callback":null,"renderers":[{"id":"bf29a39b-e32d-4339-a238-d6b24f0caea5","type":"GlyphRenderer"}],"tooltips":[["emperor","@{emperor}"],["Material","@{material}"],["Counts of coin by material","@{counts}"]]},"id":"91c424b5-0db0-4ebd-989b-80618f0e8353","type":"HoverTool"},{"attributes":{"below":[{"id":"7fbae783-9df2-4571-9f0a-2e0cd832ba41","type":"CategoricalAxis"}],"left":[{"id":"42d2a5db-7e02-49b2-9b3c-041a2d2a9708","type":"LinearAxis"}],"min_border_bottom":10,"min_border_left":10,"min_border_right":10,"min_border_top":10,"renderers":[{"id":"7fbae783-9df2-4571-9f0a-2e0cd832ba41","type":"CategoricalAxis"},{"id":"4d7649fc-2b3d-41d5-a2ad-d23dd95604cd","type":"Grid"},{"id":"42d2a5db-7e02-49b2-9b3c-041a2d2a9708","type":"LinearAxis"},{"id":"fa074a30-c66b-486f-820f-57b0bfcf8b8f","type":"Grid"},{"id":"c64aefa3-9c71-492d-bb4d-390d1a33a04a","type":"BoxAnnotation"},{"id":"d842ed9c-84ad-4fda-943a-17d6ee672391","type":"Legend"},{"id":"bf29a39b-e32d-4339-a238-d6b24f0caea5","type":"GlyphRenderer"}],"sizing_mode":"stretch_both","title":{"id":"f4f25464-d6b6-450e-8505-a734a481b96c","type":"Title"},"toolbar":{"id":"c5210ef6-fc4e-4902-b251-92759f1eec6c","type":"Toolbar"},"x_range":{"id":"eaa561aa-d5e5-4793-9cc7-c93f3005d7f1","type":"FactorRange"},"x_scale":{"id":"d7bc0a9e-e969-417b-9d6d-afd49bdb65f9","type":"CategoricalScale"},"y_range":{"id":"5ece6463-875e-477c-85f4-4de62425e34c","type":"Range1d"},"y_scale":{"id":"5278d34f-a449-45a0-a257-ee5e115563f3","type":"LinearScale"}},"id":"bc3f2ba7-c7a8-45ef-bff1-814dad4973c8","subtype":"Figure","type":"Plot"},{"attributes":{},"id":"8f5c190f-3a5a-4d0a-9c6a-4e53eb123582","type":"WheelZoomTool"},{"attributes":{},"id":"78beb1bc-e8b0-4cb7-8ba8-f3d6227310ab","type":"CategoricalTickFormatter"},{"attributes":{"overlay":{"id":"c64aefa3-9c71-492d-bb4d-390d1a33a04a","type":"BoxAnnotation"}},"id":"1d328c40-1c20-40b1-b7c8-37a54f25375b","type":"BoxZoomTool"},{"attributes":{"plot":null,"text":"Count of Coins in britishMuseum Plot","text_color":{"value":"black"},"text_font_size":{"value":"12pt"}},"id":"f4f25464-d6b6-450e-8505-a734a481b96c","type":"Title"},{"attributes":{"bottom":{"field":"bottom"},"fill_color":{"field":"material","transform":{"id":"39c498c2-eefe-43d9-95af-ff1cb1f51c7b","type":"CategoricalColorMapper"}},"line_color":{"value":"#000000"},"top":{"field":"top"},"width":{"value":0.5},"x":{"field":"emperor"}},"id":"5890900d-256d-4a42-a1af-e584733c048b","type":"VBar"},{"attributes":{},"id":"75005dbb-525a-42e3-aa81-e71f22b7810f","type":"ResetTool"},{"attributes":{"axis_label":"Counts of coin by material","bounds":"auto","formatter":{"id":"e8fc69f8-3abe-46b0-bd9c-1bb5769ddf2c","type":"BasicTickFormatter"},"major_label_orientation":"horizontal","plot":{"id":"bc3f2ba7-c7a8-45ef-bff1-814dad4973c8","subtype":"Figure","type":"Plot"},"ticker":{"id":"dd79c32c-4777-4f7b-a5a7-5fbd3cf10b9b","type":"BasicTicker"}},"id":"42d2a5db-7e02-49b2-9b3c-041a2d2a9708","type":"LinearAxis"},{"attributes":{"bottom":{"field":"bottom"},"fill_alpha":{"value":0.1},"fill_color":{"field":"material","transform":{"id":"39c498c2-eefe-43d9-95af-ff1cb1f51c7b","type":"CategoricalColorMapper"}},"line_alpha":{"value":0.1},"line_color":{"value":"#000000"},"top":{"field":"top"},"width":{"value":0.5},"x":{"field":"emperor"}},"id":"dec5dafd-501d-40c3-beed-7fd4f9e68ffd","type":"VBar"},{"attributes":{"dimensions":"width"},"id":"36bb56a3-39f4-4941-b978-a0e762523cdc","type":"WheelZoomTool"},{"attributes":{},"id":"d7bc0a9e-e969-417b-9d6d-afd49bdb65f9","type":"CategoricalScale"},{"attributes":{"items":[{"id":"34313130-a4da-4930-835b-cd969e84e81a","type":"LegendItem"}],"location":"top_left","plot":{"id":"bc3f2ba7-c7a8-45ef-bff1-814dad4973c8","subtype":"Figure","type":"Plot"}},"id":"d842ed9c-84ad-4fda-943a-17d6ee672391","type":"Legend"},{"attributes":{"active_drag":"auto","active_inspect":"auto","active_scroll":"auto","active_tap":"auto","tools":[{"id":"91c424b5-0db0-4ebd-989b-80618f0e8353","type":"HoverTool"},{"id":"94b6ea73-cac3-43b7-8185-8411b5eaa53c","type":"SaveTool"},{"id":"a52b6e05-89ce-4ce0-a266-18cca853e5ac","type":"PanTool"},{"id":"8f5c190f-3a5a-4d0a-9c6a-4e53eb123582","type":"WheelZoomTool"},{"id":"1d328c40-1c20-40b1-b7c8-37a54f25375b","type":"BoxZoomTool"},{"id":"75005dbb-525a-42e3-aa81-e71f22b7810f","type":"ResetTool"},{"id":"36bb56a3-39f4-4941-b978-a0e762523cdc","type":"WheelZoomTool"}]},"id":"c5210ef6-fc4e-4902-b251-92759f1eec6c","type":"Toolbar"},{"attributes":{"data_source":{"id":"693be947-0ebc-42d0-907d-fe2425738f38","type":"ColumnDataSource"},"glyph":{"id":"5890900d-256d-4a42-a1af-e584733c048b","type":"VBar"},"hover_glyph":null,"muted_glyph":null,"nonselection_glyph":{"id":"dec5dafd-501d-40c3-beed-7fd4f9e68ffd","type":"VBar"},"selection_glyph":null,"view":{"id":"c2e5eb4f-b445-4f98-81e6-a756245b1f36","type":"CDSView"}},"id":"bf29a39b-e32d-4339-a238-d6b24f0caea5","type":"GlyphRenderer"},{"attributes":{},"id":"5278d34f-a449-45a0-a257-ee5e115563f3","type":"LinearScale"},{"attributes":{"source":{"id":"693be947-0ebc-42d0-907d-fe2425738f38","type":"ColumnDataSource"}},"id":"c2e5eb4f-b445-4f98-81e6-a756245b1f36","type":"CDSView"},{"attributes":{"grid_line_color":{"value":null},"plot":{"id":"bc3f2ba7-c7a8-45ef-bff1-814dad4973c8","subtype":"Figure","type":"Plot"},"ticker":{"id":"57bf3b29-4a32-43d1-bae4-4e0b9f2a872e","type":"CategoricalTicker"}},"id":"4d7649fc-2b3d-41d5-a2ad-d23dd95604cd","type":"Grid"},{"attributes":{},"id":"e8fc69f8-3abe-46b0-bd9c-1bb5769ddf2c","type":"BasicTickFormatter"},{"attributes":{"axis_label":"emperor, Material","bounds":"auto","formatter":{"id":"78beb1bc-e8b0-4cb7-8ba8-f3d6227310ab","type":"CategoricalTickFormatter"},"major_label_orientation":1.5707963267948966,"plot":{"id":"bc3f2ba7-c7a8-45ef-bff1-814dad4973c8","subtype":"Figure","type":"Plot"},"ticker":{"id":"57bf3b29-4a32-43d1-bae4-4e0b9f2a872e","type":"CategoricalTicker"}},"id":"7fbae783-9df2-4571-9f0a-2e0cd832ba41","type":"CategoricalAxis"},{"attributes":{"label":{"field":"material"},"renderers":[{"id":"bf29a39b-e32d-4339-a238-d6b24f0caea5","type":"GlyphRenderer"}]},"id":"34313130-a4da-4930-835b-cd969e84e81a","type":"LegendItem"},{"attributes":{},"id":"57bf3b29-4a32-43d1-bae4-4e0b9f2a872e","type":"CategoricalTicker"}],"root_ids":["bc3f2ba7-c7a8-45ef-bff1-814dad4973c8"]},"title":"Bokeh Application","version":"0.12.15"}};
-  var render_items = [{"docid":"c1261335-6edf-46cb-8be6-c71459b7c045","elementid":"19561d02-7d82-4294-b369-aea507404180","modelid":"bc3f2ba7-c7a8-45ef-bff1-814dad4973c8"}];
+  var docs_json = {"2dfd0f43-1930-43df-9329-498c30088272":{"roots":{"references":[{"attributes":{"below":[{"id":"1931","type":"CategoricalAxis"}],"left":[{"id":"1935","type":"LinearAxis"}],"min_border_bottom":10,"min_border_left":10,"min_border_right":10,"min_border_top":10,"plot_height":500,"plot_width":1000,"renderers":[{"id":"1931","type":"CategoricalAxis"},{"id":"1934","type":"Grid"},{"id":"1935","type":"LinearAxis"},{"id":"1939","type":"Grid"},{"id":"1949","type":"BoxAnnotation"},{"id":"1960","type":"GlyphRenderer"}],"title":{"id":"1922","type":"Title"},"toolbar":{"id":"1945","type":"Toolbar"},"x_range":{"id":"1919","type":"FactorRange"},"x_scale":{"id":"1927","type":"CategoricalScale"},"y_range":{"id":"1920","type":"Range1d"},"y_scale":{"id":"1929","type":"LinearScale"}},"id":"1923","subtype":"Figure","type":"Plot"},{"attributes":{},"id":"1980","type":"UnionRenderers"},{"attributes":{"fill_color":{"value":"#30a2da"},"top":{"field":"counts"},"width":{"value":0.8},"x":{"field":"emperor"}},"id":"1957","type":"VBar"},{"attributes":{},"id":"1932","type":"CategoricalTicker"},{"attributes":{"grid_line_color":{"value":null},"plot":{"id":"1923","subtype":"Figure","type":"Plot"},"ticker":{"id":"1932","type":"CategoricalTicker"}},"id":"1934","type":"Grid"},{"attributes":{"fill_alpha":{"value":0.1},"fill_color":{"value":"#30a2da"},"line_alpha":{"value":0.1},"line_color":{"value":"black"},"top":{"field":"counts"},"width":{"value":0.8},"x":{"field":"emperor"}},"id":"1958","type":"VBar"},{"attributes":{"axis_label":"counts","bounds":"auto","formatter":{"id":"1964","type":"BasicTickFormatter"},"major_label_orientation":"horizontal","plot":{"id":"1923","subtype":"Figure","type":"Plot"},"ticker":{"id":"1936","type":"BasicTicker"}},"id":"1935","type":"LinearAxis"},{"attributes":{},"id":"1936","type":"BasicTicker"},{"attributes":{"fill_alpha":{"value":0.2},"fill_color":{"value":"#30a2da"},"line_alpha":{"value":0.2},"line_color":{"value":"black"},"top":{"field":"counts"},"width":{"value":0.8},"x":{"field":"emperor"}},"id":"1959","type":"VBar"},{"attributes":{"dimension":1,"grid_line_color":{"value":null},"plot":{"id":"1923","subtype":"Figure","type":"Plot"},"ticker":{"id":"1936","type":"BasicTicker"}},"id":"1939","type":"Grid"},{"attributes":{"data_source":{"id":"1954","type":"ColumnDataSource"},"glyph":{"id":"1957","type":"VBar"},"hover_glyph":null,"muted_glyph":{"id":"1959","type":"VBar"},"nonselection_glyph":{"id":"1958","type":"VBar"},"selection_glyph":null,"view":{"id":"1961","type":"CDSView"}},"id":"1960","type":"GlyphRenderer"},{"attributes":{},"id":"1929","type":"LinearScale"},{"attributes":{"source":{"id":"1954","type":"ColumnDataSource"}},"id":"1961","type":"CDSView"},{"attributes":{"axis_label":"emperor","bounds":"auto","formatter":{"id":"1963","type":"CategoricalTickFormatter"},"major_label_orientation":1.5707963267948966,"plot":{"id":"1923","subtype":"Figure","type":"Plot"},"ticker":{"id":"1932","type":"CategoricalTicker"}},"id":"1931","type":"CategoricalAxis"},{"attributes":{"active_drag":"auto","active_inspect":"auto","active_multi":null,"active_scroll":"auto","active_tap":"auto","tools":[{"id":"1921","type":"HoverTool"},{"id":"1940","type":"SaveTool"},{"id":"1941","type":"PanTool"},{"id":"1942","type":"WheelZoomTool"},{"id":"1943","type":"BoxZoomTool"},{"id":"1944","type":"ResetTool"}]},"id":"1945","type":"Toolbar"},{"attributes":{},"id":"1940","type":"SaveTool"},{"attributes":{},"id":"1927","type":"CategoricalScale"},{"attributes":{},"id":"1941","type":"PanTool"},{"attributes":{"plot":null,"text":"Count of Coins in britishMuseum Plot","text_color":{"value":"black"},"text_font_size":{"value":"12pt"}},"id":"1922","type":"Title"},{"attributes":{},"id":"1942","type":"WheelZoomTool"},{"attributes":{"overlay":{"id":"1949","type":"BoxAnnotation"}},"id":"1943","type":"BoxZoomTool"},{"attributes":{"callback":null,"renderers":[{"id":"1960","type":"GlyphRenderer"}],"tooltips":[["emperor","@{emperor}"],["counts","@{counts}"]]},"id":"1921","type":"HoverTool"},{"attributes":{},"id":"1944","type":"ResetTool"},{"attributes":{"callback":null,"factors":["Augustus","Septimius Severus","Nero","Domitian","Hadrian","Antoninus Pius","Caracalla, Geta, Septimius Severus","Caracalla","Geta","Caracalla, Geta","Probus","Diocletian, Maximian","Constantine I","Magnentius","Glycerius","Maximian","Carausius","Decius","Diocletian","Galerius","Gallienus","Julian","Constans","Constantine I, Maximian","Constantine II","Constantius I","Tacitus","Tetricus I"],"tags":[[["emperor","emperor",null]]]},"id":"1919","type":"FactorRange"},{"attributes":{"bottom_units":"screen","fill_alpha":{"value":0.5},"fill_color":{"value":"lightgrey"},"left_units":"screen","level":"overlay","line_alpha":{"value":1.0},"line_color":{"value":"black"},"line_dash":[4,4],"line_width":{"value":2},"plot":null,"render_mode":"css","right_units":"screen","top_units":"screen"},"id":"1949","type":"BoxAnnotation"},{"attributes":{"callback":null,"end":8320.0,"reset_end":8320.0,"reset_start":0,"tags":[[["counts","counts",null]]]},"id":"1920","type":"Range1d"},{"attributes":{"callback":null,"data":{"counts":[1,2,1,4,3,1,2,2,7,9,1,1,1,1,1,3,2,2,2,2,2,2,1,1,1,1,1,1],"emperor":["Augustus","Septimius Severus","Nero","Domitian","Hadrian","Antoninus Pius","Caracalla, Geta, Septimius Severus","Caracalla","Geta","Caracalla, Geta","Probus","Diocletian, Maximian","Constantine I","Magnentius","Glycerius","Maximian","Carausius","Decius","Diocletian","Galerius","Gallienus","Julian","Constans","Constantine I, Maximian","Constantine II","Constantius I","Tacitus","Tetricus I"]},"selected":{"id":"1955","type":"Selection"},"selection_policy":{"id":"1980","type":"UnionRenderers"}},"id":"1954","type":"ColumnDataSource"},{"attributes":{},"id":"1955","type":"Selection"},{"attributes":{},"id":"1963","type":"CategoricalTickFormatter"},{"attributes":{},"id":"1964","type":"BasicTickFormatter"}],"root_ids":["1923"]},"title":"Bokeh Application","version":"1.0.3"}};
+  var render_items = [{"docid":"2dfd0f43-1930-43df-9329-498c30088272","roots":{"1923":"21d28cd6-31c1-48ae-a294-bfe822ba6cf1"}}];
   root.Bokeh.embed.embed_items_notebook(docs_json, render_items);
 
   }
@@ -510,11 +901,11 @@ div.hologroup {
       }
       attempts++;
       if (attempts > 100) {
-        console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing")
+        console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing");
         clearInterval(timer);
       }
     }, 10, root)
   }
-})(window);
-</script>
-</div>
+})(window);</script>
+  </body>
+</html>

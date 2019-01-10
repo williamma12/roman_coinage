@@ -1,3 +1,2 @@
-Data/BM_Roman_Imperial_Coinage.csv
-Data/Roman_Imperial_Coinage.sqlite
-roman_coinage_venv/
+venv/
+Code/.ipynb_checkpoints/
