@@ -1,0 +1,85 @@
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    
+      <meta charset="utf-8">
+      <title>allData_divusRadiate_authority</title>
+      
+      
+        
+          
+        <link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-1.0.3.min.css" type="text/css" />
+        
+        
+          
+        <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-1.0.3.min.js"></script>
+        <script type="text/javascript">
+            Bokeh.set_log_level("info");
+        </script>
+        
+      
+      
+    
+  </head>
+  
+  
+  <body>
+    
+      
+        
+          
+          
+            
+              <div class="bk-root" id="d02166ad-41bb-401b-9ec2-e37af535374a" data-root-id="40034"></div>
+            
+          
+        
+      
+      
+        <script type="application/json" id="40252">
+          {"1c9004f9-c8b3-4f0b-aca7-7c455e2cdfef":{"roots":{"references":[{"attributes":{"source":{"id":"40085","type":"ColumnDataSource"}},"id":"40092","type":"CDSView"},{"attributes":{},"id":"40053","type":"WheelZoomTool"},{"attributes":{"fill_alpha":{"value":0.2},"fill_color":{"value":"#38a3d8"},"line_alpha":{"value":0.2},"line_color":{"value":"black"},"top":{"field":"count"},"width":{"value":0.8},"x":{"field":"authority"}},"id":"40074","type":"VBar"},{"attributes":{"callback":null,"data":{"authority":["Antoninus Pius","Domitian","Hadrian","Nerva","Tiberius","Titus","Trajan Decius"],"count":[4,15,1,15,1,63,66]},"selected":{"id":"40086","type":"Selection"},"selection_policy":{"id":"40109","type":"UnionRenderers"}},"id":"40085","type":"ColumnDataSource"},{"attributes":{},"id":"40067","type":"BasicTickFormatter"},{"attributes":{"dimension":1,"grid_line_color":{"value":null},"plot":{"id":"40034","subtype":"Figure","type":"Plot"},"ticker":{"id":"40047","type":"BasicTicker"}},"id":"40050","type":"Grid"},{"attributes":{"data_source":{"id":"40085","type":"ColumnDataSource"},"glyph":{"id":"40088","type":"VBar"},"hover_glyph":null,"muted_glyph":{"id":"40090","type":"VBar"},"nonselection_glyph":{"id":"40089","type":"VBar"},"selection_glyph":null,"view":{"id":"40092","type":"CDSView"}},"id":"40091","type":"GlyphRenderer"},{"attributes":{"fill_alpha":{"value":0.1},"fill_color":{"value":"#38a3d8"},"line_alpha":{"value":0.1},"line_color":{"value":"black"},"top":{"field":"count"},"width":{"value":0.8},"x":{"field":"authority"}},"id":"40073","type":"VBar"},{"attributes":{},"id":"40052","type":"PanTool"},{"attributes":{},"id":"40043","type":"CategoricalTicker"},{"attributes":{"label":{"value":"Count of coins with divus and radiate"},"renderers":[{"id":"40091","type":"GlyphRenderer"}]},"id":"40101","type":"LegendItem"},{"attributes":{"source":{"id":"40069","type":"ColumnDataSource"}},"id":"40076","type":"CDSView"},{"attributes":{},"id":"40047","type":"BasicTicker"},{"attributes":{"data_source":{"id":"40069","type":"ColumnDataSource"},"glyph":{"id":"40072","type":"VBar"},"hover_glyph":null,"muted_glyph":{"id":"40074","type":"VBar"},"nonselection_glyph":{"id":"40073","type":"VBar"},"selection_glyph":null,"view":{"id":"40076","type":"CDSView"}},"id":"40075","type":"GlyphRenderer"},{"attributes":{},"id":"40038","type":"CategoricalScale"},{"attributes":{},"id":"40051","type":"SaveTool"},{"attributes":{},"id":"40055","type":"ResetTool"},{"attributes":{},"id":"40098","type":"UnionRenderers"},{"attributes":{"fill_alpha":{"value":0.1},"fill_color":{"value":"#f95039"},"line_alpha":{"value":0.1},"line_color":{"value":"black"},"top":{"field":"count"},"width":{"value":0.8},"x":{"field":"authority"}},"id":"40089","type":"VBar"},{"attributes":{"grid_line_color":{"value":null},"plot":{"id":"40034","subtype":"Figure","type":"Plot"},"ticker":{"id":"40043","type":"CategoricalTicker"}},"id":"40045","type":"Grid"},{"attributes":{"callback":null,"data":{"authority":["Tiberius","Claudius Divus, Nero","Nero","Titus","Domitian","Nerva","Trajan","Divus Trajan, Hadrian","Augustus Divus, Hadrian","Hadrian","Antoninus Pius","Lucius Verus, Marcus Aurelius","Marcus Aurelius","Commodus","Caracalla","Trajan Decius"],"count":[1,4,17,201,26,63,11,1,1,37,97,1,23,155,1,66]},"selected":{"id":"40070","type":"Selection"},"selection_policy":{"id":"40098","type":"UnionRenderers"}},"id":"40069","type":"ColumnDataSource"},{"attributes":{"label":{"value":"Count of coins with divus"},"renderers":[{"id":"40075","type":"GlyphRenderer"}]},"id":"40084","type":"LegendItem"},{"attributes":{"fill_color":{"value":"#38a3d8"},"top":{"field":"count"},"width":{"value":0.8},"x":{"field":"authority"}},"id":"40072","type":"VBar"},{"attributes":{"fill_color":{"value":"#f95039"},"top":{"field":"count"},"width":{"value":0.8},"x":{"field":"authority"}},"id":"40088","type":"VBar"},{"attributes":{},"id":"40086","type":"Selection"},{"attributes":{},"id":"40109","type":"UnionRenderers"},{"attributes":{"bottom_units":"screen","fill_alpha":{"value":0.5},"fill_color":{"value":"lightgrey"},"left_units":"screen","level":"overlay","line_alpha":{"value":1.0},"line_color":{"value":"black"},"line_dash":[4,4],"line_width":{"value":2},"plot":null,"render_mode":"css","right_units":"screen","top_units":"screen"},"id":"40060","type":"BoxAnnotation"},{"attributes":{},"id":"40040","type":"LinearScale"},{"attributes":{},"id":"40070","type":"Selection"},{"attributes":{"plot":null,"text":"'divus with 'radiate' on obverse by authority from allData","text_color":{"value":"black"},"text_font_size":{"value":"12pt"}},"id":"40033","type":"Title"},{"attributes":{"callback":null,"renderers":[{"id":"40075","type":"GlyphRenderer"},{"id":"40091","type":"GlyphRenderer"}],"tooltips":[["authority","@{authority}"],["count","@{count}"]]},"id":"40031","type":"HoverTool"},{"attributes":{"active_drag":"auto","active_inspect":"auto","active_multi":null,"active_scroll":"auto","active_tap":"auto","tools":[{"id":"40031","type":"HoverTool"},{"id":"40051","type":"SaveTool"},{"id":"40052","type":"PanTool"},{"id":"40053","type":"WheelZoomTool"},{"id":"40054","type":"BoxZoomTool"},{"id":"40055","type":"ResetTool"}]},"id":"40056","type":"Toolbar"},{"attributes":{"overlay":{"id":"40060","type":"BoxAnnotation"}},"id":"40054","type":"BoxZoomTool"},{"attributes":{"axis_label":"count","bounds":"auto","formatter":{"id":"40067","type":"BasicTickFormatter"},"major_label_orientation":"horizontal","plot":{"id":"40034","subtype":"Figure","type":"Plot"},"ticker":{"id":"40047","type":"BasicTicker"}},"id":"40046","type":"LinearAxis"},{"attributes":{"fill_alpha":{"value":0.2},"fill_color":{"value":"#f95039"},"line_alpha":{"value":0.2},"line_color":{"value":"black"},"top":{"field":"count"},"width":{"value":0.8},"x":{"field":"authority"}},"id":"40090","type":"VBar"},{"attributes":{"callback":null,"end":201.0,"reset_end":201.0,"reset_start":0.0,"tags":[[["count","count",null]]]},"id":"40030","type":"Range1d"},{"attributes":{"axis_label":"authority","bounds":"auto","formatter":{"id":"40065","type":"CategoricalTickFormatter"},"major_label_orientation":1.5707963267948966,"plot":{"id":"40034","subtype":"Figure","type":"Plot"},"ticker":{"id":"40043","type":"CategoricalTicker"}},"id":"40042","type":"CategoricalAxis"},{"attributes":{"callback":null,"factors":["Tiberius","Claudius Divus, Nero","Nero","Titus","Domitian","Nerva","Trajan","Divus Trajan, Hadrian","Augustus Divus, Hadrian","Hadrian","Antoninus Pius","Lucius Verus, Marcus Aurelius","Marcus Aurelius","Commodus","Caracalla","Trajan Decius"],"tags":[[["authority","authority",null]]]},"id":"40029","type":"FactorRange"},{"attributes":{"below":[{"id":"40042","type":"CategoricalAxis"}],"left":[{"id":"40046","type":"LinearAxis"}],"min_border_bottom":10,"min_border_left":10,"min_border_right":10,"min_border_top":10,"plot_height":1000,"plot_width":1500,"renderers":[{"id":"40042","type":"CategoricalAxis"},{"id":"40045","type":"Grid"},{"id":"40046","type":"LinearAxis"},{"id":"40050","type":"Grid"},{"id":"40060","type":"BoxAnnotation"},{"id":"40083","type":"Legend"},{"id":"40075","type":"GlyphRenderer"},{"id":"40091","type":"GlyphRenderer"}],"title":{"id":"40033","type":"Title"},"toolbar":{"id":"40056","type":"Toolbar"},"x_range":{"id":"40029","type":"FactorRange"},"x_scale":{"id":"40038","type":"CategoricalScale"},"y_range":{"id":"40030","type":"Range1d"},"y_scale":{"id":"40040","type":"LinearScale"}},"id":"40034","subtype":"Figure","type":"Plot"},{"attributes":{"click_policy":"mute","items":[{"id":"40084","type":"LegendItem"},{"id":"40101","type":"LegendItem"}],"location":"top_left","plot":{"id":"40034","subtype":"Figure","type":"Plot"}},"id":"40083","type":"Legend"},{"attributes":{},"id":"40065","type":"CategoricalTickFormatter"}],"root_ids":["40034"]},"title":"Bokeh Application","version":"1.0.3"}}
+        </script>
+        <script type="text/javascript">
+          (function() {
+            var fn = function() {
+              Bokeh.safely(function() {
+                (function(root) {
+                  function embed_document(root) {
+                    
+                  var docs_json = document.getElementById('40252').textContent;
+                  var render_items = [{"docid":"1c9004f9-c8b3-4f0b-aca7-7c455e2cdfef","roots":{"40034":"d02166ad-41bb-401b-9ec2-e37af535374a"}}];
+                  root.Bokeh.embed.embed_items(docs_json, render_items);
+                
+                  }
+                  if (root.Bokeh !== undefined) {
+                    embed_document(root);
+                  } else {
+                    var attempts = 0;
+                    var timer = setInterval(function(root) {
+                      if (root.Bokeh !== undefined) {
+                        embed_document(root);
+                        clearInterval(timer);
+                      }
+                      attempts++;
+                      if (attempts > 100) {
+                        console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing");
+                        clearInterval(timer);
+                      }
+                    }, 10, root)
+                  }
+                })(window);
+              });
+            };
+            if (document.readyState != "loading") fn();
+            else document.addEventListener("DOMContentLoaded", fn);
+          })();
+        </script>
+    
+  </body>
+  
+</html>
