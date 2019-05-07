@@ -1,0 +1,85 @@
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    
+      <meta charset="utf-8">
+      <title>allData_WordCountsConstantine I</title>
+      
+      
+        
+          
+        <link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-1.0.3.min.css" type="text/css" />
+        
+        
+          
+        <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-1.0.3.min.js"></script>
+        <script type="text/javascript">
+            Bokeh.set_log_level("info");
+        </script>
+        
+      
+      
+    
+  </head>
+  
+  
+  <body>
+    
+      
+        
+          
+          
+            
+              <div class="bk-root" id="3d055d21-8677-4720-85c4-5e50d7cf3183" data-root-id="44744"></div>
+            
+          
+        
+      
+      
+        <script type="application/json" id="44851">
+          {"8c478a9e-193c-4b9e-a4e1-47e08931c7a6":{"roots":{"references":[{"attributes":{},"id":"44783","type":"CategoricalTickFormatter"},{"attributes":{"grid_line_color":{"value":null},"plot":{"id":"44744","subtype":"Figure","type":"Plot"},"ticker":{"id":"44753","type":"CategoricalTicker"}},"id":"44755","type":"Grid"},{"attributes":{},"id":"44776","type":"Selection"},{"attributes":{"callback":null,"data":{"count":[1301,2625,13728,11603,5439],"word":["radiate","diadem","laureate","cuirassed","helmet"]},"selected":{"id":"44776","type":"Selection"},"selection_policy":{"id":"44792","type":"UnionRenderers"}},"id":"44775","type":"ColumnDataSource"},{"attributes":{},"id":"44762","type":"PanTool"},{"attributes":{},"id":"44761","type":"SaveTool"},{"attributes":{"bottom_units":"screen","fill_alpha":{"value":0.5},"fill_color":{"value":"lightgrey"},"left_units":"screen","level":"overlay","line_alpha":{"value":1.0},"line_color":{"value":"black"},"line_dash":[4,4],"line_width":{"value":2},"plot":null,"render_mode":"css","right_units":"screen","top_units":"screen"},"id":"44770","type":"BoxAnnotation"},{"attributes":{},"id":"44748","type":"CategoricalScale"},{"attributes":{},"id":"44753","type":"CategoricalTicker"},{"attributes":{"axis_label":"word","bounds":"auto","formatter":{"id":"44783","type":"CategoricalTickFormatter"},"major_label_orientation":1.5707963267948966,"plot":{"id":"44744","subtype":"Figure","type":"Plot"},"ticker":{"id":"44753","type":"CategoricalTicker"}},"id":"44752","type":"CategoricalAxis"},{"attributes":{"below":[{"id":"44752","type":"CategoricalAxis"}],"left":[{"id":"44756","type":"LinearAxis"}],"min_border_bottom":10,"min_border_left":10,"min_border_right":10,"min_border_top":10,"plot_height":1000,"plot_width":1500,"renderers":[{"id":"44752","type":"CategoricalAxis"},{"id":"44755","type":"Grid"},{"id":"44756","type":"LinearAxis"},{"id":"44760","type":"Grid"},{"id":"44770","type":"BoxAnnotation"},{"id":"44781","type":"GlyphRenderer"}],"title":{"id":"44743","type":"Title"},"toolbar":{"id":"44766","type":"Toolbar"},"x_range":{"id":"44740","type":"FactorRange"},"x_scale":{"id":"44748","type":"CategoricalScale"},"y_range":{"id":"44741","type":"Range1d"},"y_scale":{"id":"44750","type":"LinearScale"}},"id":"44744","subtype":"Figure","type":"Plot"},{"attributes":{"overlay":{"id":"44770","type":"BoxAnnotation"}},"id":"44764","type":"BoxZoomTool"},{"attributes":{"callback":null,"renderers":[{"id":"44781","type":"GlyphRenderer"}],"tooltips":[["word","@{word}"],["count","@{count}"]]},"id":"44742","type":"HoverTool"},{"attributes":{"axis_label":"count","bounds":"auto","formatter":{"id":"44785","type":"BasicTickFormatter"},"major_label_orientation":"horizontal","plot":{"id":"44744","subtype":"Figure","type":"Plot"},"ticker":{"id":"44757","type":"BasicTicker"}},"id":"44756","type":"LinearAxis"},{"attributes":{"plot":null,"text":"Occurance of radiate, diadem, laureate, cuirassed, helmet of Constantine I coinage from allData","text_color":{"value":"black"},"text_font_size":{"value":"12pt"}},"id":"44743","type":"Title"},{"attributes":{},"id":"44750","type":"LinearScale"},{"attributes":{"fill_alpha":{"value":0.2},"fill_color":{"value":"#30a2da"},"line_alpha":{"value":0.2},"line_color":{"value":"black"},"top":{"field":"count"},"width":{"value":0.8},"x":{"field":"word"}},"id":"44780","type":"VBar"},{"attributes":{"fill_color":{"value":"#30a2da"},"top":{"field":"count"},"width":{"value":0.8},"x":{"field":"word"}},"id":"44778","type":"VBar"},{"attributes":{"callback":null,"end":13728.0,"reset_end":13728.0,"reset_start":0,"tags":[[["count","count",null]]]},"id":"44741","type":"Range1d"},{"attributes":{"dimension":1,"grid_line_color":{"value":null},"plot":{"id":"44744","subtype":"Figure","type":"Plot"},"ticker":{"id":"44757","type":"BasicTicker"}},"id":"44760","type":"Grid"},{"attributes":{},"id":"44792","type":"UnionRenderers"},{"attributes":{},"id":"44763","type":"WheelZoomTool"},{"attributes":{"callback":null,"factors":["radiate","diadem","laureate","cuirassed","helmet"],"tags":[[["word","word",null]]]},"id":"44740","type":"FactorRange"},{"attributes":{},"id":"44757","type":"BasicTicker"},{"attributes":{"source":{"id":"44775","type":"ColumnDataSource"}},"id":"44782","type":"CDSView"},{"attributes":{},"id":"44785","type":"BasicTickFormatter"},{"attributes":{"fill_alpha":{"value":0.1},"fill_color":{"value":"#30a2da"},"line_alpha":{"value":0.1},"line_color":{"value":"black"},"top":{"field":"count"},"width":{"value":0.8},"x":{"field":"word"}},"id":"44779","type":"VBar"},{"attributes":{"data_source":{"id":"44775","type":"ColumnDataSource"},"glyph":{"id":"44778","type":"VBar"},"hover_glyph":null,"muted_glyph":{"id":"44780","type":"VBar"},"nonselection_glyph":{"id":"44779","type":"VBar"},"selection_glyph":null,"view":{"id":"44782","type":"CDSView"}},"id":"44781","type":"GlyphRenderer"},{"attributes":{},"id":"44765","type":"ResetTool"},{"attributes":{"active_drag":"auto","active_inspect":"auto","active_multi":null,"active_scroll":"auto","active_tap":"auto","tools":[{"id":"44742","type":"HoverTool"},{"id":"44761","type":"SaveTool"},{"id":"44762","type":"PanTool"},{"id":"44763","type":"WheelZoomTool"},{"id":"44764","type":"BoxZoomTool"},{"id":"44765","type":"ResetTool"}]},"id":"44766","type":"Toolbar"}],"root_ids":["44744"]},"title":"Bokeh Application","version":"1.0.3"}}
+        </script>
+        <script type="text/javascript">
+          (function() {
+            var fn = function() {
+              Bokeh.safely(function() {
+                (function(root) {
+                  function embed_document(root) {
+                    
+                  var docs_json = document.getElementById('44851').textContent;
+                  var render_items = [{"docid":"8c478a9e-193c-4b9e-a4e1-47e08931c7a6","roots":{"44744":"3d055d21-8677-4720-85c4-5e50d7cf3183"}}];
+                  root.Bokeh.embed.embed_items(docs_json, render_items);
+                
+                  }
+                  if (root.Bokeh !== undefined) {
+                    embed_document(root);
+                  } else {
+                    var attempts = 0;
+                    var timer = setInterval(function(root) {
+                      if (root.Bokeh !== undefined) {
+                        embed_document(root);
+                        clearInterval(timer);
+                      }
+                      attempts++;
+                      if (attempts > 100) {
+                        console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing");
+                        clearInterval(timer);
+                      }
+                    }, 10, root)
+                  }
+                })(window);
+              });
+            };
+            if (document.readyState != "loading") fn();
+            else document.addEventListener("DOMContentLoaded", fn);
+          })();
+        </script>
+    
+  </body>
+  
+</html>

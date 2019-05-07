@@ -1,0 +1,85 @@
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    
+      <meta charset="utf-8">
+      <title>OCRE_obverseWordCount_material</title>
+      
+      
+        
+          
+        <link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-1.0.3.min.css" type="text/css" />
+        
+        
+          
+        <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-1.0.3.min.js"></script>
+        <script type="text/javascript">
+            Bokeh.set_log_level("info");
+        </script>
+        
+      
+      
+    
+  </head>
+  
+  
+  <body>
+    
+      
+        
+          
+          
+            
+              <div class="bk-root" id="1e558c01-1319-46e1-bb39-72cdf3e5f4c0" data-root-id="47984"></div>
+            
+          
+        
+      
+      
+        <script type="application/json" id="48100">
+          {"fb3bcb31-f6c7-48ff-967c-0c35836dd30c":{"roots":{"references":[{"attributes":{"factors":["silver","bronze","gold","other"],"palette":["#30a2da","#fc4f30","#e5ae38","#6d904f"]},"id":"48015","type":"CategoricalColorMapper"},{"attributes":{"grid_line_color":{"value":null},"plot":{"id":"47984","subtype":"Figure","type":"Plot"},"ticker":{"id":"47993","type":"CategoricalTicker"}},"id":"47995","type":"Grid"},{"attributes":{},"id":"48017","type":"Selection"},{"attributes":{"callback":null,"factors":["radiate","laureate","helmet","divus"],"tags":[[["word","word",null]]]},"id":"47980","type":"FactorRange"},{"attributes":{"source":{"id":"48016","type":"ColumnDataSource"}},"id":"48023","type":"CDSView"},{"attributes":{},"id":"47993","type":"CategoricalTicker"},{"attributes":{},"id":"47988","type":"CategoricalScale"},{"attributes":{"callback":null,"end":398.0,"reset_end":398.0,"reset_start":0,"tags":[[["count","count",null]]]},"id":"47981","type":"Range1d"},{"attributes":{"callback":null,"data":{"bottom":{"__ndarray__":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAADxAAAAAAAAAckAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAcEAAAAAAAAB3QA==","dtype":"float64","shape":[8]},"count":[7,28,260,8,0,256,112,30],"material":["silver","silver","bronze","gold","other","silver","bronze","gold"],"top":{"__ndarray__":"AAAAAAAAHEAAAAAAAAA8QAAAAAAAAHJAAAAAAACAckAAAAAAAAAAAAAAAAAAAHBAAAAAAAAAd0AAAAAAAOB4QA==","dtype":"float64","shape":[8]},"word":["radiate","laureate","laureate","laureate","helmet","divus","divus","divus"]},"selected":{"id":"48017","type":"Selection"},"selection_policy":{"id":"48041","type":"UnionRenderers"}},"id":"48016","type":"ColumnDataSource"},{"attributes":{"items":[{"id":"48031","type":"LegendItem"}],"location":"top_left","plot":{"id":"47984","subtype":"Figure","type":"Plot"}},"id":"48030","type":"Legend"},{"attributes":{},"id":"48005","type":"ResetTool"},{"attributes":{"bottom":{"field":"bottom"},"fill_alpha":{"value":0.2},"fill_color":{"field":"material","transform":{"id":"48015","type":"CategoricalColorMapper"}},"line_alpha":{"value":0.2},"line_color":{"value":"black"},"top":{"field":"top"},"width":{"value":0.8},"x":{"field":"word"}},"id":"48021","type":"VBar"},{"attributes":{"bottom_units":"screen","fill_alpha":{"value":0.5},"fill_color":{"value":"lightgrey"},"left_units":"screen","level":"overlay","line_alpha":{"value":1.0},"line_color":{"value":"black"},"line_dash":[4,4],"line_width":{"value":2},"plot":null,"render_mode":"css","right_units":"screen","top_units":"screen"},"id":"48010","type":"BoxAnnotation"},{"attributes":{},"id":"48003","type":"WheelZoomTool"},{"attributes":{"dimension":1,"grid_line_color":{"value":null},"plot":{"id":"47984","subtype":"Figure","type":"Plot"},"ticker":{"id":"47997","type":"BasicTicker"}},"id":"48000","type":"Grid"},{"attributes":{},"id":"48001","type":"SaveTool"},{"attributes":{"bottom":{"field":"bottom"},"fill_color":{"field":"material","transform":{"id":"48015","type":"CategoricalColorMapper"}},"top":{"field":"top"},"width":{"value":0.8},"x":{"field":"word"}},"id":"48019","type":"VBar"},{"attributes":{"axis_label":"count","bounds":"auto","formatter":{"id":"48027","type":"BasicTickFormatter"},"major_label_orientation":"horizontal","plot":{"id":"47984","subtype":"Figure","type":"Plot"},"ticker":{"id":"47997","type":"BasicTicker"}},"id":"47996","type":"LinearAxis"},{"attributes":{"axis_label":"word","bounds":"auto","formatter":{"id":"48025","type":"CategoricalTickFormatter"},"major_label_orientation":1.5707963267948966,"plot":{"id":"47984","subtype":"Figure","type":"Plot"},"ticker":{"id":"47993","type":"CategoricalTicker"}},"id":"47992","type":"CategoricalAxis"},{"attributes":{},"id":"47997","type":"BasicTicker"},{"attributes":{},"id":"48041","type":"UnionRenderers"},{"attributes":{"below":[{"id":"47992","type":"CategoricalAxis"}],"left":[{"id":"47996","type":"LinearAxis"}],"min_border_bottom":10,"min_border_left":10,"min_border_right":10,"min_border_top":10,"plot_height":1000,"plot_width":1500,"renderers":[{"id":"47992","type":"CategoricalAxis"},{"id":"47995","type":"Grid"},{"id":"47996","type":"LinearAxis"},{"id":"48000","type":"Grid"},{"id":"48010","type":"BoxAnnotation"},{"id":"48030","type":"Legend"},{"id":"48022","type":"GlyphRenderer"}],"title":{"id":"47983","type":"Title"},"toolbar":{"id":"48006","type":"Toolbar"},"x_range":{"id":"47980","type":"FactorRange"},"x_scale":{"id":"47988","type":"CategoricalScale"},"y_range":{"id":"47981","type":"Range1d"},"y_scale":{"id":"47990","type":"LinearScale"}},"id":"47984","subtype":"Figure","type":"Plot"},{"attributes":{"data_source":{"id":"48016","type":"ColumnDataSource"},"glyph":{"id":"48019","type":"VBar"},"hover_glyph":null,"muted_glyph":{"id":"48021","type":"VBar"},"nonselection_glyph":{"id":"48020","type":"VBar"},"selection_glyph":null,"view":{"id":"48023","type":"CDSView"}},"id":"48022","type":"GlyphRenderer"},{"attributes":{},"id":"47990","type":"LinearScale"},{"attributes":{"bottom":{"field":"bottom"},"fill_alpha":{"value":0.1},"fill_color":{"field":"material","transform":{"id":"48015","type":"CategoricalColorMapper"}},"line_alpha":{"value":0.1},"line_color":{"value":"black"},"top":{"field":"top"},"width":{"value":0.8},"x":{"field":"word"}},"id":"48020","type":"VBar"},{"attributes":{},"id":"48025","type":"CategoricalTickFormatter"},{"attributes":{"active_drag":"auto","active_inspect":"auto","active_multi":null,"active_scroll":"auto","active_tap":"auto","tools":[{"id":"47982","type":"HoverTool"},{"id":"48001","type":"SaveTool"},{"id":"48002","type":"PanTool"},{"id":"48003","type":"WheelZoomTool"},{"id":"48004","type":"BoxZoomTool"},{"id":"48005","type":"ResetTool"}]},"id":"48006","type":"Toolbar"},{"attributes":{"callback":null,"renderers":[{"id":"48022","type":"GlyphRenderer"}],"tooltips":[["word","@{word}"],["material","@{material}"],["count","@{count}"]]},"id":"47982","type":"HoverTool"},{"attributes":{},"id":"48027","type":"BasicTickFormatter"},{"attributes":{"overlay":{"id":"48010","type":"BoxAnnotation"}},"id":"48004","type":"BoxZoomTool"},{"attributes":{"plot":null,"text":"Count of coins by radiate, laureate, helmet, divus in OCRE by material on obverse plot","text_color":{"value":"black"},"text_font_size":{"value":"12pt"}},"id":"47983","type":"Title"},{"attributes":{},"id":"48002","type":"PanTool"},{"attributes":{"label":{"field":"material"},"renderers":[{"id":"48022","type":"GlyphRenderer"}]},"id":"48031","type":"LegendItem"}],"root_ids":["47984"]},"title":"Bokeh Application","version":"1.0.3"}}
+        </script>
+        <script type="text/javascript">
+          (function() {
+            var fn = function() {
+              Bokeh.safely(function() {
+                (function(root) {
+                  function embed_document(root) {
+                    
+                  var docs_json = document.getElementById('48100').textContent;
+                  var render_items = [{"docid":"fb3bcb31-f6c7-48ff-967c-0c35836dd30c","roots":{"47984":"1e558c01-1319-46e1-bb39-72cdf3e5f4c0"}}];
+                  root.Bokeh.embed.embed_items(docs_json, render_items);
+                
+                  }
+                  if (root.Bokeh !== undefined) {
+                    embed_document(root);
+                  } else {
+                    var attempts = 0;
+                    var timer = setInterval(function(root) {
+                      if (root.Bokeh !== undefined) {
+                        embed_document(root);
+                        clearInterval(timer);
+                      }
+                      attempts++;
+                      if (attempts > 100) {
+                        console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing");
+                        clearInterval(timer);
+                      }
+                    }, 10, root)
+                  }
+                })(window);
+              });
+            };
+            if (document.readyState != "loading") fn();
+            else document.addEventListener("DOMContentLoaded", fn);
+          })();
+        </script>
+    
+  </body>
+  
+</html>
