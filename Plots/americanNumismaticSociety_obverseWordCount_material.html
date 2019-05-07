@@ -1,0 +1,85 @@
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    
+      <meta charset="utf-8">
+      <title>americanNumismaticSociety_obverseWordCount_material</title>
+      
+      
+        
+          
+        <link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-1.0.3.min.css" type="text/css" />
+        
+        
+          
+        <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-1.0.3.min.js"></script>
+        <script type="text/javascript">
+            Bokeh.set_log_level("info");
+        </script>
+        
+      
+      
+    
+  </head>
+  
+  
+  <body>
+    
+      
+        
+          
+          
+            
+              <div class="bk-root" id="2dd92280-7907-4883-822e-fa9af394fb4c" data-root-id="47742"></div>
+            
+          
+        
+      
+      
+        <script type="application/json" id="47858">
+          {"fd393b80-3dbc-4dd8-9a67-4c64a54a8503":{"roots":{"references":[{"attributes":{"callback":null,"renderers":[{"id":"47780","type":"GlyphRenderer"}],"tooltips":[["word","@{word}"],["material","@{material}"],["count","@{count}"]]},"id":"47740","type":"HoverTool"},{"attributes":{"items":[{"id":"47789","type":"LegendItem"}],"location":"top_left","plot":{"id":"47742","subtype":"Figure","type":"Plot"}},"id":"47788","type":"Legend"},{"attributes":{"callback":null,"factors":["radiate","laureate","helmet","divus"],"tags":[[["word","word",null]]]},"id":"47738","type":"FactorRange"},{"attributes":{"dimension":1,"grid_line_color":{"value":null},"plot":{"id":"47742","subtype":"Figure","type":"Plot"},"ticker":{"id":"47755","type":"BasicTicker"}},"id":"47758","type":"Grid"},{"attributes":{},"id":"47760","type":"PanTool"},{"attributes":{"below":[{"id":"47750","type":"CategoricalAxis"}],"left":[{"id":"47754","type":"LinearAxis"}],"min_border_bottom":10,"min_border_left":10,"min_border_right":10,"min_border_top":10,"plot_height":1000,"plot_width":1500,"renderers":[{"id":"47750","type":"CategoricalAxis"},{"id":"47753","type":"Grid"},{"id":"47754","type":"LinearAxis"},{"id":"47758","type":"Grid"},{"id":"47768","type":"BoxAnnotation"},{"id":"47788","type":"Legend"},{"id":"47780","type":"GlyphRenderer"}],"title":{"id":"47741","type":"Title"},"toolbar":{"id":"47764","type":"Toolbar"},"x_range":{"id":"47738","type":"FactorRange"},"x_scale":{"id":"47746","type":"CategoricalScale"},"y_range":{"id":"47739","type":"Range1d"},"y_scale":{"id":"47748","type":"LinearScale"}},"id":"47742","subtype":"Figure","type":"Plot"},{"attributes":{"callback":null,"data":{"bottom":{"__ndarray__":"AAAAAAAAAAAAAAAAAAyoQAAAAAAAAAAAAAAAAACARUAAAAAAACC7QAAAAAAAUsBAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAhAAAAAAAAAAAAAAAAAAMBSQAAAAAAAgFhA","dtype":"float64","shape":[12]},"count":[3078,578,43,6901,1412,153,2,1,18,75,23,4],"material":["silver","bronze","other","bronze","silver","gold","silver","gold","bronze","silver","bronze","gold"],"top":{"__ndarray__":"AAAAAAAMqEAAAAAAAJCsQAAAAAAAgEVAAAAAAAAgu0AAAAAAAFLAQAAAAACAnsBAAAAAAAAAAEAAAAAAAAAIQAAAAAAAADVAAAAAAADAUkAAAAAAAIBYQAAAAAAAgFlA","dtype":"float64","shape":[12]},"word":["radiate","radiate","laureate","laureate","laureate","laureate","helmet","helmet","helmet","divus","divus","divus"]},"selected":{"id":"47775","type":"Selection"},"selection_policy":{"id":"47799","type":"UnionRenderers"}},"id":"47774","type":"ColumnDataSource"},{"attributes":{"bottom":{"field":"bottom"},"fill_color":{"field":"material","transform":{"id":"47773","type":"CategoricalColorMapper"}},"top":{"field":"top"},"width":{"value":0.8},"x":{"field":"word"}},"id":"47777","type":"VBar"},{"attributes":{},"id":"47799","type":"UnionRenderers"},{"attributes":{},"id":"47751","type":"CategoricalTicker"},{"attributes":{"bottom":{"field":"bottom"},"fill_alpha":{"value":0.2},"fill_color":{"field":"material","transform":{"id":"47773","type":"CategoricalColorMapper"}},"line_alpha":{"value":0.2},"line_color":{"value":"black"},"top":{"field":"top"},"width":{"value":0.8},"x":{"field":"word"}},"id":"47779","type":"VBar"},{"attributes":{"data_source":{"id":"47774","type":"ColumnDataSource"},"glyph":{"id":"47777","type":"VBar"},"hover_glyph":null,"muted_glyph":{"id":"47779","type":"VBar"},"nonselection_glyph":{"id":"47778","type":"VBar"},"selection_glyph":null,"view":{"id":"47781","type":"CDSView"}},"id":"47780","type":"GlyphRenderer"},{"attributes":{},"id":"47748","type":"LinearScale"},{"attributes":{},"id":"47759","type":"SaveTool"},{"attributes":{"overlay":{"id":"47768","type":"BoxAnnotation"}},"id":"47762","type":"BoxZoomTool"},{"attributes":{},"id":"47775","type":"Selection"},{"attributes":{"label":{"field":"material"},"renderers":[{"id":"47780","type":"GlyphRenderer"}]},"id":"47789","type":"LegendItem"},{"attributes":{"bottom":{"field":"bottom"},"fill_alpha":{"value":0.1},"fill_color":{"field":"material","transform":{"id":"47773","type":"CategoricalColorMapper"}},"line_alpha":{"value":0.1},"line_color":{"value":"black"},"top":{"field":"top"},"width":{"value":0.8},"x":{"field":"word"}},"id":"47778","type":"VBar"},{"attributes":{},"id":"47783","type":"CategoricalTickFormatter"},{"attributes":{"callback":null,"end":8509.0,"reset_end":8509.0,"reset_start":0,"tags":[[["count","count",null]]]},"id":"47739","type":"Range1d"},{"attributes":{"plot":null,"text":"Count of coins by radiate, laureate, helmet, divus in americanNumismaticSociety by material on obverse plot","text_color":{"value":"black"},"text_font_size":{"value":"12pt"}},"id":"47741","type":"Title"},{"attributes":{"active_drag":"auto","active_inspect":"auto","active_multi":null,"active_scroll":"auto","active_tap":"auto","tools":[{"id":"47740","type":"HoverTool"},{"id":"47759","type":"SaveTool"},{"id":"47760","type":"PanTool"},{"id":"47761","type":"WheelZoomTool"},{"id":"47762","type":"BoxZoomTool"},{"id":"47763","type":"ResetTool"}]},"id":"47764","type":"Toolbar"},{"attributes":{},"id":"47785","type":"BasicTickFormatter"},{"attributes":{"grid_line_color":{"value":null},"plot":{"id":"47742","subtype":"Figure","type":"Plot"},"ticker":{"id":"47751","type":"CategoricalTicker"}},"id":"47753","type":"Grid"},{"attributes":{"axis_label":"word","bounds":"auto","formatter":{"id":"47783","type":"CategoricalTickFormatter"},"major_label_orientation":1.5707963267948966,"plot":{"id":"47742","subtype":"Figure","type":"Plot"},"ticker":{"id":"47751","type":"CategoricalTicker"}},"id":"47750","type":"CategoricalAxis"},{"attributes":{"bottom_units":"screen","fill_alpha":{"value":0.5},"fill_color":{"value":"lightgrey"},"left_units":"screen","level":"overlay","line_alpha":{"value":1.0},"line_color":{"value":"black"},"line_dash":[4,4],"line_width":{"value":2},"plot":null,"render_mode":"css","right_units":"screen","top_units":"screen"},"id":"47768","type":"BoxAnnotation"},{"attributes":{},"id":"47755","type":"BasicTicker"},{"attributes":{"axis_label":"count","bounds":"auto","formatter":{"id":"47785","type":"BasicTickFormatter"},"major_label_orientation":"horizontal","plot":{"id":"47742","subtype":"Figure","type":"Plot"},"ticker":{"id":"47755","type":"BasicTicker"}},"id":"47754","type":"LinearAxis"},{"attributes":{"factors":["silver","bronze","other","gold"],"palette":["#30a2da","#fc4f30","#e5ae38","#6d904f"]},"id":"47773","type":"CategoricalColorMapper"},{"attributes":{},"id":"47746","type":"CategoricalScale"},{"attributes":{},"id":"47761","type":"WheelZoomTool"},{"attributes":{"source":{"id":"47774","type":"ColumnDataSource"}},"id":"47781","type":"CDSView"},{"attributes":{},"id":"47763","type":"ResetTool"}],"root_ids":["47742"]},"title":"Bokeh Application","version":"1.0.3"}}
+        </script>
+        <script type="text/javascript">
+          (function() {
+            var fn = function() {
+              Bokeh.safely(function() {
+                (function(root) {
+                  function embed_document(root) {
+                    
+                  var docs_json = document.getElementById('47858').textContent;
+                  var render_items = [{"docid":"fd393b80-3dbc-4dd8-9a67-4c64a54a8503","roots":{"47742":"2dd92280-7907-4883-822e-fa9af394fb4c"}}];
+                  root.Bokeh.embed.embed_items(docs_json, render_items);
+                
+                  }
+                  if (root.Bokeh !== undefined) {
+                    embed_document(root);
+                  } else {
+                    var attempts = 0;
+                    var timer = setInterval(function(root) {
+                      if (root.Bokeh !== undefined) {
+                        embed_document(root);
+                        clearInterval(timer);
+                      }
+                      attempts++;
+                      if (attempts > 100) {
+                        console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing");
+                        clearInterval(timer);
+                      }
+                    }, 10, root)
+                  }
+                })(window);
+              });
+            };
+            if (document.readyState != "loading") fn();
+            else document.addEventListener("DOMContentLoaded", fn);
+          })();
+        </script>
+    
+  </body>
+  
+</html>
