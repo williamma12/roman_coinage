@@ -1,17 +1,19 @@
 # Plots
 
 # Counts Plots
+These stacked bar plots show the number of coins from [SOURCE] with each bar representing the number of coins produced
+by each authority/emperor/emperor(s) on coin ordered chronologically. Each bar is stacked by the number of coins made of each material.
 ## By Authority
-These stacked bar plots show the number of coins from [SOURCE] with each bar representing the number of coins produced
-by each authority ordered chronologically. Each bar is stacked by the number of coins made of each material.
-* [allData](Plots/allData_authority_counts_plot.html)
-* [americanNumismaticSociety](Plots/americanNumismaticSociety_authority_counts_plot.html)
-* [britishMuseum](Plots/britishMuseum_authority_counts_plot.html)
-* [OCRE](Plots/OCRE_authority_counts_plot.html)
-
+* [allData](Plots/allData_TotalCount.html)
+* [americanNumismaticSociety](Plots/americanNumismaticSociety_TotalCount.html)
+* [britishMuseum](Plots/britishMuseum_TotalCount.html)
+* [OCRE](Plots/OCRE_TotalCount.html)
 ## By Emperor
-These stacked bar plots show the number of coins from [SOURCE] with each bar representing the number of coins produced
-by each emperor ordered chronologically. Each bar is stacked by the number of coins made of each material.
+* [allData](Plots/allData_TotalCount.html)
+* [americanNumismaticSociety](Plots/americanNumismaticSociety_TotalCount.html)
+* [britishMuseum](Plots/britishMuseum_TotalCount.html)
+* [OCRE](Plots/OCRE_TotalCount.html)
+## By Emperor Displayed
 * [allData.html](Plots/allData_emperor_counts_plot.html)
 * [americanNumismaticSociety](Plots/americanNumismaticSociety_emperor_counts_plot.html)
 * [britishMuseum](Plots/britishMuseum_emperor_counts_plot.html)
