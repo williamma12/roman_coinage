@@ -113,7 +113,9 @@
   + [Constantine I](#constantine-i)
 * [Word Counts Plots](#word-counts-plots)
   + [Constantine I](#constantine-i-1)
+
 ---
+
 ## Counts Plots
 These stacked bar plots show the number of coins from [SOURCE] with each bar
 representing the number of coins produced by each authority/emperor/emperor(s)
@@ -589,7 +591,7 @@ These plots show the number of coins that were produced under Constantine's rule
 "laureate", "cuirassed", or "helmet"
 
 ### Constantine I
-* [allData](Plots/allData_WordCountsConstantine I_material.html)
-* [americanNumismaticSociety](Plots/americanNumismaticSociety_WordCountsConstantine I_material.html)
-* [britishMuseum](Plots/britishMuseum_WordCountsConstantine I_material.html)
-* [OCRE](Plots/OCRE_WordCountsConstantine I_material.html)
+* [allData](Plots/allData_WordCountsConstantine I.html)
+* [americanNumismaticSociety](Plots/americanNumismaticSociety_WordCountsConstantine I.html)
+* [britishMuseum](Plots/britishMuseum_WordCountsConstantine I.html)
+* [OCRE](Plots/OCRE_WordCountsConstantine I.html)
