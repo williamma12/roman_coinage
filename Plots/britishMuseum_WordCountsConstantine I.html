@@ -1,0 +1,85 @@
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    
+      <meta charset="utf-8">
+      <title>britishMuseum_WordCountsConstantine I</title>
+      
+      
+        
+          
+        <link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-1.0.3.min.css" type="text/css" />
+        
+        
+          
+        <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-1.0.3.min.js"></script>
+        <script type="text/javascript">
+            Bokeh.set_log_level("info");
+        </script>
+        
+      
+      
+    
+  </head>
+  
+  
+  <body>
+    
+      
+        
+          
+          
+            
+              <div class="bk-root" id="64423c90-eed9-427e-8786-26623a4b8d94" data-root-id="44713"></div>
+            
+          
+        
+      
+      
+        <script type="application/json" id="44820">
+          {"62dae8e3-d64f-4b3c-a0e1-ff6a84192797":{"roots":{"references":[{"attributes":{},"id":"44731","type":"PanTool"},{"attributes":{},"id":"44732","type":"WheelZoomTool"},{"attributes":{"axis_label":"count","bounds":"auto","formatter":{"id":"44755","type":"BasicTickFormatter"},"major_label_orientation":"horizontal","plot":{"id":"44713","subtype":"Figure","type":"Plot"},"ticker":{"id":"44726","type":"BasicTicker"}},"id":"44725","type":"LinearAxis"},{"attributes":{"overlay":{"id":"44739","type":"BoxAnnotation"}},"id":"44733","type":"BoxZoomTool"},{"attributes":{},"id":"44734","type":"ResetTool"},{"attributes":{"callback":null,"factors":["radiate","diadem","laureate","cuirassed","helmet"],"tags":[[["word","word",null]]]},"id":"44709","type":"FactorRange"},{"attributes":{"callback":null,"renderers":[{"id":"44750","type":"GlyphRenderer"}],"tooltips":[["word","@{word}"],["count","@{count}"]]},"id":"44711","type":"HoverTool"},{"attributes":{"active_drag":"auto","active_inspect":"auto","active_multi":null,"active_scroll":"auto","active_tap":"auto","tools":[{"id":"44711","type":"HoverTool"},{"id":"44730","type":"SaveTool"},{"id":"44731","type":"PanTool"},{"id":"44732","type":"WheelZoomTool"},{"id":"44733","type":"BoxZoomTool"},{"id":"44734","type":"ResetTool"}]},"id":"44735","type":"Toolbar"},{"attributes":{"bottom_units":"screen","fill_alpha":{"value":0.5},"fill_color":{"value":"lightgrey"},"left_units":"screen","level":"overlay","line_alpha":{"value":1.0},"line_color":{"value":"black"},"line_dash":[4,4],"line_width":{"value":2},"plot":null,"render_mode":"css","right_units":"screen","top_units":"screen"},"id":"44739","type":"BoxAnnotation"},{"attributes":{},"id":"44719","type":"LinearScale"},{"attributes":{"fill_color":{"value":"#30a2da"},"top":{"field":"count"},"width":{"value":0.8},"x":{"field":"word"}},"id":"44747","type":"VBar"},{"attributes":{},"id":"44717","type":"CategoricalScale"},{"attributes":{"fill_alpha":{"value":0.1},"fill_color":{"value":"#30a2da"},"line_alpha":{"value":0.1},"line_color":{"value":"black"},"top":{"field":"count"},"width":{"value":0.8},"x":{"field":"word"}},"id":"44748","type":"VBar"},{"attributes":{},"id":"44761","type":"UnionRenderers"},{"attributes":{},"id":"44722","type":"CategoricalTicker"},{"attributes":{"fill_alpha":{"value":0.2},"fill_color":{"value":"#30a2da"},"line_alpha":{"value":0.2},"line_color":{"value":"black"},"top":{"field":"count"},"width":{"value":0.8},"x":{"field":"word"}},"id":"44749","type":"VBar"},{"attributes":{"below":[{"id":"44721","type":"CategoricalAxis"}],"left":[{"id":"44725","type":"LinearAxis"}],"min_border_bottom":10,"min_border_left":10,"min_border_right":10,"min_border_top":10,"plot_height":1000,"plot_width":1500,"renderers":[{"id":"44721","type":"CategoricalAxis"},{"id":"44724","type":"Grid"},{"id":"44725","type":"LinearAxis"},{"id":"44729","type":"Grid"},{"id":"44739","type":"BoxAnnotation"},{"id":"44750","type":"GlyphRenderer"}],"title":{"id":"44712","type":"Title"},"toolbar":{"id":"44735","type":"Toolbar"},"x_range":{"id":"44709","type":"FactorRange"},"x_scale":{"id":"44717","type":"CategoricalScale"},"y_range":{"id":"44710","type":"Range1d"},"y_scale":{"id":"44719","type":"LinearScale"}},"id":"44713","subtype":"Figure","type":"Plot"},{"attributes":{"data_source":{"id":"44744","type":"ColumnDataSource"},"glyph":{"id":"44747","type":"VBar"},"hover_glyph":null,"muted_glyph":{"id":"44749","type":"VBar"},"nonselection_glyph":{"id":"44748","type":"VBar"},"selection_glyph":null,"view":{"id":"44751","type":"CDSView"}},"id":"44750","type":"GlyphRenderer"},{"attributes":{},"id":"44730","type":"SaveTool"},{"attributes":{},"id":"44726","type":"BasicTicker"},{"attributes":{"source":{"id":"44744","type":"ColumnDataSource"}},"id":"44751","type":"CDSView"},{"attributes":{"callback":null,"data":{"count":[38,39,571,408,111],"word":["radiate","diadem","laureate","cuirassed","helmet"]},"selected":{"id":"44745","type":"Selection"},"selection_policy":{"id":"44761","type":"UnionRenderers"}},"id":"44744","type":"ColumnDataSource"},{"attributes":{},"id":"44745","type":"Selection"},{"attributes":{"axis_label":"word","bounds":"auto","formatter":{"id":"44753","type":"CategoricalTickFormatter"},"major_label_orientation":1.5707963267948966,"plot":{"id":"44713","subtype":"Figure","type":"Plot"},"ticker":{"id":"44722","type":"CategoricalTicker"}},"id":"44721","type":"CategoricalAxis"},{"attributes":{},"id":"44753","type":"CategoricalTickFormatter"},{"attributes":{"dimension":1,"grid_line_color":{"value":null},"plot":{"id":"44713","subtype":"Figure","type":"Plot"},"ticker":{"id":"44726","type":"BasicTicker"}},"id":"44729","type":"Grid"},{"attributes":{"grid_line_color":{"value":null},"plot":{"id":"44713","subtype":"Figure","type":"Plot"},"ticker":{"id":"44722","type":"CategoricalTicker"}},"id":"44724","type":"Grid"},{"attributes":{},"id":"44755","type":"BasicTickFormatter"},{"attributes":{"callback":null,"end":571.0,"reset_end":571.0,"reset_start":0,"tags":[[["count","count",null]]]},"id":"44710","type":"Range1d"},{"attributes":{"plot":null,"text":"Occurance of radiate, diadem, laureate, cuirassed, helmet of Constantine I coinage from britishMuseum","text_color":{"value":"black"},"text_font_size":{"value":"12pt"}},"id":"44712","type":"Title"}],"root_ids":["44713"]},"title":"Bokeh Application","version":"1.0.3"}}
+        </script>
+        <script type="text/javascript">
+          (function() {
+            var fn = function() {
+              Bokeh.safely(function() {
+                (function(root) {
+                  function embed_document(root) {
+                    
+                  var docs_json = document.getElementById('44820').textContent;
+                  var render_items = [{"docid":"62dae8e3-d64f-4b3c-a0e1-ff6a84192797","roots":{"44713":"64423c90-eed9-427e-8786-26623a4b8d94"}}];
+                  root.Bokeh.embed.embed_items(docs_json, render_items);
+                
+                  }
+                  if (root.Bokeh !== undefined) {
+                    embed_document(root);
+                  } else {
+                    var attempts = 0;
+                    var timer = setInterval(function(root) {
+                      if (root.Bokeh !== undefined) {
+                        embed_document(root);
+                        clearInterval(timer);
+                      }
+                      attempts++;
+                      if (attempts > 100) {
+                        console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing");
+                        clearInterval(timer);
+                      }
+                    }, 10, root)
+                  }
+                })(window);
+              });
+            };
+            if (document.readyState != "loading") fn();
+            else document.addEventListener("DOMContentLoaded", fn);
+          })();
+        </script>
+    
+  </body>
+  
+</html>

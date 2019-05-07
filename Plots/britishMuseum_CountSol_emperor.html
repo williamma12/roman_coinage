@@ -1,0 +1,85 @@
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    
+      <meta charset="utf-8">
+      <title>britishMuseum_CountSol_emperor</title>
+      
+      
+        
+          
+        <link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-1.0.3.min.css" type="text/css" />
+        
+        
+          
+        <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-1.0.3.min.js"></script>
+        <script type="text/javascript">
+            Bokeh.set_log_level("info");
+        </script>
+        
+      
+      
+    
+  </head>
+  
+  
+  <body>
+    
+      
+        
+          
+          
+            
+              <div class="bk-root" id="b0a7af99-c160-4c6b-9c6d-243ee5ebfe9f" data-root-id="5665"></div>
+            
+          
+        
+      
+      
+        <script type="application/json" id="5772">
+          {"e053db60-2f3d-41da-bb95-96c513b31ede":{"roots":{"references":[{"attributes":{"below":[{"id":"5673","type":"CategoricalAxis"}],"left":[{"id":"5677","type":"LinearAxis"}],"min_border_bottom":10,"min_border_left":10,"min_border_right":10,"min_border_top":10,"plot_height":1000,"plot_width":1500,"renderers":[{"id":"5673","type":"CategoricalAxis"},{"id":"5676","type":"Grid"},{"id":"5677","type":"LinearAxis"},{"id":"5681","type":"Grid"},{"id":"5691","type":"BoxAnnotation"},{"id":"5702","type":"GlyphRenderer"}],"title":{"id":"5664","type":"Title"},"toolbar":{"id":"5687","type":"Toolbar"},"x_range":{"id":"5661","type":"FactorRange"},"x_scale":{"id":"5669","type":"CategoricalScale"},"y_range":{"id":"5662","type":"Range1d"},"y_scale":{"id":"5671","type":"LinearScale"}},"id":"5665","subtype":"Figure","type":"Plot"},{"attributes":{"callback":null,"factors":["Augustus","Vespasian","Trajan","Hadrian","Antoninus Pius","Commodus","Septimius Severus","Caracalla","Caracalla, Septimius Severus","Elagabalus","Gordian III","Gallienus, Valerian","Valerian","Regalian","Gallienus","Postumus","Victorinus","Quintillus","Aurelian","Probus","Carus","Diocletian","Carausius","Allectus","Galerius","Severus II","Constantine I","Constantine II"],"tags":[[["emperor","emperor",null]]]},"id":"5661","type":"FactorRange"},{"attributes":{},"id":"5671","type":"LinearScale"},{"attributes":{},"id":"5669","type":"CategoricalScale"},{"attributes":{"active_drag":"auto","active_inspect":"auto","active_multi":null,"active_scroll":"auto","active_tap":"auto","tools":[{"id":"5663","type":"HoverTool"},{"id":"5682","type":"SaveTool"},{"id":"5683","type":"PanTool"},{"id":"5684","type":"WheelZoomTool"},{"id":"5685","type":"BoxZoomTool"},{"id":"5686","type":"ResetTool"}]},"id":"5687","type":"Toolbar"},{"attributes":{"fill_color":{"value":"#30a2da"},"top":{"field":"count"},"width":{"value":0.8},"x":{"field":"emperor"}},"id":"5699","type":"VBar"},{"attributes":{},"id":"5697","type":"Selection"},{"attributes":{"callback":null,"renderers":[{"id":"5702","type":"GlyphRenderer"}],"tooltips":[["emperor","@{emperor}"],["count","@{count}"]]},"id":"5663","type":"HoverTool"},{"attributes":{},"id":"5682","type":"SaveTool"},{"attributes":{"dimension":1,"grid_line_color":{"value":null},"plot":{"id":"5665","subtype":"Figure","type":"Plot"},"ticker":{"id":"5678","type":"BasicTicker"}},"id":"5681","type":"Grid"},{"attributes":{"callback":null,"end":274.0,"reset_end":274.0,"reset_start":0,"tags":[[["count","count",null]]]},"id":"5662","type":"Range1d"},{"attributes":{},"id":"5705","type":"CategoricalTickFormatter"},{"attributes":{"fill_alpha":{"value":0.2},"fill_color":{"value":"#30a2da"},"line_alpha":{"value":0.2},"line_color":{"value":"black"},"top":{"field":"count"},"width":{"value":0.8},"x":{"field":"emperor"}},"id":"5701","type":"VBar"},{"attributes":{"plot":null,"text":"count of coins with Sol by emperor in britishMuseum","text_color":{"value":"black"},"text_font_size":{"value":"12pt"}},"id":"5664","type":"Title"},{"attributes":{},"id":"5707","type":"BasicTickFormatter"},{"attributes":{"data_source":{"id":"5696","type":"ColumnDataSource"},"glyph":{"id":"5699","type":"VBar"},"hover_glyph":null,"muted_glyph":{"id":"5701","type":"VBar"},"nonselection_glyph":{"id":"5700","type":"VBar"},"selection_glyph":null,"view":{"id":"5703","type":"CDSView"}},"id":"5702","type":"GlyphRenderer"},{"attributes":{},"id":"5674","type":"CategoricalTicker"},{"attributes":{},"id":"5678","type":"BasicTicker"},{"attributes":{"bottom_units":"screen","fill_alpha":{"value":0.5},"fill_color":{"value":"lightgrey"},"left_units":"screen","level":"overlay","line_alpha":{"value":1.0},"line_color":{"value":"black"},"line_dash":[4,4],"line_width":{"value":2},"plot":null,"render_mode":"css","right_units":"screen","top_units":"screen"},"id":"5691","type":"BoxAnnotation"},{"attributes":{"grid_line_color":{"value":null},"plot":{"id":"5665","subtype":"Figure","type":"Plot"},"ticker":{"id":"5674","type":"CategoricalTicker"}},"id":"5676","type":"Grid"},{"attributes":{"axis_label":"emperor","bounds":"auto","formatter":{"id":"5705","type":"CategoricalTickFormatter"},"major_label_orientation":1.5707963267948966,"plot":{"id":"5665","subtype":"Figure","type":"Plot"},"ticker":{"id":"5674","type":"CategoricalTicker"}},"id":"5673","type":"CategoricalAxis"},{"attributes":{"axis_label":"count","bounds":"auto","formatter":{"id":"5707","type":"BasicTickFormatter"},"major_label_orientation":"horizontal","plot":{"id":"5665","subtype":"Figure","type":"Plot"},"ticker":{"id":"5678","type":"BasicTicker"}},"id":"5677","type":"LinearAxis"},{"attributes":{},"id":"5686","type":"ResetTool"},{"attributes":{"callback":null,"data":{"count":[6,1,4,4,1,5,1,1,9,1,7,3,23,2,22,7,1,13,10,9,16,7,1,1,1,9,1,30,1,7,29,3,1,1,1,1,15,1,4,1,1,271,3,15],"emperor":["Augustus","Vespasian","Trajan","Trajan","Hadrian","Hadrian","Antoninus Pius","Commodus","Septimius Severus","Septimius Severus","Caracalla","Caracalla, Septimius Severus","Caracalla, Septimius Severus","Septimius Severus","Caracalla","Caracalla","Elagabalus","Elagabalus","Elagabalus","Gordian III","Gordian III","Gallienus, Valerian","Valerian","Valerian","Regalian","Gallienus","Postumus","Victorinus","Victorinus","Quintillus","Aurelian","Probus","Probus","Carus","Diocletian","Diocletian","Carausius","Carausius","Allectus","Galerius","Severus II","Constantine I","Constantine I","Constantine II"]},"selected":{"id":"5697","type":"Selection"},"selection_policy":{"id":"5713","type":"UnionRenderers"}},"id":"5696","type":"ColumnDataSource"},{"attributes":{"source":{"id":"5696","type":"ColumnDataSource"}},"id":"5703","type":"CDSView"},{"attributes":{"overlay":{"id":"5691","type":"BoxAnnotation"}},"id":"5685","type":"BoxZoomTool"},{"attributes":{},"id":"5713","type":"UnionRenderers"},{"attributes":{},"id":"5684","type":"WheelZoomTool"},{"attributes":{},"id":"5683","type":"PanTool"},{"attributes":{"fill_alpha":{"value":0.1},"fill_color":{"value":"#30a2da"},"line_alpha":{"value":0.1},"line_color":{"value":"black"},"top":{"field":"count"},"width":{"value":0.8},"x":{"field":"emperor"}},"id":"5700","type":"VBar"}],"root_ids":["5665"]},"title":"Bokeh Application","version":"1.0.3"}}
+        </script>
+        <script type="text/javascript">
+          (function() {
+            var fn = function() {
+              Bokeh.safely(function() {
+                (function(root) {
+                  function embed_document(root) {
+                    
+                  var docs_json = document.getElementById('5772').textContent;
+                  var render_items = [{"docid":"e053db60-2f3d-41da-bb95-96c513b31ede","roots":{"5665":"b0a7af99-c160-4c6b-9c6d-243ee5ebfe9f"}}];
+                  root.Bokeh.embed.embed_items(docs_json, render_items);
+                
+                  }
+                  if (root.Bokeh !== undefined) {
+                    embed_document(root);
+                  } else {
+                    var attempts = 0;
+                    var timer = setInterval(function(root) {
+                      if (root.Bokeh !== undefined) {
+                        embed_document(root);
+                        clearInterval(timer);
+                      }
+                      attempts++;
+                      if (attempts > 100) {
+                        console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing");
+                        clearInterval(timer);
+                      }
+                    }, 10, root)
+                  }
+                })(window);
+              });
+            };
+            if (document.readyState != "loading") fn();
+            else document.addEventListener("DOMContentLoaded", fn);
+          })();
+        </script>
+    
+  </body>
+  
+</html>
