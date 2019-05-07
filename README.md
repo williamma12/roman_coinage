@@ -1,4 +1,5 @@
 # Plots
+* [Information](#information)
 * [Counts Plots](#counts-plots)
   + [By Authority](#by-authority)
   + [By Emperor](#by-emperor)
@@ -595,3 +596,12 @@ These plots show the number of coins that were produced under Constantine's rule
 * [americanNumismaticSociety](Plots/americanNumismaticSociety_WordCountsConstantine I.html)
 * [britishMuseum](Plots/britishMuseum_WordCountsConstantine I.html)
 * [OCRE](Plots/OCRE_WordCountsConstantine I.html)
+
+---
+
+## Information
+
+Last Updated: 5/6/19
+
+<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
+
