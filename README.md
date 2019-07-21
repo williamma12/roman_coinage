@@ -8,7 +8,7 @@
   + [On Obverse](#on-obverse)
   + [In Description](#in-description)
 * [Compare select words with and without radiate](#compare-select-words-with-and-without-radiate)
-  + [Juipter](#juipter)
+  + [Jupiter](#jupiter)
     - [By Authority](#by-authority-1)
     - [By Emperor](#by-emperor-1)
     - [By Emperor Displayed](#by-emperor-displayed-1)
@@ -165,7 +165,7 @@ These stack plots show the number of coins with [WORD]. Overlayed is the plot wi
 [WORD] and "radiate" on the obverse. As a result, the bar above the bottom one is the amount extra
 that contain [WORD] without "radiate" on the obverse.
 
-### Juipter
+### Jupiter
 #### By Authority
 * [allData](Plots/allData_JupiterRadiate_authority.html)
 * [americanNumismaticSociety](Plots/americanNumismaticSociety_JupiterRadiate_authority.html)
