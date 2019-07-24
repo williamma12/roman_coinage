@@ -114,6 +114,7 @@
   + [Constantine I](#constantine-i)
 * [Word Counts Plots](#word-counts-plots)
   + [Constantine I](#constantine-i-1)
+* [Sol Counts for Victorinus, Aurelian, and Probus](#sol-counts-for-victorinus-aurelian-and-probus)
 
 ---
 
@@ -189,7 +190,7 @@ that contain [WORD] without "radiate" on the obverse.
 * [britishMuseum](Plots/britishMuseum_SolRadiate_authority.html)
 * [OCRE](Plots/OCRE_SolRadiate_authority.html)
 #### By Emperor
-* [allData](Plots/allData_SolRadiate_emperor.html)
+* [allData](Plots/allData_kolRadiate_emperor.html)
 * [americanNumismaticSociety](Plots/americanNumismaticSociety_SolRadiate_emperor.html)
 * [britishMuseum](Plots/britishMuseum_SolRadiate_emperor.html)
 * [OCRE](Plots/OCRE_SolRadiate_emperor.html)
@@ -596,6 +597,19 @@ These plots show the number of coins that were produced under Constantine's rule
 * [americanNumismaticSociety](Plots/americanNumismaticSociety_WordCountsConstantine I.html)
 * [britishMuseum](Plots/britishMuseum_WordCountsConstantine I.html)
 * [OCRE](Plots/OCRE_WordCountsConstantine I.html)
+
+---
+
+## Sol Counts for Victorinus, Aurelian, and Probus
+#### Compare select words with and without radiate
+These stack plots show the number of coins with [WORD]. Overlayed is the plot with
+[WORD] and "radiate" on the obverse. As a result, the bar above the bottom one is the amount extra
+that contain [WORD] without "radiate" on the obverse.
+
+* [allData](Plots/allData_solRadiate_emperor_VictorinusAurelianProbus.html)
+* [americanNumismaticSociety](Plots/americanNumismaticSociety_solRadiate_emperor_VictorinusAurelianProbus.html)
+* [britishMuseum](Plots/britishMuseum_solRadiate_emperor_VictorinusAurelianProbus.html)
+* [OCRE](Plots/OCRE_solRadiate_emperor_VictorinusAurelianProbus.html)
 
 ---
 
