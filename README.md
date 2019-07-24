@@ -1,6 +1,6 @@
-# Plots
+## Table of Contents
 * [Information](#information)
-* [Counts Plots](#counts-plots)
+* [Coin Output Plots](#coin-output--plots)
   + [By Authority](#by-authority)
   + [By Emperor](#by-emperor)
   + [By Emperor Displayed](#by-emperor-displayed)
@@ -117,7 +117,7 @@
 
 ---
 
-## Counts Plots
+## Coin Output Plots
 These stacked bar plots show the number of coins from [SOURCE] with each bar
 representing the number of coins produced by each authority/emperor/emperor(s)
 on coin ordered chronologically. Each bar is stacked by the number of coins made
