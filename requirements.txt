@@ -29,7 +29,7 @@ pyparsing==2.3.0
 python-dateutil==2.7.5
 pytz==2018.9
 pyviz-comms==0.7.0
-PyYAML==4.2b1
+PyYAML==5.4
 pyzmq==17.1.2
 requests==2.21.0
 six==1.12.0
